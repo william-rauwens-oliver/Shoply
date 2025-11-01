@@ -1,6 +1,6 @@
 //
 //  ShoplyApp.swift
-//  Shoply
+//  Shoply - Outfit Selector
 //
 //  Created by William on 01/11/2025.
 //
@@ -12,6 +12,8 @@ struct ShoplyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.light)
         }
     }
 }
+

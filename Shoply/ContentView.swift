@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  Shoply
+//  Shoply - Outfit Selector
 //
 //  Created by William on 01/11/2025.
 //
@@ -9,13 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        HomeScreen()
     }
 }
 
