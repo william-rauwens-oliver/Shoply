@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>colors</key>
+	<array>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/williamrauwensoliver/Projet SWIFT/Shoply/Shoply/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameBg</string>
+			<key>relativePath</key>
+			<string>./Bg.colorset</string>
+			<key>swiftSymbol</key>
+			<string>bg</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/williamrauwensoliver/Projet SWIFT/Shoply/Shoply/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNamePrimary</string>
+			<key>relativePath</key>
+			<string>./Primary.colorset</string>
+			<key>swiftSymbol</key>
+			<string>primary</string>
+		</dict>
+	</array>
+	<key>images</key>
+	<array>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/williamrauwensoliver/Projet SWIFT/Shoply/Shoply/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameChair1</string>
+			<key>relativePath</key>
+			<string>./chair_1.imageset</string>
+			<key>swiftSymbol</key>
+			<string>chair1</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/williamrauwensoliver/Projet SWIFT/Shoply/Shoply/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameChair2</string>
+			<key>relativePath</key>
+			<string>./chair_2.imageset</string>
+			<key>swiftSymbol</key>
+			<string>chair2</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/williamrauwensoliver/Projet SWIFT/Shoply/Shoply/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameChair3</string>
+			<key>relativePath</key>
+			<string>./chair_3.imageset</string>
+			<key>swiftSymbol</key>
+			<string>chair3</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/williamrauwensoliver/Projet SWIFT/Shoply/Shoply/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameChair4</string>
+			<key>relativePath</key>
+			<string>./chair_4.imageset</string>
+			<key>swiftSymbol</key>
+			<string>chair4</string>
+		</dict>
+	</array>
+	<key>symbols</key>
+	<array/>
+</dict>
+</plist>

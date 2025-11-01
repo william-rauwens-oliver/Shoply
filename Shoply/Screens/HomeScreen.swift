@@ -18,14 +18,32 @@ struct HomeScreen: View {
     @State private var navigateToOutfitSelection = false
     @State private var selectedWeather: WeatherType = .sunny
     
-    let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
-    
     var body: some View {
         NavigationStack {
             ZStack {
-                // Gradient de fond adaptatif
-                adaptiveGradient()
-                    .ignoresSafeArea()
+                // Gradient de fond adaptatif avec fallback
+                Group {
+                    if #available(iOS 26.0, *) {
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.99, green: 0.98, blue: 1.0).opacity(0.95),
+                                Color(red: 0.97, green: 0.98, blue: 1.0).opacity(0.9)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    } else {
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.98, green: 0.97, blue: 0.99),
+                                Color(red: 0.95, green: 0.97, blue: 1.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    }
+                }
+                .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 25) {
@@ -33,7 +51,19 @@ struct HomeScreen: View {
                         HeaderSection(currentTime: currentTime)
                             .padding(.top, 10)
                         
-                        // Carte principale - Sélection rapide
+                        // Carte principale - Sélection intelligente
+                        NavigationLink(destination: SmartOutfitSelectionScreen()) {
+                            SmartSelectionCard()
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        // Gestion de la garde-robe
+                        NavigationLink(destination: WardrobeManagementScreen()) {
+                            WardrobeManagementCard()
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        // Ancienne sélection par humeur (conservée)
                         QuickSelectionCard(
                             navigateToMoodSelection: $navigateToMoodSelection
                         )
@@ -86,42 +116,50 @@ struct HomeScreen: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Shoply")
-                        .font(.custom("PlayfairDisplay-Bold", size: 24))
+                        .font(.playfairDisplayBold(size: 24))
                         .foregroundColor(.primary)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: FavoritesScreen()) {
-                        Image(systemName: "heart.fill")
-                            .foregroundColor(.pink)
+                    HStack(spacing: 16) {
+                        NavigationLink(destination: FavoritesScreen()) {
+                            Image(systemName: "heart.fill")
+                                .foregroundColor(.pink)
+                        }
+                        
+                        NavigationLink(destination: SettingsScreen()) {
+                            Image(systemName: "gearshape.fill")
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
             }
-        }
-        .navigationDestination(isPresented: $navigateToMoodSelection) {
-            MoodSelectionScreen()
-        }
-        .navigationDestination(isPresented: $navigateToOutfitSelection) {
-            if let mood = selectedMood {
-                OutfitSelectionScreen(
-                    mood: mood,
-                    weather: selectedWeather,
-                    outfitService: outfitService
-                )
-            } else {
-                OutfitSelectionScreen(
-                    mood: .energetic,
-                    weather: selectedWeather,
-                    outfitService: outfitService
-                )
+            .navigationDestination(isPresented: $navigateToMoodSelection) {
+                MoodSelectionScreen()
+            }
+            .navigationDestination(isPresented: $navigateToOutfitSelection) {
+                if let mood = selectedMood {
+                    OutfitSelectionScreen(
+                        mood: mood,
+                        weather: selectedWeather,
+                        outfitService: outfitService
+                    )
+                } else {
+                    OutfitSelectionScreen(
+                        mood: .energetic,
+                        weather: selectedWeather,
+                        outfitService: outfitService
+                    )
+                }
             }
         }
-        .onReceive(timer) { _ in
-            currentTime = Date()
-        }
         .onAppear {
+            // Initialisation au chargement
             loadTodayOutfit()
             updateFavoritesCount()
+        }
+        .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
+            currentTime = Date()
         }
     }
     
@@ -145,7 +183,7 @@ struct HeaderSection: View {
             HStack {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(greeting)
-                        .font(.custom("PlayfairDisplay-Bold", size: 32))
+                        .font(.playfairDisplayBold(size: 32))
                         .foregroundColor(.primary)
                     
                     Text(formattedDate)
@@ -197,30 +235,118 @@ struct HeaderSection: View {
     }
 }
 
-// Carte de sélection rapide
-struct QuickSelectionCard: View {
-    @Binding var navigateToMoodSelection: Bool
-    
+// Carte de sélection intelligente (nouvelle)
+struct SmartSelectionCard: View {
     var body: some View {
         VStack(spacing: 20) {
             HStack {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Choisissez votre outfit")
-                        .font(.custom("PlayfairDisplay-Bold", size: 24))
+                    Text("Sélection Intelligente")
+                        .font(.playfairDisplayBold(size: 24))
                         .foregroundColor(.primary)
-                    
-                    Text("Selon votre humeur du jour")
+
+                    Text("Météo automatique + IA")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
+                Image(systemName: "brain.head.profile")
+                    .font(.system(size: 32))
+                    .foregroundColor(.purple)
+            }
+
+            HStack {
+                Image(systemName: "location.fill")
+                    .foregroundColor(.blue)
+                Text("Détection automatique")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondary)
+                Spacer()
+                Image(systemName: "arrow.right")
+            }
+            .foregroundColor(.white)
+            .padding()
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color.purple,
+                        Color.pink.opacity(0.8)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(16)
+            .shadow(color: Color.purple.opacity(0.3), radius: 10, x: 0, y: 5)
+        }
+        .padding(25)
+        .adaptiveCard(cornerRadius: 25)
+    }
+}
+
+// Carte de gestion de garde-robe
+struct WardrobeManagementCard: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Ma Garde-robe")
+                        .font(.playfairDisplayBold(size: 24))
+                        .foregroundColor(.primary)
+
+                    Text("Ajoutez vos vêtements")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "tshirt.fill")
+                    .font(.system(size: 32))
+                    .foregroundColor(.pink)
+            }
+
+            HStack {
+                Image(systemName: "camera.fill")
+                    .foregroundColor(.blue)
+                Text("Prenez vos vêtements en photo")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondary)
+                Spacer()
+                Image(systemName: "arrow.right")
+            }
+        }
+        .padding(25)
+        .adaptiveCard(cornerRadius: 25)
+    }
+}
+
+// Carte de sélection rapide (ancienne méthode - conservée)
+struct QuickSelectionCard: View {
+    @Binding var navigateToMoodSelection: Bool
+
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Sélection par Humeur")
+                        .font(.playfairDisplayBold(size: 24))
+                        .foregroundColor(.primary)
+
+                    Text("Choisissez selon votre humeur")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
                 Image(systemName: "sparkles")
                     .font(.system(size: 32))
                     .foregroundColor(.yellow)
             }
-            
+
             Button(action: {
                 navigateToMoodSelection = true
             }) {
@@ -260,7 +386,7 @@ struct TodayOutfitCard: View {
         VStack(alignment: .leading, spacing: 15) {
             HStack {
                 Text("Outfit du jour")
-                    .font(.custom("PlayfairDisplay-Bold", size: 22))
+                    .font(.playfairDisplayBold(size: 22))
                     .foregroundColor(.primary)
                 
                 Spacer()
@@ -292,7 +418,7 @@ struct TodayOutfitCard: View {
                 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(outfit.name)
-                        .font(.custom("PlayfairDisplay-Bold", size: 20))
+                        .font(.playfairDisplayBold(size: 20))
                         .foregroundColor(.primary)
                     
                     Text(outfit.type.rawValue)
@@ -306,7 +432,7 @@ struct TodayOutfitCard: View {
                         
                         Label("\(outfit.styleLevel)/5", systemImage: "sparkles")
                             .font(.system(size: 12))
-                            .foregroundColor(.yellow)
+                            .foregroundColor(.pink)
                     }
                 }
                 
@@ -326,7 +452,7 @@ struct StatsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             Text("Statistiques")
-                .font(.custom("PlayfairDisplay-Bold", size: 22))
+                .font(.playfairDisplayBold(size: 22))
                 .foregroundColor(.primary)
             
             HStack(spacing: 15) {
@@ -334,7 +460,7 @@ struct StatsSection: View {
                     icon: "tshirt.fill",
                     title: "Outfits",
                     value: "\(totalOutfits)",
-                    color: .blue
+                    color: .pink
                 )
                 
                 HomeStatCard(
@@ -362,7 +488,7 @@ struct HomeStatCard: View {
                 .foregroundColor(color)
             
             Text(value)
-                .font(.custom("PlayfairDisplay-Bold", size: 32))
+                .font(.playfairDisplayBold(size: 32))
                 .foregroundColor(.primary)
             
             Text(title)
@@ -384,7 +510,7 @@ struct QuickMoodsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             Text("Humeurs rapides")
-                .font(.custom("PlayfairDisplay-Bold", size: 22))
+                .font(.playfairDisplayBold(size: 22))
                 .foregroundColor(.primary)
             
             ScrollView(.horizontal, showsIndicators: false) {
@@ -450,13 +576,13 @@ struct WeatherSuggestionsSection: View {
         VStack(alignment: .leading, spacing: 15) {
             HStack {
                 Text("Suggestions météo")
-                    .font(.custom("PlayfairDisplay-Bold", size: 22))
+                    .font(.playfairDisplayBold(size: 22))
                     .foregroundColor(.primary)
                 
                 Spacer()
                 
                 Image(systemName: "cloud.sun.fill")
-                    .foregroundColor(.orange)
+                    .foregroundColor(.blue)
             }
             
             ScrollView(.horizontal, showsIndicators: false) {
@@ -518,7 +644,7 @@ struct RecentOutfitsSection: View {
         VStack(alignment: .leading, spacing: 15) {
             HStack {
                 Text("Outfits populaires")
-                    .font(.custom("PlayfairDisplay-Bold", size: 22))
+                    .font(.playfairDisplayBold(size: 22))
                     .foregroundColor(.primary)
                 
                 Spacer()
@@ -576,11 +702,11 @@ struct CompactOutfitCard: View {
                 
                 Image(systemName: "tshirt.fill")
                     .font(.system(size: 50))
-                    .foregroundColor(.pink.opacity(0.7))
+                    .foregroundColor(.blue)
             }
             
             Text(outfit.name)
-                .font(.custom("PlayfairDisplay-Bold", size: 16))
+                .font(.playfairDisplayBold(size: 16))
                 .foregroundColor(.primary)
                 .lineLimit(1)
             
@@ -612,7 +738,7 @@ struct FavoritesScreen: View {
                         .foregroundColor(.gray.opacity(0.3))
                     
                     Text("Aucun favori")
-                        .font(.custom("PlayfairDisplay-Bold", size: 24))
+                        .font(.playfairDisplayBold(size: 24))
                         .foregroundColor(.primary)
                     
                     Text("Ajoutez des outfits à vos favoris")
@@ -648,5 +774,8 @@ struct FavoritesScreen: View {
 }
 
 #Preview {
-    HomeScreen()
+    NavigationStack {
+        HomeScreen()
+            .environmentObject(DataManager.shared)
+    }
 }

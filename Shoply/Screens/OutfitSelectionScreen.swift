@@ -41,7 +41,7 @@ struct OutfitSelectionScreen: View {
                                     Image(systemName: mood.icon)
                                         .foregroundColor(mood.color)
                                     Text(mood.rawValue)
-                                        .font(.custom("PlayfairDisplay-Bold", size: 28))
+                                        .font(.playfairDisplayBold(size: 28))
                                         .foregroundColor(.primary)
                                 }
                             }
@@ -122,7 +122,7 @@ struct OutfitSelectionScreen: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Choisissez votre style")
-                    .font(.custom("PlayfairDisplay-Bold", size: 20))
+                    .font(.playfairDisplayBold(size: 20))
             }
         }
         .sheet(item: $selectedOutfit) { outfit in
@@ -178,7 +178,7 @@ struct OutfitCard: View {
                 // Informations
                 VStack(alignment: .leading, spacing: 6) {
                     Text(outfit.name)
-                        .font(.custom("PlayfairDisplay-Bold", size: 18))
+                        .font(.playfairDisplayBold(size: 18))
                         .foregroundColor(.primary)
                         .lineLimit(1)
                     
@@ -236,6 +236,7 @@ struct OutfitCard: View {
             weather: .sunny,
             outfitService: OutfitService()
         )
+        .environmentObject(DataManager.shared)
     }
 }
 

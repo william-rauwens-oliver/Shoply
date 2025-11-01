@@ -29,7 +29,7 @@ struct MoodSelectionScreen: View {
                         // En-tête avec salutation
                         VStack(spacing: 10) {
                             Text(greeting)
-                                .font(.custom("PlayfairDisplay-Regular", size: 32))
+                                .font(.playfairDisplayRegular(size: 32))
                                 .foregroundColor(.primary)
                             
                             Text("Comment vous sentez-vous ce matin ?")
@@ -44,7 +44,7 @@ struct MoodSelectionScreen: View {
                         // Section humeurs
                         VStack(alignment: .leading, spacing: 20) {
                             Text("Choisissez votre humeur")
-                                .font(.custom("PlayfairDisplay-Bold", size: 24))
+                                .font(.playfairDisplayBold(size: 24))
                                 .foregroundColor(.primary)
                                 .padding(.horizontal)
                             
@@ -201,7 +201,7 @@ struct WeatherSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             Text("Météo du jour")
-                .font(.custom("PlayfairDisplay-Bold", size: 22))
+                .font(.playfairDisplayBold(size: 22))
                 .foregroundColor(.primary)
                 .padding(.horizontal)
             
@@ -251,6 +251,9 @@ struct WeatherChip: View {
 }
 
 #Preview {
-    MoodSelectionScreen()
+    NavigationStack {
+        MoodSelectionScreen()
+            .environmentObject(DataManager.shared)
+    }
 }
 

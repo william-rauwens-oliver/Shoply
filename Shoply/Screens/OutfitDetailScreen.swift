@@ -47,7 +47,7 @@ struct OutfitDetailScreen: View {
                                     .foregroundColor(mood.color.opacity(0.7))
                                 
                                 Text(outfit.name)
-                                    .font(.custom("PlayfairDisplay-Bold", size: 32))
+                                    .font(.playfairDisplayBold(size: 32))
                                     .foregroundColor(.primary)
                                 
                                 Text(outfit.type.rawValue)
@@ -60,7 +60,7 @@ struct OutfitDetailScreen: View {
                         // Description
                         VStack(alignment: .leading, spacing: 15) {
                             Text("À propos de cet outfit")
-                                .font(.custom("PlayfairDisplay-Bold", size: 22))
+                                .font(.playfairDisplayBold(size: 22))
                                 .foregroundColor(.primary)
                             
                             Text(outfit.description)
@@ -73,7 +73,7 @@ struct OutfitDetailScreen: View {
                         // Composants de l'outfit
                         VStack(alignment: .leading, spacing: 20) {
                             Text("Composition")
-                                .font(.custom("PlayfairDisplay-Bold", size: 22))
+                                .font(.playfairDisplayBold(size: 22))
                                 .foregroundColor(.primary)
                             
                             OutfitComponentRow(icon: "tshirt.fill", title: "Haut", value: outfit.top)
@@ -108,7 +108,7 @@ struct OutfitDetailScreen: View {
                         // Statistiques
                         VStack(alignment: .leading, spacing: 20) {
                             Text("Caractéristiques")
-                                .font(.custom("PlayfairDisplay-Bold", size: 22))
+                                .font(.playfairDisplayBold(size: 22))
                                 .foregroundColor(.primary)
                             
                             StatCard(
@@ -130,7 +130,7 @@ struct OutfitDetailScreen: View {
                         // Compatibilité
                         VStack(alignment: .leading, spacing: 15) {
                             Text("Parfait pour")
-                                .font(.custom("PlayfairDisplay-Bold", size: 22))
+                                .font(.playfairDisplayBold(size: 22))
                                 .foregroundColor(.primary)
                             
                             HStack(spacing: 15) {
@@ -308,23 +308,13 @@ struct WeatherBadge: View {
 }
 
 #Preview {
-    OutfitDetailScreen(
-        outfit: Outfit(
-            name: "Test",
-            description: "Test description",
-            type: .casual,
-            top: "T-shirt",
-            bottom: "Jeans",
-            shoes: "Sneakers",
-            accessories: ["Montre"],
-            suitableMoods: [.energetic],
-            suitableWeather: [.sunny],
-            imageName: "test",
-            comfortLevel: 4,
-            styleLevel: 5
-        ),
-        mood: .energetic,
-        weather: .sunny
-    )
+    NavigationStack {
+        OutfitDetailScreen(
+            outfit: PreviewHelpers.sampleOutfit,
+            mood: .energetic,
+            weather: .sunny
+        )
+        .environmentObject(DataManager.shared)
+    }
 }
 

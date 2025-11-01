@@ -1,0 +1,64 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode.app
+    
+    - name: Build and test
+      run: |
+        xcodebuild clean build test \
+          -project Shoply.xcodeproj \
+          -scheme Shoply \
+          -destination 'platform=iOS Simulator,name=iPhone 15' \
+          -enableCodeCoverage YES
+    
+    - name: Generate coverage report
+      run: |
+        xcrun xcodebuild test \
+          -project Shoply.xcodeproj \
+          -scheme Shoply \
+          -destination 'platform=iOS Simulator,name=iPhone 15' \
+          -enableCodeCoverage YES \
+          | xcpretty -r junit --output test-results.xml
+
+  build:
+    name: Build for Production
+    runs-on: macos-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode.app
+    
+    - name: Build archive
+      run: |
+        xcodebuild archive \
+          -project Shoply.xcodeproj \
+          -scheme Shoply \
+          -configuration Release \
+          -archivePath build/Shoply.xcarchive
+    
+    - name: Export IPA
+      run: |
+        xcodebuild -exportArchive \
+          -archivePath build/Shoply.xcarchive \
+          -exportPath build/ \
+          -exportOptionsPlist ExportOptions.plist
+

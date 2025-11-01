@@ -89,3 +89,16 @@ func adaptiveGradient() -> some View {
     }
 }
 
+// Extension Font pour les polices PlayfairDisplay sans conflit de poids
+// Le vrai nom de la police est "Playfair Display Bold" (avec espaces)
+extension Font {
+    static func playfairDisplayBold(size: CGFloat) -> Font {
+        // Utiliser le vrai nom de la police avec espaces pour éviter les erreurs
+        return .custom("Playfair Display Bold", size: size)
+    }
+    
+    static func playfairDisplayRegular(size: CGFloat) -> Font {
+        return .custom("Playfair Display Regular", size: size)
+    }
+}
+

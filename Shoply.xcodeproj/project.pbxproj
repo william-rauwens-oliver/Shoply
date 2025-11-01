@@ -421,6 +421,10 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Shoply nécessite l'accès à la caméra pour prendre des photos de vos vêtements et créer votre garde-robe personnalisée.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Shoply utilise votre position pour récupérer automatiquement la météo locale et vous suggérer les meilleurs outfits pour la journée.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Shoply nécessite l'autorisation pour sauvegarder les photos de vos vêtements dans votre bibliothèque.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Shoply nécessite l'accès à votre bibliothèque de photos pour sélectionner des images de vos vêtements depuis votre galerie.";
 				INFOPLIST_KEY_UIAppFonts = "Fonts/PlayfairDisplay-Regular.ttf Fonts/PlayfairDisplay-Bold.ttf";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -466,6 +470,10 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Shoply nécessite l'accès à la caméra pour prendre des photos de vos vêtements et créer votre garde-robe personnalisée.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Shoply utilise votre position pour récupérer automatiquement la météo locale et vous suggérer les meilleurs outfits pour la journée.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Shoply nécessite l'autorisation pour sauvegarder les photos de vos vêtements dans votre bibliothèque.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Shoply nécessite l'accès à votre bibliothèque de photos pour sélectionner des images de vos vêtements depuis votre galerie.";
 				INFOPLIST_KEY_UIAppFonts = "Fonts/PlayfairDisplay-Regular.ttf Fonts/PlayfairDisplay-Bold.ttf";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
