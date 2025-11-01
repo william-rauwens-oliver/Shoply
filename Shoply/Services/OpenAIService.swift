@@ -14,8 +14,12 @@ import UIKit
 class OpenAIService: ObservableObject {
     static let shared = OpenAIService()
     
+    // Clé API intégrée directement dans le code
+    private let embeddedAPIKey: String? = nil
+    
     private var apiKey: String? {
-        UserDefaults.standard.string(forKey: "openai_api_key")
+        // Priorité à la clé intégrée, puis UserDefaults en fallback
+        return embeddedAPIKey ?? UserDefaults.standard.string(forKey: "openai_api_key")
     }
     
     private let baseURL = "https://api.openai.com/v1/chat/completions"
@@ -23,17 +27,26 @@ class OpenAIService: ObservableObject {
     @Published var isEnabled = false
     
     private init() {
-        // Récupérer la clé API depuis UserDefaults
+        // Charger et activer la clé API au démarrage
         reloadAPIKey()
+        
+        // Si on a une clé intégrée, l'activer automatiquement
+        if embeddedAPIKey != nil {
+            DispatchQueue.main.async {
+                self.isEnabled = true
+            }
+        }
     }
     
     // MARK: - Suggestions intelligentes
     
     /// Génère des suggestions d'outfits intelligentes via GPT avec analyse des photos
+    /// Envoie TOUTES les images et TOUTES les descriptions à ChatGPT
     func generateOutfitSuggestions(
         wardrobeItems: [WardrobeItem],
         weather: WeatherData,
-        userProfile: UserProfile
+        userProfile: UserProfile,
+        progressCallback: ((Double) async -> Void)? = nil
     ) async throws -> [String] {
         guard !wardrobeItems.isEmpty else {
             throw OpenAIError.noItems
@@ -43,11 +56,14 @@ class OpenAIService: ObservableObject {
             throw OpenAIError.apiKeyMissing
         }
         
-        // Préparer les images en base64 pour Vision API
+        // Préparer TOUTES les images en base64 pour Vision API + TOUTES les descriptions
         var imageContents: [[String: Any]] = []
         var itemsDescriptions: [String] = []
         
-        for item in wardrobeItems.prefix(20) { // Limiter à 20 items pour ne pas dépasser les limites
+        // Utiliser TOUS les items (pas de limite à 20) - Envoyer tout à ChatGPT
+        await progressCallback?(0.1) // 10% - Début de préparation
+        
+        for (index, item) in wardrobeItems.enumerated() {
             var itemDesc = "- \(item.name) | Catégorie: \(item.category.rawValue) | Couleur: \(item.color)"
             
             if let material = item.material, !material.isEmpty {
@@ -74,13 +90,22 @@ class OpenAIService: ObservableObject {
                     ])
                 }
             }
+            
+            // Mettre à jour la progression pendant la préparation (jusqu'à 40%)
+            if (index + 1) % max(1, wardrobeItems.count / 5) == 0 {
+                let progress = 0.1 + (Double(index + 1) / Double(wardrobeItems.count)) * 0.3
+                await progressCallback?(progress)
+            }
         }
+        
+        await progressCallback?(0.4) // 40% - Préparation terminée
         
         let prompt = buildPrompt(
             itemsDescriptions: itemsDescriptions,
             weather: weather,
             userProfile: userProfile,
-            hasImages: !imageContents.isEmpty
+            hasImages: !imageContents.isEmpty,
+            numberOfItems: wardrobeItems.count
         )
         
         // Construire les messages avec images si disponibles
@@ -112,7 +137,7 @@ class OpenAIService: ObservableObject {
             "messages": [
                 [
                     "role": "system",
-                    "content": "Tu es un expert en mode et stylisme. Analyse cette garde-robe et génère 5 outfits parfaitement adaptés en fonction du genre, de la météo et des vêtements disponibles."
+                    "content": "Tu es un expert en mode et stylisme. Tu dois générer des outfits adaptés au GENRE de l'utilisateur et à la MÉTÉO d'aujourd'hui. Analyse cette garde-robe et génère des outfits parfaitement adaptés."
                 ],
                 userMessage
             ],
@@ -130,12 +155,18 @@ class OpenAIService: ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
         
+        await progressCallback?(0.5) // 50% - Envoi à ChatGPT...
+        
         let (data, response) = try await URLSession.shared.data(for: request)
+        
+        await progressCallback?(0.7) // 70% - ChatGPT analyse...
         
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200 else {
             throw OpenAIError.apiError
         }
+        
+        await progressCallback?(0.8) // 80% - Parsing de la réponse
         
         let apiResponse = try JSONDecoder().decode(OpenAIResponse.self, from: data)
         
@@ -146,6 +177,8 @@ class OpenAIService: ObservableObject {
         
         // Extraire le contenu texte
         let content = choice.message.content
+        
+        await progressCallback?(0.85) // 85% - Contenu extrait
         
         // Parser les suggestions (format attendu: "Outfit X: ...")
         let suggestions = content.components(separatedBy: "\n")
@@ -167,7 +200,13 @@ class OpenAIService: ObservableObject {
             }
             .filter { !$0.isEmpty }
         
-        return suggestions.isEmpty ? [content] : suggestions
+        await progressCallback?(0.95) // 95% - Parsing terminé
+        
+        let finalSuggestions = suggestions.isEmpty ? [content] : suggestions
+        
+        await progressCallback?(1.0) // 100% - Terminé
+        
+        return finalSuggestions
     }
     
     // MARK: - Construction du prompt
@@ -176,20 +215,24 @@ class OpenAIService: ObservableObject {
         itemsDescriptions: [String],
         weather: WeatherData,
         userProfile: UserProfile,
-        hasImages: Bool
+        hasImages: Bool,
+        numberOfItems: Int
     ) -> String {
         let itemsDescription = itemsDescriptions.joined(separator: "\n")
         
+        // Calculer le nombre d'outfits possibles (selon le nombre d'articles)
+        let numberOfOutfits = min(5, max(1, numberOfItems))
+        
         var prompt = """
-        Analyse cette garde-robe et génère 5 outfits parfaitement adaptés.
+        Analyse cette garde-robe et génère \(numberOfOutfits) outfit(s) parfaitement adapté(s).
         
         PROFIL UTILISATEUR:
-        - Genre: \(userProfile.gender.rawValue)
+        - Genre: \(userProfile.gender.rawValue) (IMPORTANT: Adapte les outfits à ce genre spécifique)
         - Âge: \(userProfile.age)
         
-        CONDITIONS MÉTÉOROLOGIQUES:
-        - Température: \(Int(weather.temperature))°C
-        - Conditions: \(weather.condition.rawValue)
+        CONDITIONS MÉTÉOROLOGIQUES D'AUJOURD'HUI:
+        - Température: \(Int(weather.temperature))°C (IMPORTANT: Adapte les vêtements à cette température)
+        - Conditions: \(weather.condition.rawValue) (IMPORTANT: Prends en compte cette condition météo)
         
         GARDE-ROBE DISPONIBLE:
         \(itemsDescription)
@@ -201,13 +244,14 @@ class OpenAIService: ObservableObject {
         
         prompt += """
         
-        INSTRUCTIONS:
-        1. Génère EXACTEMENT 5 suggestions d'outfits différents et adaptés
+        INSTRUCTIONS CRITIQUES:
+        1. Génère EXACTEMENT \(numberOfOutfits) suggestion(s) d'outfit(s) différent(s) et adapté(s)
         2. Chaque outfit doit inclure: un haut (obligatoire), un bas (obligatoire), des chaussures (obligatoire), et éventuellement des accessoires
-        3. Adapte chaque outfit au genre (\(userProfile.gender.rawValue)) et à la météo (\(Int(weather.temperature))°C, \(weather.condition.rawValue))
-        4. Utilise UNIQUEMENT les vêtements listés ci-dessus
-        5. Varie les styles entre les 5 outfits (casual, smart casual, sportif, etc.)
-        6. Réponds UNIQUEMENT avec les 5 suggestions, une par ligne, format:
+        3. **ADAPTE CHAQUE OUTFIT AU GENRE** (\(userProfile.gender.rawValue)) - Les vêtements doivent être adaptés à ce genre spécifique
+        4. **ADAPTE CHAQUE OUTFIT À LA MÉTÉO** (\(Int(weather.temperature))°C, \(weather.condition.rawValue)) - Les vêtements doivent être adaptés à cette température et condition météo
+        5. Utilise UNIQUEMENT les vêtements listés ci-dessus
+        6. Si tu as peu d'articles, tu peux réutiliser certains vêtements dans différents outfits mais varie les combinaisons
+        7. Réponds UNIQUEMENT avec les \(numberOfOutfits) suggestion(s), une par ligne, format:
            Outfit 1: [nom exact du haut] + [nom exact du bas] + [nom exact des chaussures] + [accessoires optionnels]
            Outfit 2: [nom exact du haut] + [nom exact du bas] + [nom exact des chaussures] + [accessoires optionnels]
            ...
@@ -233,10 +277,10 @@ class OpenAIService: ObservableObject {
         reloadAPIKey()
     }
     
-    // Recharger la clé depuis UserDefaults
+    // Recharger la clé depuis la clé intégrée ou UserDefaults
     func reloadAPIKey() {
-        let savedKey = UserDefaults.standard.string(forKey: "openai_api_key")
-        self.isEnabled = savedKey != nil && !savedKey!.isEmpty && savedKey!.hasPrefix("sk-")
+        let keyToCheck = embeddedAPIKey ?? UserDefaults.standard.string(forKey: "openai_api_key")
+        self.isEnabled = keyToCheck != nil && !keyToCheck!.isEmpty && keyToCheck!.hasPrefix("sk-")
         self.objectWillChange.send()
     }
     
