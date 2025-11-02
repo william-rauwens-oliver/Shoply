@@ -18,9 +18,9 @@ struct ContentView: View {
             AppColors.background
                 .ignoresSafeArea()
             
-            // Contenu principal
-        HomeScreen()
-            .environmentObject(settingsManager)
+            // Contenu principal - afficher directement HomeScreen
+            HomeScreen()
+                .environmentObject(settingsManager)
         }
         .id(settingsManager.selectedLanguage) // Force le rafraîchissement quand la langue change
     }

@@ -16,7 +16,8 @@ class GeminiService: ObservableObject {
     // Clé API Gemini intégrée par défaut
     private var embeddedAPIKey = "AIzaSyBJToCQ-5iBa7-mTpkTXGjqY_ZbOeSUEaI"
     
-    private var apiKey: String? {
+    // Accesseur public pour la clé API (pour vérification dans autres services)
+    var apiKey: String? {
         // Utiliser directement la clé API intégrée (plus de OAuth)
         // L'utilisateur peut toujours remplacer par sa propre clé
         if let storedKey = UserDefaults.standard.string(forKey: "gemini_api_key"),

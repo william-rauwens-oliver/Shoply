@@ -21,44 +21,45 @@ struct HomeScreen: View {
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 24) {
+                    VStack(spacing: 0) {
                         // En-tête personnalisé avec accès au profil
                         HeaderSection(currentTime: currentTime)
-                            .padding(.top, 10)
+                            .padding(.top, 20)
+                            .padding(.bottom, 32)
                         
-                        // Carte principale - Sélection intelligente
-                        NavigationLink(destination: SmartOutfitSelectionScreen()) {
-                            SmartSelectionCard()
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        // Gestion de la garde-robe
-                        NavigationLink(destination: WardrobeManagementScreen()) {
-                            WardrobeManagementCard()
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        // Historique des outfits portés
-                        NavigationLink(destination: OutfitHistoryScreen()) {
-                            HistoryCard()
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        // Calendrier des outfits
-                        NavigationLink(destination: OutfitCalendarScreen()) {
-                            CalendarCard()
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        // Génération de recettes
-                        NavigationLink(destination: RecipeGenerationScreen()) {
-                            RecipeCard()
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                                }
-                    .padding(.horizontal)
-                    .padding(.bottom, 100) // Plus d'espace pour la bulle de chat
+                        // Grille de cartes épurées
+                        VStack(spacing: 16) {
+                            // Carte principale - Sélection intelligente (plus grande)
+                            NavigationLink(destination: SmartOutfitSelectionScreen()) {
+                                SmartSelectionCard()
                             }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            // Deux colonnes pour les cartes secondaires
+                            HStack(spacing: 16) {
+                                // Garde-robe
+                                NavigationLink(destination: WardrobeManagementScreen()) {
+                                    WardrobeManagementCard()
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                                
+                                // Historique
+                                NavigationLink(destination: OutfitHistoryScreen()) {
+                                    HistoryCard()
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                            
+                            // Calendrier (pleine largeur)
+                            NavigationLink(destination: OutfitCalendarScreen()) {
+                                CalendarCard()
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 120) // Plus d'espace pour la bulle de chat
+                    }
+                }
                 
                 // Bulle de chat flottante
                 VStack {
@@ -67,10 +68,10 @@ struct HomeScreen: View {
                         Spacer()
                         FloatingChatButton()
                             .padding(.trailing, 20)
-                            .padding(.bottom, 20)
+                            .padding(.bottom, 100) // Plus d'espace pour la navbar en bas
                     }
                 }
-                        }
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
@@ -107,27 +108,28 @@ struct HeaderSection: View {
     @StateObject private var settingsManager = AppSettingsManager.shared
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-        HStack {
-                VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
                     if let profile = dataManager.loadUserProfile(), !profile.firstName.isEmpty {
                         Text("\(LocalizedString.localized("Bonjour", for: settingsManager.selectedLanguage)) \(profile.firstName)")
-                            .font(.playfairDisplayBold(size: 32))
+                            .font(.system(size: 32, weight: .bold))
                             .foregroundColor(AppColors.primaryText)
                     } else {
-                    Text(greeting.localized)
-                        .font(.playfairDisplayBold(size: 32))
-                        .foregroundColor(AppColors.primaryText)
+                        Text(greeting.localized)
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(AppColors.primaryText)
                     }
                     
                     Text(formattedDate)
-                        .font(.system(size: 16, weight: .regular))
+                        .font(.system(size: 15, weight: .regular))
                         .foregroundColor(AppColors.secondaryText)
-            }
-            
-            Spacer()
+                }
+                
+                Spacer()
             }
         }
+        .padding(.horizontal, 20)
     }
     
     private var greeting: String {
@@ -155,160 +157,109 @@ struct HeaderSection: View {
     
     private func getLocaleId(for language: AppLanguage) -> String {
         switch language {
-        // Européennes
-        case .french: return "fr_FR"
+        // Les 10 langues les plus parlées au monde
         case .english: return "en_US"
-        case .spanish: return "es_ES"
-        case .spanishLatinAmerica: return "es_MX"
-        case .german: return "de_DE"
-        case .italian: return "it_IT"
-        case .portuguese: return "pt_PT"
-        case .portugueseBrazil: return "pt_BR"
-        case .russian: return "ru_RU"
-        case .dutch: return "nl_NL"
-        case .polish: return "pl_PL"
-        case .greek: return "el_GR"
-        case .turkish: return "tr_TR"
-        case .swedish: return "sv_SE"
-        case .norwegian, .norwegianBokmal: return "no_NO"
-        case .danish: return "da_DK"
-        case .finnish: return "fi_FI"
-        case .czech: return "cs_CZ"
-        case .hungarian: return "hu_HU"
-        case .romanian: return "ro_RO"
-        case .croatian: return "hr_HR"
-        case .bulgarian: return "bg_BG"
-        case .serbian: return "sr_RS"
-        case .slovak: return "sk_SK"
-        case .slovenian: return "sl_SI"
-        case .ukrainian: return "uk_UA"
-        case .irish: return "ga_IE"
-        case .catalan: return "ca_ES"
-        case .basque: return "eu_ES"
-        
-        // Asiatiques
         case .chineseSimplified: return "zh_Hans_CN"
-        case .chineseTraditional: return "zh_Hant_TW"
-        case .japanese: return "ja_JP"
-        case .korean: return "ko_KR"
         case .hindi: return "hi_IN"
+        case .spanish: return "es_ES"
+        case .french: return "fr_FR"
         case .arabic: return "ar_SA"
-        case .thai: return "th_TH"
-        case .vietnamese: return "vi_VN"
-        case .indonesian: return "id_ID"
-        case .malay: return "ms_MY"
         case .bengali: return "bn_BD"
-        case .tagalog: return "tl_PH"
-        case .urdu: return "ur_PK"
-        case .persian: return "fa_IR"
-        case .hebrew: return "he_IL"
-        case .tamil: return "ta_IN"
-        case .telugu: return "te_IN"
-        case .marathi: return "mr_IN"
-        case .gujarati: return "gu_IN"
-        case .kannada: return "kn_IN"
-        case .malayalam: return "ml_IN"
-        case .punjabi: return "pa_IN"
-        case .nepali: return "ne_NP"
-        case .sinhala: return "si_LK"
-        case .khmer: return "km_KH"
-        case .lao: return "lo_LA"
-        case .burmese: return "my_MM"
-        
-        // Africaines et autres
-        case .swahili: return "sw_KE"
-        case .afrikaans: return "af_ZA"
-        case .zulu: return "zu_ZA"
-        case .xhosa: return "xh_ZA"
-        case .amharic: return "am_ET"
-        case .hausa: return "ha_NG"
-        case .yoruba: return "yo_NG"
-        case .igbo: return "ig_NG"
+        case .russian: return "ru_RU"
+        case .portuguese: return "pt_PT"
+        case .indonesian: return "id_ID"
         }
     }
 }
 
-// Carte de sélection intelligente (nouvelle)
+// Carte de sélection intelligente (design épuré)
 struct SmartSelectionCard: View {
     @StateObject private var settingsManager = AppSettingsManager.shared
     
     var body: some View {
-        VStack(spacing: 20) {
-            HStack {
-                VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Sélection Intelligente".localized)
-                        .font(.playfairDisplayBold(size: 22))
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundColor(AppColors.primaryText)
 
                     Text("Météo automatique + IA".localized)
-                        .font(.system(size: 14, weight: .regular))
+                        .font(.system(size: 15, weight: .regular))
                         .foregroundColor(AppColors.secondaryText)
                 }
 
                 Spacer()
 
-                Image(systemName: "brain.head.profile")
-                    .font(.system(size: 28))
-                    .foregroundColor(AppColors.primaryText)
+                Image(systemName: "sparkles")
+                    .font(.system(size: 32, weight: .light))
+                    .foregroundColor(AppColors.primaryText.opacity(0.6))
             }
 
-            HStack {
+            HStack(spacing: 12) {
                 Image(systemName: "location.fill")
-                    .foregroundColor(AppColors.primaryText)
-                    .font(.system(size: 14))
+                    .font(.system(size: 16))
+                    .foregroundColor(AppColors.buttonPrimaryText)
+                
                 Text("Détection automatique".localized)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundColor(AppColors.buttonPrimaryText)
+                
                 Spacer()
-                Image(systemName: "arrow.right")
-                    .foregroundColor(AppColors.buttonPrimaryText)
-                    .font(.system(size: 14, weight: .semibold))
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity)
             .background(AppColors.buttonPrimary)
-            .roundedCorner(20)
+            .roundedCorner(16)
         }
-        .padding(24)
-        .cleanCard(cornerRadius: 24)
+        .padding(28)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppColors.cardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
+        }
+        .roundedCorner(20)
+        .shadow(color: AppColors.shadow.opacity(0.08), radius: 12, x: 0, y: 4)
         .id(settingsManager.selectedLanguage)
     }
 }
 
-// Carte de gestion de garde-robe
+// Carte calendrier (design épuré)
 struct CalendarCard: View {
     @StateObject private var settingsManager = AppSettingsManager.shared
     
     var body: some View {
         HStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .fill(AppColors.buttonSecondary)
-                    .frame(width: 60, height: 60)
-                
-                Image(systemName: "calendar")
-                    .font(.system(size: 28))
-                    .foregroundColor(AppColors.primaryText)
-            }
-            
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Calendrier".localized)
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundColor(AppColors.primaryText)
                 
                 Text("Planifiez vos outfits à l'avance".localized)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
             }
             
             Spacer()
             
-            Image(systemName: "chevron.right")
-                .foregroundColor(AppColors.secondaryText)
+            Image(systemName: "calendar")
+                .font(.system(size: 28, weight: .light))
+                .foregroundColor(AppColors.primaryText.opacity(0.7))
+                .frame(width: 56, height: 56)
+                .background(AppColors.buttonSecondary)
+                .clipShape(Circle())
         }
-        .padding()
-        .cleanCard(cornerRadius: 24)
-        .slideIn()
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppColors.cardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
+        }
+        .roundedCorner(18)
+        .shadow(color: AppColors.shadow.opacity(0.06), radius: 8, x: 0, y: 2)
         .id("calendar-\(settingsManager.selectedLanguage)")
     }
 }
@@ -317,83 +268,73 @@ struct WardrobeManagementCard: View {
     @StateObject private var settingsManager = AppSettingsManager.shared
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Ma Garde-robe".localized)
-                        .font(.playfairDisplayBold(size: 22))
+                    Text("Garde-robe".localized)
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(AppColors.primaryText)
 
                     Text("Ajoutez vos vêtements".localized)
-                        .font(.system(size: 14, weight: .regular))
+                        .font(.system(size: 13, weight: .regular))
                         .foregroundColor(AppColors.secondaryText)
-            }
+                }
 
                 Spacer()
 
                 Image(systemName: "tshirt.fill")
-                    .font(.system(size: 28))
-                    .foregroundColor(AppColors.primaryText)
-            }
-
-            HStack {
-                Image(systemName: "camera.fill")
-                    .foregroundColor(AppColors.secondaryText)
-                    .font(.system(size: 14))
-                Text("Prenez vos vêtements en photo".localized)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(AppColors.secondaryText)
-                Spacer()
-                Image(systemName: "arrow.right")
-                    .foregroundColor(AppColors.secondaryText)
-                    .font(.system(size: 14))
+                    .font(.system(size: 24, weight: .light))
+                    .foregroundColor(AppColors.primaryText.opacity(0.7))
             }
         }
-        .padding(24)
-        .cleanCard(cornerRadius: 24)
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 120)
+        .background(AppColors.cardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
+        }
+        .roundedCorner(18)
+        .shadow(color: AppColors.shadow.opacity(0.06), radius: 8, x: 0, y: 2)
         .id("wardrobe-\(settingsManager.selectedLanguage)")
     }
 }
 
-// Carte historique
+// Carte historique (design épuré)
 struct HistoryCard: View {
     @StateObject private var settingsManager = AppSettingsManager.shared
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Historique".localized)
-                        .font(.playfairDisplayBold(size: 22))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(AppColors.primaryText)
 
                     Text("Outfits déjà portés".localized)
-                        .font(.system(size: 14, weight: .regular))
+                        .font(.system(size: 13, weight: .regular))
                         .foregroundColor(AppColors.secondaryText)
                 }
 
                 Spacer()
 
                 Image(systemName: "clock.fill")
-                    .font(.system(size: 28))
-                    .foregroundColor(AppColors.primaryText)
-            }
-
-                HStack {
-                Image(systemName: "arrow.right")
-                    .foregroundColor(AppColors.secondaryText)
-                    .font(.system(size: 14))
-                Text("Voir l'historique complet".localized)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(AppColors.secondaryText)
-                    Spacer()
-                    Image(systemName: "arrow.right")
-                    .foregroundColor(AppColors.secondaryText)
-                    .font(.system(size: 14))
+                    .font(.system(size: 24, weight: .light))
+                    .foregroundColor(AppColors.primaryText.opacity(0.7))
             }
         }
-        .padding(24)
-        .cleanCard(cornerRadius: 24)
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 120)
+        .background(AppColors.cardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
+        }
+        .roundedCorner(18)
+        .shadow(color: AppColors.shadow.opacity(0.06), radius: 8, x: 0, y: 2)
         .id("history-\(settingsManager.selectedLanguage)")
     }
 }

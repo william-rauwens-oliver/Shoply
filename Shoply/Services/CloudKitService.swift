@@ -30,6 +30,20 @@ class CloudKitService: ObservableObject {
     
     // MARK: - Vérification du compte iCloud
     
+    func checkIfDataExists() async throws -> Bool {
+        // Vérifier si un profil utilisateur existe dans iCloud
+        let recordID = CKRecord.ID(recordName: "userProfile")
+        do {
+            let _ = try await privateDatabase.record(for: recordID)
+            return true // Des données existent
+        } catch {
+            if let ckError = error as? CKError, ckError.code == .unknownItem {
+                return false // Aucune donnée
+            }
+            throw error
+        }
+    }
+    
     func checkAccountStatus() {
         // Utiliser un timeout pour éviter que l'app reste bloquée
         container.accountStatus { [weak self] status, error in
@@ -73,29 +87,57 @@ class CloudKitService: ObservableObject {
     
     /// Sauvegarde complète de toutes les données utilisateur
     func syncAllUserData() async throws {
-        guard isSignedIn else {
-            throw CloudKitError.notSignedIn
+        // Vérifier le statut iCloud d'abord
+        await MainActor.run {
+            checkAccountStatus()
         }
         
-        syncStatus = "Synchronisation en cours...".localized
+        // Attendre un peu pour que le statut soit mis à jour
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5 secondes
         
-        // Sauvegarder le profil utilisateur
-        try await saveUserProfile()
-        
-        // Sauvegarder la garde-robe
-        try await saveWardrobe()
-        
-        // Sauvegarder les conversations IA
-        try await saveConversations()
-        
-        // Sauvegarder l'historique des outfits
-        try await saveOutfitHistory()
-        
-        // Sauvegarder les favoris
-        try await saveFavorites()
+        // Vérifier le statut de connexion iCloud
+        if !isSignedIn {
+            // Si pas connecté, essayer de vérifier à nouveau
+            await MainActor.run {
+                checkAccountStatus()
+            }
+            try await Task.sleep(nanoseconds: 500_000_000)
+            
+            // Vérifier à nouveau après le délai
+            guard isSignedIn else {
+                throw CloudKitError.notSignedIn
+            }
+        }
         
         await MainActor.run {
-            syncStatus = "Synchronisation terminée".localized
+            syncStatus = "Synchronisation en cours...".localized
+        }
+        
+        do {
+            // Sauvegarder le profil utilisateur
+            try await saveUserProfile()
+            
+            // Sauvegarder la garde-robe
+            try await saveWardrobe()
+            
+            // Sauvegarder les conversations IA
+            try await saveConversations()
+            
+            // Sauvegarder l'historique des outfits
+            try await saveOutfitHistory()
+            
+            // Sauvegarder les favoris
+            try await saveFavorites()
+            
+            await MainActor.run {
+                syncStatus = "Synchronisation terminée".localized
+            }
+            print("✅ Toutes les données ont été synchronisées avec succès dans iCloud")
+        } catch {
+            await MainActor.run {
+                syncStatus = "Erreur de synchronisation: \(error.localizedDescription)".localized
+            }
+            throw error
         }
     }
     
@@ -169,13 +211,13 @@ class CloudKitService: ObservableObject {
             let recordID = CKRecord.ID(recordName: item.id.uuidString)
             let record = CKRecord(recordType: "WardrobeItem", recordID: recordID)
             
-            record["name"] = item.name
-            record["category"] = item.category.rawValue
-            record["color"] = item.color
-            record["material"] = item.material
-            record["season"] = item.season.map { $0.rawValue }
-            record["isFavorite"] = item.isFavorite
-            record["createdAt"] = item.createdAt
+            record["name"] = item.name as CKRecordValue
+            record["category"] = item.category.rawValue as CKRecordValue
+            record["color"] = item.color as CKRecordValue
+            record["material"] = (item.material ?? "") as CKRecordValue
+            record["season"] = item.season.map { $0.rawValue } as CKRecordValue
+            record["isFavorite"] = item.isFavorite as CKRecordValue
+            record["createdAt"] = item.createdAt as CKRecordValue
             
             // Sauvegarder la photo en base64 si disponible
             if let photoURL = item.photoURL,
@@ -264,13 +306,19 @@ class CloudKitService: ObservableObject {
             let recordID = CKRecord.ID(recordName: conversation.id.uuidString)
             let record = CKRecord(recordType: "ChatConversation", recordID: recordID)
             
-            record["title"] = conversation.title
-            record["messages"] = try encodeJSON(conversation.messages)
-            record["createdAt"] = conversation.createdAt
-            record["lastMessageAt"] = conversation.lastMessageAt
-            record["aiMode"] = conversation.aiMode
+            record["title"] = conversation.title as CKRecordValue
+            record["messages"] = try encodeJSON(conversation.messages) as CKRecordValue
+            record["createdAt"] = conversation.createdAt as CKRecordValue
+            record["lastMessageAt"] = conversation.lastMessageAt as CKRecordValue
+            record["aiMode"] = conversation.aiMode as CKRecordValue
             
-            try await privateDatabase.save(record)
+            do {
+                let savedRecord = try await privateDatabase.save(record)
+                print("✅ Conversation sauvegardée: \(savedRecord.recordID)")
+            } catch {
+                print("⚠️ Erreur sauvegarde conversation \(conversation.id): \(error)")
+                // Continuer avec les autres conversations même en cas d'erreur
+            }
         }
         
         print("✅ \(conversations.count) conversations sauvegardées dans iCloud")
@@ -327,11 +375,17 @@ class CloudKitService: ObservableObject {
             let recordID = CKRecord.ID(recordName: historicalOutfit.id.uuidString)
             let record = CKRecord(recordType: "OutfitHistory", recordID: recordID)
             
-            record["outfit"] = try encodeJSON(historicalOutfit.outfit)
-            record["dateWorn"] = historicalOutfit.dateWorn
-            record["isFavorite"] = historicalOutfit.isFavorite
+            record["outfit"] = try encodeJSON(historicalOutfit.outfit) as CKRecordValue
+            record["dateWorn"] = historicalOutfit.dateWorn as CKRecordValue
+            record["isFavorite"] = historicalOutfit.isFavorite as CKRecordValue
             
-            try await privateDatabase.save(record)
+            do {
+                let savedRecord = try await privateDatabase.save(record)
+                print("✅ Outfit historique sauvegardé: \(savedRecord.recordID)")
+            } catch {
+                print("⚠️ Erreur sauvegarde outfit historique \(historicalOutfit.id): \(error)")
+                // Continuer avec les autres outfits même en cas d'erreur
+            }
         }
         
         print("✅ \(history.count) outfits historiques sauvegardés dans iCloud")
@@ -375,13 +429,23 @@ class CloudKitService: ObservableObject {
     
     private func saveFavorites() async throws {
         let favorites = DataManager.shared.getAllFavorites()
+        guard !favorites.isEmpty else {
+            print("⚠️ Aucun favori à sauvegarder")
+            return
+        }
+        
         let recordID = CKRecord.ID(recordName: "favorites")
         let record = CKRecord(recordType: "Favorites", recordID: recordID)
         
-        record["outfitIds"] = favorites.map { $0.uuidString }
+        record["outfitIds"] = favorites.map { $0.uuidString } as CKRecordValue
         
-        try await privateDatabase.save(record)
-        print("✅ Favoris sauvegardés dans iCloud")
+        do {
+            let savedRecord = try await privateDatabase.save(record)
+            print("✅ Favoris sauvegardés dans iCloud: \(savedRecord.recordID)")
+        } catch {
+            print("❌ Erreur sauvegarde favoris: \(error)")
+            throw error
+        }
     }
     
     // MARK: - Chargement complet

@@ -41,14 +41,15 @@ struct ShoplyApp: App {
         WindowGroup {
             ZStack {
                 // Fond de sécurité pour éviter écran noir
-                Color.white
+                AppColors.background
+                    .ignoresSafeArea()
                 
                 if !rgpdManager.hasConsentedToDataCollection {
                     // Afficher la vue de consentement RGPD en premier
                     PrivacyConsentView()
                         .environmentObject(rgpdManager)
                 } else if !dataManager.onboardingCompleted && !dataManager.hasCompletedOnboarding() {
-                    // Afficher l'onboarding si pas encore complété
+                    // Afficher l'onboarding si pas encore complété (sans forcer Apple Sign In)
                     OnboardingScreen()
                         .environmentObject(dataManager)
                         .onAppear {
@@ -56,6 +57,7 @@ struct ShoplyApp: App {
                             checkTutorialNeeded()
                         }
                 } else {
+                    // Afficher l'application principale
                     ContentView()
                         .environmentObject(appState)
                         .environmentObject(dataManager)

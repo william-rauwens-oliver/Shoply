@@ -15,1408 +15,2200 @@ struct LocalizedString {
         // Dictionnaire de traductions
         let translations: [String: [AppLanguage: String]] = [
             // Paramètres
-            "Paramètres": [
-                .french: "Paramètres",
+            "Paramètres": [                .french: "Paramètres",
                 .english: "Settings",
                 .spanish: "Configuración",
-                .german: "Einstellungen",
-                .italian: "Impostazioni"
+                .hindi: "Settings",
+                .chineseSimplified: "Settings",
+                .arabic: "Settings",
+                .bengali: "Settings",
+                .russian: "Settings",
+                .portuguese: "Configuración",
+                .indonesian: "Settings"
             ],
-            "Apparence": [
-                .french: "Apparence",
+            "Apparence": [                .french: "Apparence",
                 .english: "Appearance",
                 .spanish: "Apariencia",
-                .german: "Darstellung",
-                .italian: "Aspetto"
+                .hindi: "Appearance",
+                .chineseSimplified: "Appearance",
+                .arabic: "Appearance",
+                .bengali: "Appearance",
+                .russian: "Appearance",
+                .portuguese: "Apariencia",
+                .indonesian: "Appearance"
             ],
-            "Mode sombre": [
-                .french: "Mode sombre",
+            "Mode sombre": [                .french: "Mode sombre",
                 .english: "Dark mode",
                 .spanish: "Modo oscuro",
-                .german: "Dunkler Modus",
-                .italian: "Modalità scura"
+                .hindi: "Dark mode",
+                .chineseSimplified: "Dark mode",
+                .arabic: "Dark mode",
+                .bengali: "Dark mode",
+                .russian: "Dark mode",
+                .portuguese: "Modo oscuro",
+                .indonesian: "Dark mode"
             ],
-            "Clair": [
-                .french: "Clair",
+            "Clair": [                .french: "Clair",
                 .english: "Light",
                 .spanish: "Claro",
-                .german: "Hell",
-                .italian: "Chiaro"
+                .hindi: "Light",
+                .chineseSimplified: "Light",
+                .arabic: "Light",
+                .bengali: "Light",
+                .russian: "Light",
+                .portuguese: "Claro",
+                .indonesian: "Light"
             ],
-            "Sombre": [
-                .french: "Sombre",
+            "Sombre": [                .french: "Sombre",
                 .english: "Dark",
                 .spanish: "Oscuro",
-                .german: "Dunkel",
-                .italian: "Scuro"
+                .hindi: "Dark",
+                .chineseSimplified: "Dark",
+                .arabic: "Dark",
+                .bengali: "Dark",
+                .russian: "Dark",
+                .portuguese: "Oscuro",
+                .indonesian: "Dark"
             ],
-            "Système": [
-                .french: "Système",
+            "Système": [                .french: "Système",
                 .english: "System",
                 .spanish: "Sistema",
-                .german: "System",
-                .italian: "Sistema"
+                .hindi: "System",
+                .chineseSimplified: "System",
+                .arabic: "System",
+                .bengali: "System",
+                .russian: "System",
+                .portuguese: "Sistema",
+                .indonesian: "System"
             ],
-            "Langue": [
-                .french: "Langue",
+            "Langue": [                .french: "Langue",
                 .english: "Language",
                 .spanish: "Idioma",
-                .german: "Sprache",
-                .italian: "Lingua"
+                .hindi: "Language",
+                .chineseSimplified: "Language",
+                .arabic: "Language",
+                .bengali: "Language",
+                .russian: "Language",
+                .portuguese: "Idioma",
+                .indonesian: "Language"
             ],
-            "Intelligence Artificielle": [
-                .french: "Intelligence Artificielle",
+            "Intelligence Artificielle": [                .french: "Intelligence Artificielle",
                 .english: "Artificial Intelligence",
                 .spanish: "Inteligencia Artificial",
-                .german: "Künstliche Intelligenz",
-                .italian: "Intelligenza Artificiale"
+                .hindi: "Artificial Intelligence",
+                .chineseSimplified: "Artificial Intelligence",
+                .arabic: "Artificial Intelligence",
+                .bengali: "Artificial Intelligence",
+                .russian: "Artificial Intelligence",
+                .portuguese: "Inteligencia Artificial",
+                .indonesian: "Artificial Intelligence"
             ],
-            "Données utilisateur": [
-                .french: "Données utilisateur",
+            "Données utilisateur": [                .french: "Données utilisateur",
                 .english: "User Data",
                 .spanish: "Datos del usuario",
-                .german: "Benutzerdaten",
-                .italian: "Dati utente"
+                .hindi: "User Data",
+                .chineseSimplified: "User Data",
+                .arabic: "User Data",
+                .bengali: "User Data",
+                .russian: "User Data",
+                .portuguese: "Datos del usuario",
+                .indonesian: "User Data"
             ],
-            "Exporter mes données": [
-                .french: "Exporter mes données",
+            "Exporter mes données": [                .french: "Exporter mes données",
                 .english: "Export my data",
                 .spanish: "Exportar mis datos",
-                .german: "Meine Daten exportieren",
-                .italian: "Esporta i miei dati"
+                .hindi: "Export my data",
+                .chineseSimplified: "Export my data",
+                .arabic: "Export my data",
+                .bengali: "Export my data",
+                .russian: "Export my data",
+                .portuguese: "Exportar mis datos",
+                .indonesian: "Export my data"
             ],
-            "Télécharger toutes vos données au format JSON": [
-                .french: "Télécharger toutes vos données au format JSON",
+            "Télécharger toutes vos données au format JSON": [                .french: "Télécharger toutes vos données au format JSON",
                 .english: "Download all your data in JSON format",
                 .spanish: "Descargar todos sus datos en formato JSON",
-                .german: "Alle Ihre Daten im JSON-Format herunterladen",
-                .italian: "Scarica tutti i tuoi dati in formato JSON"
+                .hindi: "Download all your data in JSON format",
+                .chineseSimplified: "Download all your data in JSON format",
+                .arabic: "Download all your data in JSON format",
+                .bengali: "Download all your data in JSON format",
+                .russian: "Download all your data in JSON format",
+                .portuguese: "Descargar todos sus datos en formato JSON",
+                .indonesian: "Download all your data in JSON format"
             ],
-            "Supprimer toutes mes données": [
-                .french: "Supprimer toutes mes données",
+            "Supprimer toutes mes données": [                .french: "Supprimer toutes mes données",
                 .english: "Delete all my data",
                 .spanish: "Eliminar todos mis datos",
-                .german: "Alle meine Daten löschen",
-                .italian: "Elimina tutti i miei dati"
+                .hindi: "Delete all my data",
+                .chineseSimplified: "Delete all my data",
+                .arabic: "Delete all my data",
+                .bengali: "Delete all my data",
+                .russian: "Delete all my data",
+                .portuguese: "Eliminar todos mis datos",
+                .indonesian: "Delete all my data"
             ],
-            "Cette action est irréversible": [
-                .french: "Cette action est irréversible",
+            "Cette action est irréversible": [                .french: "Cette action est irréversible",
                 .english: "This action is irreversible",
                 .spanish: "Esta acción es irreversible",
-                .german: "Diese Aktion ist irreversibel",
-                .italian: "Questa azione è irreversibile"
+                .hindi: "This action is irreversible",
+                .chineseSimplified: "This action is irreversible",
+                .arabic: "This action is irreversible",
+                .bengali: "This action is irreversible",
+                .russian: "This action is irreversible",
+                .portuguese: "Esta acción es irreversible",
+                .indonesian: "This action is irreversible"
             ],
-            "À propos": [
-                .french: "À propos",
+            "À propos": [                .french: "À propos",
                 .english: "About",
                 .spanish: "Acerca de",
-                .german: "Über",
-                .italian: "Informazioni"
+                .hindi: "About",
+                .chineseSimplified: "About",
+                .arabic: "About",
+                .bengali: "About",
+                .russian: "About",
+                .portuguese: "Acerca de",
+                .indonesian: "About"
             ],
-            "À propos de Shoply": [
-                .french: "À propos de Shoply",
+            "À propos de Shoply": [                .french: "À propos de Shoply",
                 .english: "About Shoply",
                 .spanish: "Acerca de Shoply",
-                .german: "Über Shoply",
-                .italian: "Informazioni su Shoply"
+                .hindi: "About Shoply",
+                .chineseSimplified: "About Shoply",
+                .arabic: "About Shoply",
+                .bengali: "About Shoply",
+                .russian: "About Shoply",
+                .portuguese: "Acerca de Shoply",
+                .indonesian: "About Shoply"
             ],
-            "Version": [
-                .french: "Version",
+            "Version": [                .french: "Version",
                 .english: "Version",
                 .spanish: "Versión",
-                .german: "Version",
-                .italian: "Versione"
+                .hindi: "Version",
+                .chineseSimplified: "Version",
+                .arabic: "Version",
+                .bengali: "Version",
+                .russian: "Version",
+                .portuguese: "Versión",
+                .indonesian: "Version"
             ],
-            "Choisir le thème": [
-                .french: "Choisir le thème",
+            "Choisir le thème": [                .french: "Choisir le thème",
                 .english: "Choose theme",
                 .spanish: "Elegir tema",
-                .german: "Design wählen",
-                .italian: "Scegli tema"
+                .hindi: "Choose theme",
+                .chineseSimplified: "Choose theme",
+                .arabic: "Choose theme",
+                .bengali: "Choose theme",
+                .russian: "Choose theme",
+                .portuguese: "Elegir tema",
+                .indonesian: "Choose theme"
             ],
-            "Sélectionner la langue": [
-                .french: "Sélectionner la langue",
+            "Sélectionner la langue": [                .french: "Sélectionner la langue",
                 .english: "Select language",
                 .spanish: "Seleccionar idioma",
-                .german: "Sprache auswählen",
-                .italian: "Seleziona lingua"
+                .hindi: "Select language",
+                .chineseSimplified: "Select language",
+                .arabic: "Select language",
+                .bengali: "Select language",
+                .russian: "Select language",
+                .portuguese: "Seleccionar idioma",
+                .indonesian: "Select language"
             ],
-            "Annuler": [
-                .french: "Annuler",
+            "Annuler": [                .french: "Annuler",
                 .english: "Cancel",
                 .spanish: "Cancelar",
-                .german: "Abbrechen",
-                .italian: "Annulla"
+                .hindi: "Cancel",
+                .chineseSimplified: "Cancel",
+                .arabic: "Cancel",
+                .bengali: "Cancel",
+                .russian: "Cancel",
+                .portuguese: "Cancelar",
+                .indonesian: "Cancel"
             ],
-            "Fermer": [
-                .french: "Fermer",
+            "Fermer": [                .french: "Fermer",
                 .english: "Close",
                 .spanish: "Cerrar",
-                .german: "Schließen",
-                .italian: "Chiudi"
+                .hindi: "Close",
+                .chineseSimplified: "Close",
+                .arabic: "Close",
+                .bengali: "Close",
+                .russian: "Close",
+                .portuguese: "Cerrar",
+                .indonesian: "Close"
             ],
-            "Connectez-vous à votre compte OpenAI pour utiliser les suggestions intelligentes d'outfits basées sur vos photos.": [
-                .french: "Connectez-vous à votre compte OpenAI pour utiliser les suggestions intelligentes d'outfits basées sur vos photos.",
+            "Connectez-vous à votre compte OpenAI pour utiliser les suggestions intelligentes d'outfits basées sur vos photos.": [                .french: "Connectez-vous à votre compte OpenAI pour utiliser les suggestions intelligentes d'outfits basées sur vos photos.",
                 .english: "Connect to your OpenAI account to use intelligent outfit suggestions based on your photos.",
                 .spanish: "Conéctese a su cuenta de OpenAI para usar sugerencias inteligentes de outfits basadas en sus fotos.",
-                .german: "Verbinden Sie sich mit Ihrem OpenAI-Konto, um intelligente Outfit-Vorschläge basierend auf Ihren Fotos zu verwenden.",
-                .italian: "Connettiti al tuo account OpenAI per utilizzare suggerimenti intelligenti di outfit basati sulle tue foto."
+                .hindi: "Connect to your OpenAI account to use intelligent outfit suggestions based on your photos.",
+                .chineseSimplified: "Connect to your OpenAI account to use intelligent outfit suggestions based on your photos.",
+                .arabic: "Connect to your OpenAI account to use intelligent outfit suggestions based on your photos.",
+                .bengali: "Connect to your OpenAI account to use intelligent outfit suggestions based on your photos.",
+                .russian: "Connect to your OpenAI account to use intelligent outfit suggestions based on your photos.",
+                .portuguese: "Conéctese a su cuenta de OpenAI para usar sugerencias inteligentes de outfits basadas en sus fotos.",
+                .indonesian: "Connect to your OpenAI account to use intelligent outfit suggestions based on your photos."
             ],
-            "Connecté à ChatGPT": [
-                .french: "Connecté à ChatGPT",
+            "Connecté à ChatGPT": [                .french: "Connecté à ChatGPT",
                 .english: "Connected to ChatGPT",
                 .spanish: "Conectado a ChatGPT",
-                .german: "Mit ChatGPT verbunden",
-                .italian: "Connesso a ChatGPT"
+                .hindi: "Connected to ChatGPT",
+                .chineseSimplified: "Connected to ChatGPT",
+                .arabic: "Connected to ChatGPT",
+                .bengali: "Connected to ChatGPT",
+                .russian: "Connected to ChatGPT",
+                .portuguese: "Conectado a ChatGPT",
+                .indonesian: "Connected to ChatGPT"
             ],
-            "Déconnecter": [
-                .french: "Déconnecter",
+            "Déconnecter": [                .french: "Déconnecter",
                 .english: "Disconnect",
                 .spanish: "Desconectar",
-                .german: "Trennen",
-                .italian: "Disconnetti"
+                .hindi: "Disconnect",
+                .chineseSimplified: "Disconnect",
+                .arabic: "Disconnect",
+                .bengali: "Disconnect",
+                .russian: "Disconnect",
+                .portuguese: "Desconectar",
+                .indonesian: "Disconnect"
             ],
-            "Se connecter à ChatGPT": [
-                .french: "Se connecter à ChatGPT",
+            "Se connecter à ChatGPT": [                .french: "Se connecter à ChatGPT",
                 .english: "Connect to ChatGPT",
                 .spanish: "Conectar a ChatGPT",
-                .german: "Mit ChatGPT verbinden",
-                .italian: "Connetti a ChatGPT"
+                .hindi: "Connect to ChatGPT",
+                .chineseSimplified: "Connect to ChatGPT",
+                .arabic: "Connect to ChatGPT",
+                .bengali: "Connect to ChatGPT",
+                .russian: "Connect to ChatGPT",
+                .portuguese: "Conectar a ChatGPT",
+                .indonesian: "Connect to ChatGPT"
             ],
-            "Comment ça marche ?": [
-                .french: "Comment ça marche ?",
+            "Comment ça marche ?": [                .french: "Comment ça marche ?",
                 .english: "How does it work?",
                 .spanish: "¿Cómo funciona?",
-                .german: "Wie funktioniert es?",
-                .italian: "Come funziona?"
+                .hindi: "How does it work?",
+                .chineseSimplified: "How does it work?",
+                .arabic: "How does it work?",
+                .bengali: "How does it work?",
+                .russian: "How does it work?",
+                .portuguese: "¿Cómo funciona?",
+                .indonesian: "How does it work?"
             ],
-            "Information": [
-                .french: "Information",
+            "Information": [                .french: "Information",
                 .english: "Information",
                 .spanish: "Información",
-                .german: "Information",
-                .italian: "Informazioni"
+                .hindi: "Information",
+                .chineseSimplified: "Information",
+                .arabic: "Information",
+                .bengali: "Information",
+                .russian: "Information",
+                .portuguese: "Información",
+                .indonesian: "Information"
             ],
-            "L'utilisation de ChatGPT consomme des crédits de votre compte OpenAI. Les coûts sont généralement très faibles (quelques centimes par utilisation).": [
-                .french: "L'utilisation de ChatGPT consomme des crédits de votre compte OpenAI. Les coûts sont généralement très faibles (quelques centimes par utilisation).",
+            "L'utilisation de ChatGPT consomme des crédits de votre compte OpenAI. Les coûts sont généralement très faibles (quelques centimes par utilisation).": [                .french: "L'utilisation de ChatGPT consomme des crédits de votre compte OpenAI. Les coûts sont généralement très faibles (quelques centimes par utilisation).",
                 .english: "Using ChatGPT consumes credits from your OpenAI account. Costs are generally very low (a few cents per use).",
                 .spanish: "El uso de ChatGPT consume créditos de su cuenta de OpenAI. Los costos son generalmente muy bajos (unos centavos por uso).",
-                .german: "Die Verwendung von ChatGPT verbraucht Guthaben von Ihrem OpenAI-Konto. Die Kosten sind in der Regel sehr gering (ein paar Cent pro Nutzung).",
-                .italian: "L'uso di ChatGPT consuma crediti dal tuo account OpenAI. I costi sono generalmente molto bassi (pochi centesimi per utilizzo)."
+                .hindi: "Using ChatGPT consumes credits from your OpenAI account. Costs are generally very low (a few cents per use).",
+                .chineseSimplified: "Using ChatGPT consumes credits from your OpenAI account. Costs are generally very low (a few cents per use).",
+                .arabic: "Using ChatGPT consumes credits from your OpenAI account. Costs are generally very low (a few cents per use).",
+                .bengali: "Using ChatGPT consumes credits from your OpenAI account. Costs are generally very low (a few cents per use).",
+                .russian: "Using ChatGPT consumes credits from your OpenAI account. Costs are generally very low (a few cents per use).",
+                .portuguese: "El uso de ChatGPT consume créditos de su cuenta de OpenAI. Los costos son generalmente muy bajos (unos centavos por uso).",
+                .indonesian: "Using ChatGPT consumes credits from your OpenAI account. Costs are generally very low (a few cents per use)."
             ],
-            "Exporter les données": [
-                .french: "Exporter les données",
+            "Exporter les données": [                .french: "Exporter les données",
                 .english: "Export data",
                 .spanish: "Exportar datos",
-                .german: "Daten exportieren",
-                .italian: "Esporta dati"
+                .hindi: "Export data",
+                .chineseSimplified: "Export data",
+                .arabic: "Export data",
+                .bengali: "Export data",
+                .russian: "Export data",
+                .portuguese: "Exportar datos",
+                .indonesian: "Export data"
             ],
             // HomeScreen
-            "Shoply": [
-                .french: "Shoply",
+            "Shoply": [                .french: "Shoply",
                 .english: "Shoply",
                 .spanish: "Shoply",
-                .german: "Shoply",
-                .italian: "Shoply"
+                .hindi: "Shoply",
+                .chineseSimplified: "Shoply",
+                .arabic: "Shoply",
+                .bengali: "Shoply",
+                .russian: "Shoply",
+                .portuguese: "Shoply",
+                .indonesian: "Shoply"
             ],
-            "Bonjour": [
-                .french: "Bonjour",
+            "Bonjour": [                .french: "Bonjour",
                 .english: "Hello",
                 .spanish: "Hola",
-                .german: "Guten Tag",
-                .italian: "Ciao"
+                .hindi: "Hello",
+                .chineseSimplified: "Hello",
+                .arabic: "Hello",
+                .bengali: "Hello",
+                .russian: "Hello",
+                .portuguese: "Hola",
+                .indonesian: "Hello"
             ],
-            "Bon après-midi": [
-                .french: "Bon après-midi",
+            "Bon après-midi": [                .french: "Bon après-midi",
                 .english: "Good afternoon",
                 .spanish: "Buenas tardes",
-                .german: "Guten Nachmittag",
-                .italian: "Buon pomeriggio"
+                .hindi: "Good afternoon",
+                .chineseSimplified: "Good afternoon",
+                .arabic: "Good afternoon",
+                .bengali: "Good afternoon",
+                .russian: "Good afternoon",
+                .portuguese: "Buenas tardes",
+                .indonesian: "Good afternoon"
             ],
-            "Bonsoir": [
-                .french: "Bonsoir",
+            "Bonsoir": [                .french: "Bonsoir",
                 .english: "Good evening",
                 .spanish: "Buenas noches",
-                .german: "Guten Abend",
-                .italian: "Buona sera"
+                .hindi: "Good evening",
+                .chineseSimplified: "Good evening",
+                .arabic: "Good evening",
+                .bengali: "Good evening",
+                .russian: "Good evening",
+                .portuguese: "Buenas noches",
+                .indonesian: "Good evening"
             ],
-            "Bonne nuit": [
-                .french: "Bonne nuit",
+            "Bonne nuit": [                .french: "Bonne nuit",
                 .english: "Good night",
                 .spanish: "Buenas noches",
-                .german: "Gute Nacht",
-                .italian: "Buona notte"
+                .hindi: "Good night",
+                .chineseSimplified: "Good night",
+                .arabic: "Good night",
+                .bengali: "Good night",
+                .russian: "Good night",
+                .portuguese: "Buenas noches",
+                .indonesian: "Good night"
             ],
-            "Météo automatique + IA": [
-                .french: "Météo automatique + IA",
+            "Météo automatique + IA": [                .french: "Météo automatique + IA",
                 .english: "Automatic weather + AI",
                 .spanish: "Clima automático + IA",
-                .german: "Automatisches Wetter + KI",
-                .italian: "Metà automatico + IA"
+                .hindi: "Automatic weather + AI",
+                .chineseSimplified: "Automatic weather + AI",
+                .arabic: "Automatic weather + AI",
+                .bengali: "Automatic weather + AI",
+                .russian: "Automatic weather + AI",
+                .portuguese: "Clima automático + IA",
+                .indonesian: "Automatic weather + AI"
             ],
-            "Détection automatique": [
-                .french: "Détection automatique",
+            "Détection automatique": [                .french: "Détection automatique",
                 .english: "Automatic detection",
                 .spanish: "Detección automática",
-                .german: "Automatische Erkennung",
-                .italian: "Rilevamento automatico"
+                .hindi: "Automatic detection",
+                .chineseSimplified: "Automatic detection",
+                .arabic: "Automatic detection",
+                .bengali: "Automatic detection",
+                .russian: "Automatic detection",
+                .portuguese: "Detección automática",
+                .indonesian: "Automatic detection"
             ],
-            "Ma Garde-robe": [
-                .french: "Ma Garde-robe",
+            "Ma Garde-robe": [                .french: "Ma Garde-robe",
                 .english: "My Wardrobe",
                 .spanish: "Mi Armario",
-                .german: "Mein Kleiderschrank",
-                .italian: "Il Mio Guardaroba"
+                .hindi: "My Wardrobe",
+                .chineseSimplified: "My Wardrobe",
+                .arabic: "My Wardrobe",
+                .bengali: "My Wardrobe",
+                .russian: "My Wardrobe",
+                .portuguese: "Mi Armario",
+                .indonesian: "My Wardrobe"
             ],
-            "Prenez vos vêtements en photo": [
-                .french: "Prenez vos vêtements en photo",
+            "Prenez vos vêtements en photo": [                .french: "Prenez vos vêtements en photo",
                 .english: "Take photos of your clothes",
                 .spanish: "Toma fotos de tu ropa",
-                .german: "Mache Fotos von deiner Kleidung",
-                .italian: "Scatta foto dei tuoi vestiti"
+                .hindi: "Take photos of your clothes",
+                .chineseSimplified: "Take photos of your clothes",
+                .arabic: "Take photos of your clothes",
+                .bengali: "Take photos of your clothes",
+                .russian: "Take photos of your clothes",
+                .portuguese: "Toma fotos de tu ropa",
+                .indonesian: "Take photos of your clothes"
             ],
-            "Historique": [
-                .french: "Historique",
+            "Historique": [                .french: "Historique",
                 .english: "History",
                 .spanish: "Historial",
-                .german: "Verlauf",
-                .italian: "Cronologia"
+                .hindi: "History",
+                .chineseSimplified: "History",
+                .arabic: "History",
+                .bengali: "History",
+                .russian: "History",
+                .portuguese: "Historial",
+                .indonesian: "History"
             ],
-            "Outfits déjà portés": [
-                .french: "Outfits déjà portés",
+            "Outfits déjà portés": [                .french: "Outfits déjà portés",
                 .english: "Outfits already worn",
                 .spanish: "Outfits ya usados",
-                .german: "Bereits getragene Outfits",
-                .italian: "Outfit già indossati"
+                .hindi: "Outfits already worn",
+                .chineseSimplified: "Outfits already worn",
+                .arabic: "Outfits already worn",
+                .bengali: "Outfits already worn",
+                .russian: "Outfits already worn",
+                .portuguese: "Outfits ya usados",
+                .indonesian: "Outfits already worn"
             ],
-            "Voir l'historique complet": [
-                .french: "Voir l'historique complet",
+            "Voir l'historique complet": [                .french: "Voir l'historique complet",
                 .english: "View full history",
                 .spanish: "Ver historial completo",
-                .german: "Vollständigen Verlauf anzeigen",
-                .italian: "Vedi cronologia completa"
+                .hindi: "View full history",
+                .chineseSimplified: "View full history",
+                .arabic: "View full history",
+                .bengali: "View full history",
+                .russian: "View full history",
+                .portuguese: "Ver historial completo",
+                .indonesian: "View full history"
             ],
-            "Planifiez vos outfits à l'avance": [
-                .french: "Planifiez vos outfits à l'avance",
+            "Planifiez vos outfits à l'avance": [                .french: "Planifiez vos outfits à l'avance",
                 .english: "Plan your outfits in advance",
                 .spanish: "Planifica tus outfits con anticipación",
-                .german: "Planen Sie Ihre Outfits im Voraus",
-                .italian: "Pianifica i tuoi outfit in anticipo"
+                .hindi: "Plan your outfits in advance",
+                .chineseSimplified: "Plan your outfits in advance",
+                .arabic: "Plan your outfits in advance",
+                .bengali: "Plan your outfits in advance",
+                .russian: "Plan your outfits in advance",
+                .portuguese: "Planifica tus outfits con anticipación",
+                .indonesian: "Plan your outfits in advance"
             ],
             // ProfileScreen
-            "Profil": [
-                .french: "Profil",
+            "Profil": [                .french: "Profil",
                 .english: "Profile",
                 .spanish: "Perfil",
-                .german: "Profil",
-                .italian: "Profilo"
+                .hindi: "Profile",
+                .chineseSimplified: "Profile",
+                .arabic: "Profile",
+                .bengali: "Profile",
+                .russian: "Profile",
+                .portuguese: "Perfil",
+                .indonesian: "Profile"
             ],
-            "Prénom": [
-                .french: "Prénom",
+            "Prénom": [                .french: "Prénom",
                 .english: "First name",
                 .spanish: "Nombre",
-                .german: "Vorname",
-                .italian: "Nome"
+                .hindi: "First name",
+                .chineseSimplified: "First name",
+                .arabic: "First name",
+                .bengali: "First name",
+                .russian: "First name",
+                .portuguese: "Nombre",
+                .indonesian: "First name"
             ],
-            "Votre prénom": [
-                .french: "Votre prénom",
+            "Votre prénom": [                .french: "Votre prénom",
                 .english: "Your first name",
                 .spanish: "Tu nombre",
-                .german: "Ihr Vorname",
-                .italian: "Il tuo nome"
+                .hindi: "Your first name",
+                .chineseSimplified: "Your first name",
+                .arabic: "Your first name",
+                .bengali: "Your first name",
+                .russian: "Your first name",
+                .portuguese: "Tu nombre",
+                .indonesian: "Your first name"
             ],
-            "Âge": [
-                .french: "Âge",
+            "Âge": [                .french: "Âge",
                 .english: "Age",
                 .spanish: "Edad",
-                .german: "Alter",
-                .italian: "Età"
+                .hindi: "Age",
+                .chineseSimplified: "Age",
+                .arabic: "Age",
+                .bengali: "Age",
+                .russian: "Age",
+                .portuguese: "Edad",
+                .indonesian: "Age"
             ],
-            "ans": [
-                .french: "ans",
+            "ans": [                .french: "ans",
                 .english: "years old",
                 .spanish: "años",
-                .german: "Jahre",
-                .italian: "anni"
+                .hindi: "years old",
+                .chineseSimplified: "years old",
+                .arabic: "years old",
+                .bengali: "years old",
+                .russian: "years old",
+                .portuguese: "años",
+                .indonesian: "years old"
             ],
-            "Genre": [
-                .french: "Genre",
+            "Genre": [                .french: "Genre",
                 .english: "Gender",
                 .spanish: "Género",
-                .german: "Geschlecht",
-                .italian: "Genere"
+                .hindi: "Gender",
+                .chineseSimplified: "Gender",
+                .arabic: "Gender",
+                .bengali: "Gender",
+                .russian: "Gender",
+                .portuguese: "Género",
+                .indonesian: "Gender"
             ],
-            "Non renseigné": [
-                .french: "Non renseigné",
+            "Non renseigné": [                .french: "Non renseigné",
                 .english: "Not specified",
                 .spanish: "No especificado",
-                .german: "Nicht angegeben",
-                .italian: "Non specificato"
+                .hindi: "Not specified",
+                .chineseSimplified: "Not specified",
+                .arabic: "Not specified",
+                .bengali: "Not specified",
+                .russian: "Not specified",
+                .portuguese: "No especificado",
+                .indonesian: "Not specified"
             ],
-            "Modifier": [
-                .french: "Modifier",
+            "Modifier": [                .french: "Modifier",
                 .english: "Edit",
                 .spanish: "Editar",
-                .german: "Bearbeiten",
-                .italian: "Modifica"
+                .hindi: "Edit",
+                .chineseSimplified: "Edit",
+                .arabic: "Edit",
+                .bengali: "Edit",
+                .russian: "Edit",
+                .portuguese: "Editar",
+                .indonesian: "Edit"
             ],
-            "Enregistrer": [
-                .french: "Enregistrer",
+            "Enregistrer": [                .french: "Enregistrer",
                 .english: "Save",
                 .spanish: "Guardar",
-                .german: "Speichern",
-                .italian: "Salva"
+                .hindi: "Save",
+                .chineseSimplified: "Save",
+                .arabic: "Save",
+                .bengali: "Save",
+                .russian: "Save",
+                .portuguese: "Guardar",
+                .indonesian: "Save"
             ],
-            "Le prénom ne peut pas être vide.": [
-                .french: "Le prénom ne peut pas être vide.",
+            "Le prénom ne peut pas être vide.": [                .french: "Le prénom ne peut pas être vide.",
                 .english: "First name cannot be empty.",
                 .spanish: "El nombre no puede estar vacío.",
-                .german: "Der Vorname darf nicht leer sein.",
-                .italian: "Il nome non può essere vuoto."
+                .hindi: "First name cannot be empty.",
+                .chineseSimplified: "First name cannot be empty.",
+                .arabic: "First name cannot be empty.",
+                .bengali: "First name cannot be empty.",
+                .russian: "First name cannot be empty.",
+                .portuguese: "El nombre no puede estar vacío.",
+                .indonesian: "First name cannot be empty."
             ],
-            "Profil mis à jour avec succès.": [
-                .french: "Profil mis à jour avec succès.",
+            "Profil mis à jour avec succès.": [                .french: "Profil mis à jour avec succès.",
                 .english: "Profile updated successfully.",
                 .spanish: "Perfil actualizado exitosamente.",
-                .german: "Profil erfolgreich aktualisiert.",
-                .italian: "Profilo aggiornato con successo."
+                .hindi: "Profile updated successfully.",
+                .chineseSimplified: "Profile updated successfully.",
+                .arabic: "Profile updated successfully.",
+                .bengali: "Profile updated successfully.",
+                .russian: "Profile updated successfully.",
+                .portuguese: "Perfil actualizado exitosamente.",
+                .indonesian: "Profile updated successfully."
             ],
             // Chat AI
-            "Assistant": [
-                .french: "Assistant",
+            "Assistant": [                .french: "Assistant",
                 .english: "Assistant",
                 .spanish: "Asistente",
-                .german: "Assistent",
-                .italian: "Assistente"
+                .hindi: "Assistant",
+                .chineseSimplified: "Assistant",
+                .arabic: "Assistant",
+                .bengali: "Assistant",
+                .russian: "Assistant",
+                .portuguese: "Asistente",
+                .indonesian: "Assistant"
             ],
-            "Assistant Style": [
-                .french: "Assistant Style",
+            "Assistant Style": [                .french: "Assistant Style",
                 .english: "Style Assistant",
                 .spanish: "Asistente de Estilo",
-                .german: "Stil-Assistent",
-                .italian: "Assistente di Stile"
+                .hindi: "Style Assistant",
+                .chineseSimplified: "Style Assistant",
+                .arabic: "Style Assistant",
+                .bengali: "Style Assistant",
+                .russian: "Style Assistant",
+                .portuguese: "Asistente de Estilo",
+                .indonesian: "Style Assistant"
             ],
-            "Conseils de Style": [
-                .french: "Conseils de Style",
+            "Conseils de Style": [                .french: "Conseils de Style",
                 .english: "Style Advice",
                 .spanish: "Consejos de Estilo",
-                .german: "Stilberatung",
-                .italian: "Consigli di Stile"
+                .hindi: "Style Advice",
+                .chineseSimplified: "Style Advice",
+                .arabic: "Style Advice",
+                .bengali: "Style Advice",
+                .russian: "Style Advice",
+                .portuguese: "Consejos de Estilo",
+                .indonesian: "Style Advice"
             ],
-            "Posez-moi vos questions sur vos outfits, la météo, ou vos vêtements !": [
-                .french: "Posez-moi vos questions sur vos outfits, la météo, ou vos vêtements !",
+            "Posez-moi vos questions sur vos outfits, la météo, ou vos vêtements !": [                .french: "Posez-moi vos questions sur vos outfits, la météo, ou vos vêtements !",
                 .english: "Ask me questions about your outfits, weather, or clothes!",
                 .spanish: "¡Hazme preguntas sobre tus outfits, el clima o tu ropa!",
-                .german: "Stellen Sie mir Fragen zu Ihren Outfits, dem Wetter oder Ihrer Kleidung!",
-                .italian: "Fammi domande sui tuoi outfit, il meteo o i tuoi vestiti!"
+                .hindi: "Ask me questions about your outfits, weather, or clothes!",
+                .chineseSimplified: "Ask me questions about your outfits, weather, or clothes!",
+                .arabic: "Ask me questions about your outfits, weather, or clothes!",
+                .bengali: "Ask me questions about your outfits, weather, or clothes!",
+                .russian: "Ask me questions about your outfits, weather, or clothes!",
+                .portuguese: "¡Hazme preguntas sobre tus outfits, el clima o tu ropa!",
+                .indonesian: "Ask me questions about your outfits, weather, or clothes!"
             ],
-            "Posez votre question...": [
-                .french: "Posez votre question...",
+            "Posez votre question...": [                .french: "Posez votre question...",
                 .english: "Ask your question...",
                 .spanish: "Haz tu pregunta...",
-                .german: "Stellen Sie Ihre Frage...",
-                .italian: "Fai la tua domanda..."
+                .hindi: "Ask your question...",
+                .chineseSimplified: "Ask your question...",
+                .arabic: "Ask your question...",
+                .bengali: "Ask your question...",
+                .russian: "Ask your question...",
+                .portuguese: "Haz tu pregunta...",
+                .indonesian: "Ask your question..."
             ],
-            "L'IA réfléchit...": [
-                .french: "L'IA réfléchit...",
+            "L'IA réfléchit...": [                .french: "L'IA réfléchit...",
                 .english: "AI is thinking...",
                 .spanish: "La IA está pensando...",
-                .german: "KI denkt nach...",
-                .italian: "L'IA sta pensando..."
+                .hindi: "AI is thinking...",
+                .chineseSimplified: "AI is thinking...",
+                .arabic: "AI is thinking...",
+                .bengali: "AI is thinking...",
+                .russian: "AI is thinking...",
+                .portuguese: "La IA está pensando...",
+                .indonesian: "AI is thinking..."
             ],
-            "Je peux uniquement répondre à des questions concernant vos vêtements, outfits, la météo, le style et la mode. Posez-moi une question sur ces sujets !": [
-                .french: "Je peux uniquement répondre à des questions concernant vos vêtements, outfits, la météo, le style et la mode. Posez-moi une question sur ces sujets !",
+            "Je peux uniquement répondre à des questions concernant vos vêtements, outfits, la météo, le style et la mode. Posez-moi une question sur ces sujets !": [                .french: "Je peux uniquement répondre à des questions concernant vos vêtements, outfits, la météo, le style et la mode. Posez-moi une question sur ces sujets !",
                 .english: "I can only answer questions about your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
                 .spanish: "Solo puedo responder preguntas sobre tu ropa, outfits, clima, estilo y moda. ¡Hazme una pregunta sobre estos temas!",
-                .german: "Ich kann nur Fragen zu Ihrer Kleidung, Outfits, Wetter, Stil und Mode beantworten. Stellen Sie mir eine Frage zu diesen Themen!",
-                .italian: "Posso rispondere solo a domande sui tuoi vestiti, outfit, meteo, stile e moda. Fammi una domanda su questi argomenti!"
+                .hindi: "I can only answer questions about your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
+                .chineseSimplified: "I can only answer questions about your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
+                .arabic: "I can only answer questions about your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
+                .bengali: "I can only answer questions about your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
+                .russian: "I can only answer questions about your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
+                .portuguese: "Solo puedo responder preguntas sobre tu ropa, outfits, clima, estilo y moda. ¡Hazme una pregunta sobre estos temas!",
+                .indonesian: "I can only answer questions about your clothes, outfits, weather, style and fashion. Ask me a question about these topics!"
             ],
-            "Désolé, une erreur s'est produite. Veuillez réessayer.": [
-                .french: "Désolé, une erreur s'est produite. Veuillez réessayer.",
+            "Désolé, une erreur s'est produite. Veuillez réessayer.": [                .french: "Désolé, une erreur s'est produite. Veuillez réessayer.",
                 .english: "Sorry, an error occurred. Please try again.",
                 .spanish: "Lo siento, ocurrió un error. Por favor, inténtalo de nuevo.",
-                .german: "Entschuldigung, ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
-                .italian: "Spiacenti, si è verificato un errore. Per favore riprova."
+                .hindi: "Sorry, an error occurred. Please try again.",
+                .chineseSimplified: "Sorry, an error occurred. Please try again.",
+                .arabic: "Sorry, an error occurred. Please try again.",
+                .bengali: "Sorry, an error occurred. Please try again.",
+                .russian: "Sorry, an error occurred. Please try again.",
+                .portuguese: "Lo siento, ocurrió un error. Por favor, inténtalo de nuevo.",
+                .indonesian: "Sorry, an error occurred. Please try again."
             ],
-            "Mode IA": [
-                .french: "Mode IA",
+            "Mode IA": [                .french: "Mode IA",
                 .english: "AI Mode",
                 .spanish: "Modo IA",
-                .german: "KI-Modus",
-                .italian: "Modalità IA"
+                .hindi: "AI Mode",
+                .chineseSimplified: "AI Mode",
+                .arabic: "AI Mode",
+                .bengali: "AI Mode",
+                .russian: "AI Mode",
+                .portuguese: "Modo IA",
+                .indonesian: "AI Mode"
             ],
-            "ChatGPT": [
-                .french: "ChatGPT",
+            "ChatGPT": [                .french: "ChatGPT",
                 .english: "ChatGPT",
                 .spanish: "ChatGPT",
-                .german: "ChatGPT",
-                .italian: "ChatGPT"
+                .hindi: "ChatGPT",
+                .chineseSimplified: "ChatGPT",
+                .arabic: "ChatGPT",
+                .bengali: "ChatGPT",
+                .russian: "ChatGPT",
+                .portuguese: "ChatGPT",
+                .indonesian: "ChatGPT"
             ],
-            "IA Locale": [
-                .french: "Shoply AI",
+            "IA Locale": [                .french: "Shoply AI",
                 .english: "Shoply AI",
                 .spanish: "Shoply AI",
-                .german: "Shoply AI",
-                .italian: "Shoply AI"
+                .hindi: "Shoply AI",
+                .chineseSimplified: "Shoply AI",
+                .arabic: "Shoply AI",
+                .bengali: "Shoply AI",
+                .russian: "Shoply AI",
+                .portuguese: "Shoply AI",
+                .indonesian: "Shoply AI"
             ],
-            "Désolé, ChatGPT n'est pas disponible. Voulez-vous essayer avec l'IA locale ?": [
-                .french: "Désolé, ChatGPT n'est pas disponible. Voulez-vous essayer avec Shoply AI ?",
+            "Désolé, ChatGPT n'est pas disponible. Voulez-vous essayer avec l'IA locale ?": [                .french: "Désolé, ChatGPT n'est pas disponible. Voulez-vous essayer avec Shoply AI ?",
                 .english: "Sorry, ChatGPT is not available. Would you like to try with Shoply AI?",
                 .spanish: "Lo siento, ChatGPT no está disponible. ¿Te gustaría probar con Shoply AI?",
-                .german: "Entschuldigung, ChatGPT ist nicht verfügbar. Möchten Sie es mit Shoply AI versuchen?",
-                .italian: "Spiacenti, ChatGPT non è disponibile. Vuoi provare con Shoply AI?"
+                .hindi: "Sorry, ChatGPT is not available. Would you like to try with Shoply AI?",
+                .chineseSimplified: "Sorry, ChatGPT is not available. Would you like to try with Shoply AI?",
+                .arabic: "Sorry, ChatGPT is not available. Would you like to try with Shoply AI?",
+                .bengali: "Sorry, ChatGPT is not available. Would you like to try with Shoply AI?",
+                .russian: "Sorry, ChatGPT is not available. Would you like to try with Shoply AI?",
+                .portuguese: "Lo siento, ChatGPT no está disponible. ¿Te gustaría probar con Shoply AI?",
+                .indonesian: "Sorry, ChatGPT is not available. Would you like to try with Shoply AI?"
             ],
-            "Désolé, ChatGPT n'est pas disponible. Essayez de passer en mode IA Locale dans les paramètres en haut.": [
-                .french: "Désolé, ChatGPT n'est pas disponible. Essayez de passer en mode Shoply AI dans les paramètres en haut.",
+            "Désolé, ChatGPT n'est pas disponible. Essayez de passer en mode IA Locale dans les paramètres en haut.": [                .french: "Désolé, ChatGPT n'est pas disponible. Essayez de passer en mode Shoply AI dans les paramètres en haut.",
                 .english: "Sorry, ChatGPT is not available. Try switching to Shoply AI mode in the settings above.",
                 .spanish: "Lo siento, ChatGPT no está disponible. Intenta cambiar al modo Shoply AI en la configuración de arriba.",
-                .german: "Entschuldigung, ChatGPT ist nicht verfügbar. Versuchen Sie, in den Einstellungen oben in den Shoply AI-Modus zu wechseln.",
-                .italian: "Spiacenti, ChatGPT non è disponibile. Prova a passare alla modalità Shoply AI nelle impostazioni in alto."
+                .hindi: "Sorry, ChatGPT is not available. Try switching to Shoply AI mode in the settings above.",
+                .chineseSimplified: "Sorry, ChatGPT is not available. Try switching to Shoply AI mode in the settings above.",
+                .arabic: "Sorry, ChatGPT is not available. Try switching to Shoply AI mode in the settings above.",
+                .bengali: "Sorry, ChatGPT is not available. Try switching to Shoply AI mode in the settings above.",
+                .russian: "Sorry, ChatGPT is not available. Try switching to Shoply AI mode in the settings above.",
+                .portuguese: "Lo siento, ChatGPT no está disponible. Intenta cambiar al modo Shoply AI en la configuración de arriba.",
+                .indonesian: "Sorry, ChatGPT is not available. Try switching to Shoply AI mode in the settings above."
             ],
-            "Je peux vous aider avec des conseils sur vos vêtements, outfits, la météo, le style et la mode. Posez-moi une question sur ces sujets !": [
-                .french: "Je peux vous aider avec des conseils sur vos vêtements, outfits, la météo, le style et la mode. Posez-moi une question sur ces sujets !",
+            "Je peux vous aider avec des conseils sur vos vêtements, outfits, la météo, le style et la mode. Posez-moi une question sur ces sujets !": [                .french: "Je peux vous aider avec des conseils sur vos vêtements, outfits, la météo, le style et la mode. Posez-moi une question sur ces sujets !",
                 .english: "I can help you with advice on your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
                 .spanish: "Puedo ayudarte con consejos sobre tu ropa, outfits, clima, estilo y moda. ¡Hazme una pregunta sobre estos temas!",
-                .german: "Ich kann Ihnen mit Ratschlägen zu Ihrer Kleidung, Outfits, Wetter, Stil und Mode helfen. Stellen Sie mir eine Frage zu diesen Themen!",
-                .italian: "Posso aiutarti con consigli sui tuoi vestiti, outfit, meteo, stile e moda. Fammi una domanda su questi argomenti!"
+                .hindi: "I can help you with advice on your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
+                .chineseSimplified: "I can help you with advice on your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
+                .arabic: "I can help you with advice on your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
+                .bengali: "I can help you with advice on your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
+                .russian: "I can help you with advice on your clothes, outfits, weather, style and fashion. Ask me a question about these topics!",
+                .portuguese: "Puedo ayudarte con consejos sobre tu ropa, outfits, clima, estilo y moda. ¡Hazme una pregunta sobre estos temas!",
+                .indonesian: "I can help you with advice on your clothes, outfits, weather, style and fashion. Ask me a question about these topics!"
             ],
-            "Salut ! Je suis là pour vous aider avec vos questions sur la mode, les outfits et les vêtements. Que souhaitez-vous savoir ?": [
-                .french: "Salut ! Je suis là pour vous aider avec vos questions sur la mode, les outfits et les vêtements. Que souhaitez-vous savoir ?",
+            "Salut ! Je suis là pour vous aider avec vos questions sur la mode, les outfits et les vêtements. Que souhaitez-vous savoir ?": [                .french: "Salut ! Je suis là pour vous aider avec vos questions sur la mode, les outfits et les vêtements. Que souhaitez-vous savoir ?",
                 .english: "Hi! I'm here to help you with your questions about fashion, outfits and clothes. What would you like to know?",
                 .spanish: "¡Hola! Estoy aquí para ayudarte con tus preguntas sobre moda, outfits y ropa. ¿Qué te gustaría saber?",
-                .german: "Hallo! Ich bin hier, um Ihnen bei Ihren Fragen zu Mode, Outfits und Kleidung zu helfen. Was möchten Sie wissen?",
-                .italian: "Ciao! Sono qui per aiutarti con le tue domande su moda, outfit e vestiti. Cosa vorresti sapere?"
+                .hindi: "Hi! I'm here to help you with your questions about fashion, outfits and clothes. What would you like to know?",
+                .chineseSimplified: "Hi! I'm here to help you with your questions about fashion, outfits and clothes. What would you like to know?",
+                .arabic: "Hi! I'm here to help you with your questions about fashion, outfits and clothes. What would you like to know?",
+                .bengali: "Hi! I'm here to help you with your questions about fashion, outfits and clothes. What would you like to know?",
+                .russian: "Hi! I'm here to help you with your questions about fashion, outfits and clothes. What would you like to know?",
+                .portuguese: "¡Hola! Estoy aquí para ayudarte con tus preguntas sobre moda, outfits y ropa. ¿Qué te gustaría saber?",
+                .indonesian: "Hi! I'm here to help you with your questions about fashion, outfits and clothes. What would you like to know?"
             ],
-            "Conversations": [
-                .french: "Conversations",
+            "Conversations": [                .french: "Conversations",
                 .english: "Conversations",
                 .spanish: "Conversaciones",
-                .german: "Unterhaltungen",
-                .italian: "Conversazioni"
+                .hindi: "Conversations",
+                .chineseSimplified: "Conversations",
+                .arabic: "Conversations",
+                .bengali: "Conversations",
+                .russian: "Conversations",
+                .portuguese: "Conversaciones",
+                .indonesian: "Conversations"
             ],
-            "Aucune conversation": [
-                .french: "Aucune conversation",
+            "Aucune conversation": [                .french: "Aucune conversation",
                 .english: "No conversations",
                 .spanish: "Sin conversaciones",
-                .german: "Keine Unterhaltungen",
-                .italian: "Nessuna conversazione"
+                .hindi: "No conversations",
+                .chineseSimplified: "No conversations",
+                .arabic: "No conversations",
+                .bengali: "No conversations",
+                .russian: "No conversations",
+                .portuguese: "Sin conversaciones",
+                .indonesian: "No conversations"
             ],
-            "Démarrrez une nouvelle conversation pour obtenir des conseils de style !": [
-                .french: "Démarrrez une nouvelle conversation pour obtenir des conseils de style !",
+            "Démarrrez une nouvelle conversation pour obtenir des conseils de style !": [                .french: "Démarrrez une nouvelle conversation pour obtenir des conseils de style !",
                 .english: "Start a new conversation to get style advice!",
                 .spanish: "¡Inicia una nueva conversación para obtener consejos de estilo!",
-                .german: "Starten Sie eine neue Unterhaltung, um Stilberatung zu erhalten!",
-                .italian: "Inizia una nuova conversazione per ricevere consigli di stile!"
+                .hindi: "Start a new conversation to get style advice!",
+                .chineseSimplified: "Start a new conversation to get style advice!",
+                .arabic: "Start a new conversation to get style advice!",
+                .bengali: "Start a new conversation to get style advice!",
+                .russian: "Start a new conversation to get style advice!",
+                .portuguese: "¡Inicia una nueva conversación para obtener consejos de estilo!",
+                .indonesian: "Start a new conversation to get style advice!"
             ],
-            "Nouvelle conversation": [
-                .french: "Nouvelle conversation",
+            "Nouvelle conversation": [                .french: "Nouvelle conversation",
                 .english: "New conversation",
                 .spanish: "Nueva conversación",
-                .german: "Neue Unterhaltung",
-                .italian: "Nuova conversazione"
+                .hindi: "New conversation",
+                .chineseSimplified: "New conversation",
+                .arabic: "New conversation",
+                .bengali: "New conversation",
+                .russian: "New conversation",
+                .portuguese: "Nueva conversación",
+                .indonesian: "New conversation"
             ],
-            "Historique des conversations": [
-                .french: "Historique",
+            "Historique des conversations": [                .french: "Historique",
                 .english: "History",
                 .spanish: "Historial",
-                .german: "Verlauf",
-                .italian: "Cronologia"
+                .hindi: "History",
+                .chineseSimplified: "History",
+                .arabic: "History",
+                .bengali: "History",
+                .russian: "History",
+                .portuguese: "Historial",
+                .indonesian: "History"
             ],
-            "Fournisseur IA": [
-                .french: "Fournisseur IA",
+            "Fournisseur IA": [                .french: "Fournisseur IA",
                 .english: "AI Provider",
                 .spanish: "Proveedor IA",
-                .german: "KI-Anbieter",
-                .italian: "Fornitore IA"
+                .hindi: "AI Provider",
+                .chineseSimplified: "AI Provider",
+                .arabic: "AI Provider",
+                .bengali: "AI Provider",
+                .russian: "AI Provider",
+                .portuguese: "Proveedor IA",
+                .indonesian: "AI Provider"
             ],
-            "Google Gemini": [
-                .french: "Google Gemini",
+            "Google Gemini": [                .french: "Google Gemini",
                 .english: "Google Gemini",
                 .spanish: "Google Gemini",
-                .german: "Google Gemini",
-                .italian: "Google Gemini"
+                .hindi: "Google Gemini",
+                .chineseSimplified: "Google Gemini",
+                .arabic: "Google Gemini",
+                .bengali: "Google Gemini",
+                .russian: "Google Gemini",
+                .portuguese: "Google Gemini",
+                .indonesian: "Google Gemini"
             ],
-            "Connectez-vous à Google Gemini pour utiliser les suggestions intelligentes d'outfits basées sur vos photos.": [
-                .french: "Connectez-vous à Google Gemini pour utiliser les suggestions intelligentes d'outfits basées sur vos photos.",
+            "Connectez-vous à Google Gemini pour utiliser les suggestions intelligentes d'outfits basées sur vos photos.": [                .french: "Connectez-vous à Google Gemini pour utiliser les suggestions intelligentes d'outfits basées sur vos photos.",
                 .english: "Connect to Google Gemini to use intelligent outfit suggestions based on your photos.",
                 .spanish: "Conéctate a Google Gemini para usar sugerencias inteligentes de outfits basadas en tus fotos.",
-                .german: "Verbinden Sie sich mit Google Gemini, um intelligente Outfit-Vorschläge basierend auf Ihren Fotos zu verwenden.",
-                .italian: "Connettiti a Google Gemini per utilizzare suggerimenti intelligenti di outfit basati sulle tue foto."
+                .hindi: "Connect to Google Gemini to use intelligent outfit suggestions based on your photos.",
+                .chineseSimplified: "Connect to Google Gemini to use intelligent outfit suggestions based on your photos.",
+                .arabic: "Connect to Google Gemini to use intelligent outfit suggestions based on your photos.",
+                .bengali: "Connect to Google Gemini to use intelligent outfit suggestions based on your photos.",
+                .russian: "Connect to Google Gemini to use intelligent outfit suggestions based on your photos.",
+                .portuguese: "Conéctate a Google Gemini para usar sugerencias inteligentes de outfits basadas en tus fotos.",
+                .indonesian: "Connect to Google Gemini to use intelligent outfit suggestions based on your photos."
             ],
-            "Configurer Gemini": [
-                .french: "Configurer Gemini",
+            "Configurer Gemini": [                .french: "Configurer Gemini",
                 .english: "Configure Gemini",
                 .spanish: "Configurar Gemini",
-                .german: "Gemini konfigurieren",
-                .italian: "Configura Gemini"
+                .hindi: "Configure Gemini",
+                .chineseSimplified: "Configure Gemini",
+                .arabic: "Configure Gemini",
+                .bengali: "Configure Gemini",
+                .russian: "Configure Gemini",
+                .portuguese: "Configurar Gemini",
+                .indonesian: "Configure Gemini"
             ],
-            "Connecté à Gemini": [
-                .french: "Connecté à Gemini",
+            "Connecté à Gemini": [                .french: "Connecté à Gemini",
                 .english: "Connected to Gemini",
                 .spanish: "Conectado a Gemini",
-                .german: "Mit Gemini verbunden",
-                .italian: "Connesso a Gemini"
+                .hindi: "Connected to Gemini",
+                .chineseSimplified: "Connected to Gemini",
+                .arabic: "Connected to Gemini",
+                .bengali: "Connected to Gemini",
+                .russian: "Connected to Gemini",
+                .portuguese: "Conectado a Gemini",
+                .indonesian: "Connected to Gemini"
             ],
-            "Clé API Gemini": [
-                .french: "Clé API Gemini",
+            "Clé API Gemini": [                .french: "Clé API Gemini",
                 .english: "Gemini API Key",
                 .spanish: "Clave API Gemini",
-                .german: "Gemini API-Schlüssel",
-                .italian: "Chiave API Gemini"
+                .hindi: "Gemini API Key",
+                .chineseSimplified: "Gemini API Key",
+                .arabic: "Gemini API Key",
+                .bengali: "Gemini API Key",
+                .russian: "Gemini API Key",
+                .portuguese: "Clave API Gemini",
+                .indonesian: "Gemini API Key"
             ],
-            "Entrez votre clé API Google Gemini": [
-                .french: "Entrez votre clé API Google Gemini",
+            "Entrez votre clé API Google Gemini": [                .french: "Entrez votre clé API Google Gemini",
                 .english: "Enter your Google Gemini API key",
                 .spanish: "Ingresa tu clave API de Google Gemini",
-                .german: "Geben Sie Ihren Google Gemini API-Schlüssel ein",
-                .italian: "Inserisci la tua chiave API Google Gemini"
+                .hindi: "Enter your Google Gemini API key",
+                .chineseSimplified: "Enter your Google Gemini API key",
+                .arabic: "Enter your Google Gemini API key",
+                .bengali: "Enter your Google Gemini API key",
+                .russian: "Enter your Google Gemini API key",
+                .portuguese: "Ingresa tu clave API de Google Gemini",
+                .indonesian: "Enter your Google Gemini API key"
             ],
-            "Vous pouvez obtenir votre clé API sur : https://makersuite.google.com/app/apikey": [
-                .french: "Vous pouvez obtenir votre clé API sur : https://makersuite.google.com/app/apikey",
+            "Vous pouvez obtenir votre clé API sur : https://makersuite.google.com/app/apikey": [                .french: "Vous pouvez obtenir votre clé API sur : https://makersuite.google.com/app/apikey",
                 .english: "You can get your API key at: https://makersuite.google.com/app/apikey",
                 .spanish: "Puedes obtener tu clave API en: https://makersuite.google.com/app/apikey",
-                .german: "Sie können Ihren API-Schlüssel unter erhalten: https://makersuite.google.com/app/apikey",
-                .italian: "Puoi ottenere la tua chiave API su: https://makersuite.google.com/app/apikey"
+                .hindi: "You can get your API key at: https://makersuite.google.com/app/apikey",
+                .chineseSimplified: "You can get your API key at: https://makersuite.google.com/app/apikey",
+                .arabic: "You can get your API key at: https://makersuite.google.com/app/apikey",
+                .bengali: "You can get your API key at: https://makersuite.google.com/app/apikey",
+                .russian: "You can get your API key at: https://makersuite.google.com/app/apikey",
+                .portuguese: "Puedes obtener tu clave API en: https://makersuite.google.com/app/apikey",
+                .indonesian: "You can get your API key at: https://makersuite.google.com/app/apikey"
             ],
-            "Votre clé API Gemini": [
-                .french: "Votre clé API Gemini",
+            "Votre clé API Gemini": [                .french: "Votre clé API Gemini",
                 .english: "Your Gemini API key",
                 .spanish: "Tu clave API Gemini",
-                .german: "Ihr Gemini API-Schlüssel",
-                .italian: "La tua chiave API Gemini"
+                .hindi: "Your Gemini API key",
+                .chineseSimplified: "Your Gemini API key",
+                .arabic: "Your Gemini API key",
+                .bengali: "Your Gemini API key",
+                .russian: "Your Gemini API key",
+                .portuguese: "Tu clave API Gemini",
+                .indonesian: "Your Gemini API key"
             ],
-            "⚠️ Gemini n'est pas disponible. Utilisation de Shoply AI à la place.": [
-                .french: "⚠️ Gemini n'est pas disponible. Utilisation de Shoply AI à la place.",
+            "⚠️ Gemini n'est pas disponible. Utilisation de Shoply AI à la place.": [                .french: "⚠️ Gemini n'est pas disponible. Utilisation de Shoply AI à la place.",
                 .english: "⚠️ Gemini is not available. Using Shoply AI instead.",
                 .spanish: "⚠️ Gemini no está disponible. Usando Shoply AI en su lugar.",
-                .german: "⚠️ Gemini ist nicht verfügbar. Verwenden von Shoply AI stattdessen.",
-                .italian: "⚠️ Gemini non è disponibile. Utilizzo di Shoply AI invece."
+                .hindi: "⚠️ Gemini is not available. Using Shoply AI instead.",
+                .chineseSimplified: "⚠️ Gemini is not available. Using Shoply AI instead.",
+                .arabic: "⚠️ Gemini is not available. Using Shoply AI instead.",
+                .bengali: "⚠️ Gemini is not available. Using Shoply AI instead.",
+                .russian: "⚠️ Gemini is not available. Using Shoply AI instead.",
+                .portuguese: "⚠️ Gemini no está disponible. Usando Shoply AI en su lugar.",
+                .indonesian: "⚠️ Gemini is not available. Using Shoply AI instead."
             ],
-            "⚠️ ChatGPT n'est pas disponible. Utilisation de Shoply AI à la place.": [
-                .french: "⚠️ ChatGPT n'est pas disponible. Utilisation de Shoply AI à la place.",
+            "⚠️ ChatGPT n'est pas disponible. Utilisation de Shoply AI à la place.": [                .french: "⚠️ ChatGPT n'est pas disponible. Utilisation de Shoply AI à la place.",
                 .english: "⚠️ ChatGPT is not available. Using Shoply AI instead.",
                 .spanish: "⚠️ ChatGPT no está disponible. Usando Shoply AI en su lugar.",
-                .german: "⚠️ ChatGPT ist nicht verfügbar. Verwenden von Shoply AI stattdessen.",
-                .italian: "⚠️ ChatGPT non è disponibile. Utilizzo di Shoply AI invece."
+                .hindi: "⚠️ ChatGPT is not available. Using Shoply AI instead.",
+                .chineseSimplified: "⚠️ ChatGPT is not available. Using Shoply AI instead.",
+                .arabic: "⚠️ ChatGPT is not available. Using Shoply AI instead.",
+                .bengali: "⚠️ ChatGPT is not available. Using Shoply AI instead.",
+                .russian: "⚠️ ChatGPT is not available. Using Shoply AI instead.",
+                .portuguese: "⚠️ ChatGPT no está disponible. Usando Shoply AI en su lugar.",
+                .indonesian: "⚠️ ChatGPT is not available. Using Shoply AI instead."
             ],
-            "⚠️ Aucun service IA avancé disponible. Utilisation de Shoply AI.": [
-                .french: "⚠️ Aucun service IA avancé disponible. Utilisation de Shoply AI.",
+            "⚠️ Aucun service IA avancé disponible. Utilisation de Shoply AI.": [                .french: "⚠️ Aucun service IA avancé disponible. Utilisation de Shoply AI.",
                 .english: "⚠️ No advanced AI service available. Using Shoply AI.",
                 .spanish: "⚠️ No hay servicio de IA avanzado disponible. Usando Shoply AI.",
-                .german: "⚠️ Kein erweiteter KI-Service verfügbar. Verwenden von Shoply AI.",
-                .italian: "⚠️ Nessun servizio IA avanzato disponibile. Utilizzo di Shoply AI."
+                .hindi: "⚠️ No advanced AI service available. Using Shoply AI.",
+                .chineseSimplified: "⚠️ No advanced AI service available. Using Shoply AI.",
+                .arabic: "⚠️ No advanced AI service available. Using Shoply AI.",
+                .bengali: "⚠️ No advanced AI service available. Using Shoply AI.",
+                .russian: "⚠️ No advanced AI service available. Using Shoply AI.",
+                .portuguese: "⚠️ No hay servicio de IA avanzado disponible. Usando Shoply AI.",
+                .indonesian: "⚠️ No advanced AI service available. Using Shoply AI."
             ],
-            "Se connecter avec OpenAI": [
-                .french: "Se connecter avec OpenAI",
+            "Se connecter avec OpenAI": [                .french: "Se connecter avec OpenAI",
                 .english: "Sign in with OpenAI",
                 .spanish: "Iniciar sesión con OpenAI",
-                .german: "Mit OpenAI anmelden",
-                .italian: "Accedi con OpenAI"
+                .hindi: "Sign in with OpenAI",
+                .chineseSimplified: "Sign in with OpenAI",
+                .arabic: "Sign in with OpenAI",
+                .bengali: "Sign in with OpenAI",
+                .russian: "Sign in with OpenAI",
+                .portuguese: "Iniciar sesión con OpenAI",
+                .indonesian: "Sign in with OpenAI"
             ],
-            "Se connecter avec Google": [
-                .french: "Se connecter avec Google",
+            "Se connecter avec Google": [                .french: "Se connecter avec Google",
                 .english: "Sign in with Google",
                 .spanish: "Iniciar sesión con Google",
-                .german: "Mit Google anmelden",
-                .italian: "Accedi con Google"
+                .hindi: "Sign in with Google",
+                .chineseSimplified: "Sign in with Google",
+                .arabic: "Sign in with Google",
+                .bengali: "Sign in with Google",
+                .russian: "Sign in with Google",
+                .portuguese: "Iniciar sesión con Google",
+                .indonesian: "Sign in with Google"
             ],
-            "Utiliser votre compte OpenAI (avec quota)": [
-                .french: "Utiliser votre compte OpenAI (avec quota)",
+            "Utiliser votre compte OpenAI (avec quota)": [                .french: "Utiliser votre compte OpenAI (avec quota)",
                 .english: "Use your OpenAI account (with quota)",
                 .spanish: "Usar tu cuenta de OpenAI (con cuota)",
-                .german: "Verwenden Sie Ihr OpenAI-Konto (mit Kontingent)",
-                .italian: "Usa il tuo account OpenAI (con quota)"
+                .hindi: "Use your OpenAI account (with quota)",
+                .chineseSimplified: "Use your OpenAI account (with quota)",
+                .arabic: "Use your OpenAI account (with quota)",
+                .bengali: "Use your OpenAI account (with quota)",
+                .russian: "Use your OpenAI account (with quota)",
+                .portuguese: "Usar tu cuenta de OpenAI (con cuota)",
+                .indonesian: "Use your OpenAI account (with quota)"
             ],
-            "Utiliser votre compte Google (avec quota)": [
-                .french: "Utiliser votre compte Google (avec quota)",
+            "Utiliser votre compte Google (avec quota)": [                .french: "Utiliser votre compte Google (avec quota)",
                 .english: "Use your Google account (with quota)",
                 .spanish: "Usar tu cuenta de Google (con cuota)",
-                .german: "Verwenden Sie Ihr Google-Konto (mit Kontingent)",
-                .italian: "Usa il tuo account Google (con quota)"
+                .hindi: "Use your Google account (with quota)",
+                .chineseSimplified: "Use your Google account (with quota)",
+                .arabic: "Use your Google account (with quota)",
+                .bengali: "Use your Google account (with quota)",
+                .russian: "Use your Google account (with quota)",
+                .portuguese: "Usar tu cuenta de Google (con cuota)",
+                .indonesian: "Use your Google account (with quota)"
             ],
-            "OU": [
-                .french: "OU",
+            "OU": [                .french: "OU",
                 .english: "OR",
                 .spanish: "O",
-                .german: "ODER",
-                .italian: "OPPURE"
+                .hindi: "OR",
+                .chineseSimplified: "OR",
+                .arabic: "OR",
+                .bengali: "OR",
+                .russian: "OR",
+                .portuguese: "O",
+                .indonesian: "OR"
             ],
-            "Utiliser une clé API": [
-                .french: "Utiliser une clé API",
+            "Utiliser une clé API": [                .french: "Utiliser une clé API",
                 .english: "Use an API key",
                 .spanish: "Usar una clave API",
-                .german: "API-Schlüssel verwenden",
-                .italian: "Usa una chiave API"
+                .hindi: "Use an API key",
+                .chineseSimplified: "Use an API key",
+                .arabic: "Use an API key",
+                .bengali: "Use an API key",
+                .russian: "Use an API key",
+                .portuguese: "Usar una clave API",
+                .indonesian: "Use an API key"
             ],
-            "Entrer une clé API": [
-                .french: "Entrer une clé API",
+            "Entrer une clé API": [                .french: "Entrer une clé API",
                 .english: "Enter an API key",
                 .spanish: "Ingresar una clave API",
-                .german: "API-Schlüssel eingeben",
-                .italian: "Inserisci una chiave API"
+                .hindi: "Enter an API key",
+                .chineseSimplified: "Enter an API key",
+                .arabic: "Enter an API key",
+                .bengali: "Enter an API key",
+                .russian: "Enter an API key",
+                .portuguese: "Ingresar una clave API",
+                .indonesian: "Enter an API key"
             ],
-            "Authentification réussie !": [
-                .french: "Authentification réussie !",
+            "Authentification réussie !": [                .french: "Authentification réussie !",
                 .english: "Authentication successful!",
                 .spanish: "¡Autenticación exitosa!",
-                .german: "Authentifizierung erfolgreich!",
-                .italian: "Autenticazione riuscita!"
+                .hindi: "Authentication successful!",
+                .chineseSimplified: "Authentication successful!",
+                .arabic: "Authentication successful!",
+                .bengali: "Authentication successful!",
+                .russian: "Authentication successful!",
+                .portuguese: "¡Autenticación exitosa!",
+                .indonesian: "Authentication successful!"
             ],
-            "Supprimer toutes les conversations": [
-                .french: "Supprimer toutes les conversations",
+            "Supprimer toutes les conversations": [                .french: "Supprimer toutes les conversations",
                 .english: "Delete all conversations",
                 .spanish: "Eliminar todas las conversaciones",
-                .german: "Alle Gespräche löschen",
-                .italian: "Elimina tutte le conversazioni"
+                .hindi: "Delete all conversations",
+                .chineseSimplified: "Delete all conversations",
+                .arabic: "Delete all conversations",
+                .bengali: "Delete all conversations",
+                .russian: "Delete all conversations",
+                .portuguese: "Eliminar todas las conversaciones",
+                .indonesian: "Delete all conversations"
             ],
-            "Supprimer toutes les conversations ?": [
-                .french: "Supprimer toutes les conversations ?",
+            "Supprimer toutes les conversations ?": [                .french: "Supprimer toutes les conversations ?",
                 .english: "Delete all conversations?",
                 .spanish: "¿Eliminar todas las conversaciones?",
-                .german: "Alle Gespräche löschen?",
-                .italian: "Eliminare tutte le conversazioni?"
+                .hindi: "Delete all conversations?",
+                .chineseSimplified: "Delete all conversations?",
+                .arabic: "Delete all conversations?",
+                .bengali: "Delete all conversations?",
+                .russian: "Delete all conversations?",
+                .portuguese: "¿Eliminar todas las conversaciones?",
+                .indonesian: "Delete all conversations?"
             ],
-            "Cette action est irréversible.": [
-                .french: "Cette action est irréversible.",
+            "Cette action est irréversible.": [                .french: "Cette action est irréversible.",
                 .english: "This action is irreversible.",
                 .spanish: "Esta acción es irreversible.",
-                .german: "Diese Aktion ist unwiderruflich.",
-                .italian: "Questa azione è irreversibile."
+                .hindi: "This action is irreversible.",
+                .chineseSimplified: "This action is irreversible.",
+                .arabic: "This action is irreversible.",
+                .bengali: "This action is irreversible.",
+                .russian: "This action is irreversible.",
+                .portuguese: "Esta acción es irreversible.",
+                .indonesian: "This action is irreversible."
             ],
-            "Synchronisation iCloud": [
-                .french: "Synchronisation iCloud",
+            "Synchronisation iCloud": [                .french: "Synchronisation iCloud",
                 .english: "iCloud Sync",
                 .spanish: "Sincronización iCloud",
-                .german: "iCloud-Synchronisation",
-                .italian: "Sincronizzazione iCloud"
+                .hindi: "iCloud Sync",
+                .chineseSimplified: "iCloud Sync",
+                .arabic: "iCloud Sync",
+                .bengali: "iCloud Sync",
+                .russian: "iCloud Sync",
+                .portuguese: "Sincronización iCloud",
+                .indonesian: "iCloud Sync"
             ],
-            "Sauvegarde iCloud": [
-                .french: "Sauvegarde iCloud",
+            "Sauvegarde iCloud": [                .french: "Sauvegarde iCloud",
                 .english: "iCloud Backup",
                 .spanish: "Copia de seguridad iCloud",
-                .german: "iCloud-Sicherung",
-                .italian: "Backup iCloud"
+                .hindi: "iCloud Backup",
+                .chineseSimplified: "iCloud Backup",
+                .arabic: "iCloud Backup",
+                .bengali: "iCloud Backup",
+                .russian: "iCloud Backup",
+                .portuguese: "Copia de seguridad iCloud",
+                .indonesian: "iCloud Backup"
             ],
-            "Vos données sont synchronisées avec iCloud": [
-                .french: "Vos données sont synchronisées avec iCloud",
+            "Vos données sont synchronisées avec iCloud": [                .french: "Vos données sont synchronisées avec iCloud",
                 .english: "Your data is synced with iCloud",
                 .spanish: "Tus datos están sincronizados con iCloud",
-                .german: "Ihre Daten sind mit iCloud synchronisiert",
-                .italian: "I tuoi dati sono sincronizzati con iCloud"
+                .hindi: "Your data is synced with iCloud",
+                .chineseSimplified: "Your data is synced with iCloud",
+                .arabic: "Your data is synced with iCloud",
+                .bengali: "Your data is synced with iCloud",
+                .russian: "Your data is synced with iCloud",
+                .portuguese: "Tus datos están sincronizados con iCloud",
+                .indonesian: "Your data is synced with iCloud"
             ],
-            "Connectez-vous à iCloud pour sauvegarder vos données": [
-                .french: "Connectez-vous à iCloud pour sauvegarder vos données",
+            "Connectez-vous à iCloud pour sauvegarder vos données": [                .french: "Connectez-vous à iCloud pour sauvegarder vos données",
                 .english: "Sign in to iCloud to backup your data",
                 .spanish: "Inicia sesión en iCloud para hacer una copia de seguridad de tus datos",
-                .german: "Melden Sie sich bei iCloud an, um Ihre Daten zu sichern",
-                .italian: "Accedi a iCloud per eseguire il backup dei tuoi dati"
+                .hindi: "Sign in to iCloud to backup your data",
+                .chineseSimplified: "Sign in to iCloud to backup your data",
+                .arabic: "Sign in to iCloud to backup your data",
+                .bengali: "Sign in to iCloud to backup your data",
+                .russian: "Sign in to iCloud to backup your data",
+                .portuguese: "Inicia sesión en iCloud para hacer una copia de seguridad de tus datos",
+                .indonesian: "Sign in to iCloud to backup your data"
             ],
-            "Synchroniser maintenant": [
-                .french: "Synchroniser maintenant",
+            "Synchroniser maintenant": [                .french: "Synchroniser maintenant",
                 .english: "Sync now",
                 .spanish: "Sincronizar ahora",
-                .german: "Jetzt synchronisieren",
-                .italian: "Sincronizza ora"
+                .hindi: "Sync now",
+                .chineseSimplified: "Sync now",
+                .arabic: "Sync now",
+                .bengali: "Sync now",
+                .russian: "Sync now",
+                .portuguese: "Sincronizar ahora",
+                .indonesian: "Sync now"
             ],
-            "Récupérer depuis iCloud": [
-                .french: "Récupérer depuis iCloud",
+            "Récupérer depuis iCloud": [                .french: "Récupérer depuis iCloud",
                 .english: "Restore from iCloud",
                 .spanish: "Restaurar desde iCloud",
-                .german: "Von iCloud wiederherstellen",
-                .italian: "Ripristina da iCloud"
+                .hindi: "Restore from iCloud",
+                .chineseSimplified: "Restore from iCloud",
+                .arabic: "Restore from iCloud",
+                .bengali: "Restore from iCloud",
+                .russian: "Restore from iCloud",
+                .portuguese: "Restaurar desde iCloud",
+                .indonesian: "Restore from iCloud"
             ],
             "Connectez-vous à iCloud dans Réglages → [Votre nom] → iCloud": [
                 .french: "Connectez-vous à iCloud dans Réglages → [Votre nom] → iCloud",
                 .english: "Sign in to iCloud in Settings → [Your name] → iCloud",
                 .spanish: "Inicia sesión en iCloud en Configuración → [Tu nombre] → iCloud",
-                .german: "Melden Sie sich in Einstellungen → [Ihr Name] → iCloud an",
-                .italian: "Accedi a iCloud in Impostazioni → [Il tuo nome] → iCloud"
+                .hindi: "Sign in to iCloud in Settings → [Your name] → iCloud",
+                .chineseSimplified: "Sign in to iCloud in Settings → [Your name] → iCloud",
+                .arabic: "Sign in to iCloud in Settings → [Your name] → iCloud",
+                .bengali: "Sign in to iCloud in Settings → [Your name] → iCloud",
+                .russian: "Sign in to iCloud in Settings → [Your name] → iCloud",
+                .portuguese: "Entre no iCloud em Configurações → [Seu nome] → iCloud",
+                .indonesian: "Sign in to iCloud in Settings → [Your name] → iCloud"
             ],
-            "Synchronisation réussie !": [
-                .french: "Synchronisation réussie !",
+            "Synchronisation réussie !": [                .french: "Synchronisation réussie !",
                 .english: "Sync successful!",
                 .spanish: "¡Sincronización exitosa!",
-                .german: "Synchronisation erfolgreich!",
-                .italian: "Sincronizzazione riuscita!"
+                .hindi: "Sync successful!",
+                .chineseSimplified: "Sync successful!",
+                .arabic: "Sync successful!",
+                .bengali: "Sync successful!",
+                .russian: "Sync successful!",
+                .portuguese: "¡Sincronización exitosa!",
+                .indonesian: "Sync successful!"
             ],
-            "Données restaurées depuis iCloud !": [
-                .french: "Données restaurées depuis iCloud !",
+            "Données restaurées depuis iCloud !": [                .french: "Données restaurées depuis iCloud !",
                 .english: "Data restored from iCloud!",
                 .spanish: "¡Datos restaurados desde iCloud!",
-                .german: "Daten von iCloud wiederhergestellt!",
-                .italian: "Dati ripristinati da iCloud!"
+                .hindi: "Data restored from iCloud!",
+                .chineseSimplified: "Data restored from iCloud!",
+                .arabic: "Data restored from iCloud!",
+                .bengali: "Data restored from iCloud!",
+                .russian: "Data restored from iCloud!",
+                .portuguese: "¡Datos restaurados desde iCloud!",
+                .indonesian: "Data restored from iCloud!"
             ],
-            "Erreur de synchronisation:": [
-                .french: "Erreur de synchronisation:",
+            "Erreur de synchronisation:": [                .french: "Erreur de synchronisation:",
                 .english: "Sync error:",
                 .spanish: "Error de sincronización:",
-                .german: "Synchronisationsfehler:",
-                .italian: "Errore di sincronizzazione:"
+                .hindi: "Sync error:",
+                .chineseSimplified: "Sync error:",
+                .arabic: "Sync error:",
+                .bengali: "Sync error:",
+                .russian: "Sync error:",
+                .portuguese: "Error de sincronización:",
+                .indonesian: "Sync error:"
             ],
-            "Erreur de restauration:": [
-                .french: "Erreur de restauration:",
+            "Erreur de restauration:": [                .french: "Erreur de restauration:",
                 .english: "Restore error:",
                 .spanish: "Error de restauración:",
-                .german: "Wiederherstellungsfehler:",
-                .italian: "Errore di ripristino:"
+                .hindi: "Restore error:",
+                .chineseSimplified: "Restore error:",
+                .arabic: "Restore error:",
+                .bengali: "Restore error:",
+                .russian: "Restore error:",
+                .portuguese: "Error de restauración:",
+                .indonesian: "Restore error:"
             ],
-            "Synchronisation en cours...": [
-                .french: "Synchronisation en cours...",
+            "Synchronisation en cours...": [                .french: "Synchronisation en cours...",
                 .english: "Syncing...",
                 .spanish: "Sincronizando...",
-                .german: "Wird synchronisiert...",
-                .italian: "Sincronizzazione in corso..."
+                .hindi: "Syncing...",
+                .chineseSimplified: "Syncing...",
+                .arabic: "Syncing...",
+                .bengali: "Syncing...",
+                .russian: "Syncing...",
+                .portuguese: "Sincronizando...",
+                .indonesian: "Syncing..."
             ],
-            "Synchronisation terminée": [
-                .french: "Synchronisation terminée",
+            "Synchronisation terminée": [                .french: "Synchronisation terminée",
                 .english: "Sync completed",
                 .spanish: "Sincronización completada",
-                .german: "Synchronisation abgeschlossen",
-                .italian: "Sincronizzazione completata"
+                .hindi: "Sync completed",
+                .chineseSimplified: "Sync completed",
+                .arabic: "Sync completed",
+                .bengali: "Sync completed",
+                .russian: "Sync completed",
+                .portuguese: "Sincronización completada",
+                .indonesian: "Sync completed"
             ],
-            "Entrez votre clé API Google Gemini. Vous pouvez l'obtenir sur https://makersuite.google.com/app/apikey": [
-                .french: "Entrez votre clé API Google Gemini. Vous pouvez l'obtenir sur https://makersuite.google.com/app/apikey",
+            "Entrez votre clé API Google Gemini. Vous pouvez l'obtenir sur https://makersuite.google.com/app/apikey": [                .french: "Entrez votre clé API Google Gemini. Vous pouvez l'obtenir sur https://makersuite.google.com/app/apikey",
                 .english: "Enter your Google Gemini API key. You can get it at https://makersuite.google.com/app/apikey",
                 .spanish: "Ingresa tu clave API de Google Gemini. Puedes obtenerla en https://makersuite.google.com/app/apikey",
-                .german: "Geben Sie Ihren Google Gemini API-Schlüssel ein. Sie können ihn unter https://makersuite.google.com/app/apikey erhalten",
-                .italian: "Inserisci la tua chiave API Google Gemini. Puoi ottenerla su https://makersuite.google.com/app/apikey"
+                .hindi: "Enter your Google Gemini API key. You can get it at https://makersuite.google.com/app/apikey",
+                .chineseSimplified: "Enter your Google Gemini API key. You can get it at https://makersuite.google.com/app/apikey",
+                .arabic: "Enter your Google Gemini API key. You can get it at https://makersuite.google.com/app/apikey",
+                .bengali: "Enter your Google Gemini API key. You can get it at https://makersuite.google.com/app/apikey",
+                .russian: "Enter your Google Gemini API key. You can get it at https://makersuite.google.com/app/apikey",
+                .portuguese: "Ingresa tu clave API de Google Gemini. Puedes obtenerla en https://makersuite.google.com/app/apikey",
+                .indonesian: "Enter your Google Gemini API key. You can get it at https://makersuite.google.com/app/apikey"
             ],
-            "Clé API enregistrée avec succès.": [
-                .french: "Clé API enregistrée avec succès.",
+            "Clé API enregistrée avec succès.": [                .french: "Clé API enregistrée avec succès.",
                 .english: "API key saved successfully.",
                 .spanish: "Clave API guardada exitosamente.",
-                .german: "API-Schlüssel erfolgreich gespeichert.",
-                .italian: "Chiave API salvata con successo."
+                .hindi: "API key saved successfully.",
+                .chineseSimplified: "API key saved successfully.",
+                .arabic: "API key saved successfully.",
+                .bengali: "API key saved successfully.",
+                .russian: "API key saved successfully.",
+                .portuguese: "Clave API guardada exitosamente.",
+                .indonesian: "API key saved successfully."
             ],
-            "Affiche vos outfits du jour et la météo": [
-                .french: "Affiche vos outfits du jour et la météo",
+            "Affiche vos outfits du jour et la météo": [                .french: "Affiche vos outfits du jour et la météo",
                 .english: "Shows your outfits of the day and weather",
                 .spanish: "Muestra tus outfits del día y el clima",
-                .german: "Zeigt deine Outfits des Tages und das Wetter",
-                .italian: "Mostra i tuoi outfit del giorno e il meteo"
+                .hindi: "Shows your outfits of the day and weather",
+                .chineseSimplified: "Shows your outfits of the day and weather",
+                .arabic: "Shows your outfits of the day and weather",
+                .bengali: "Shows your outfits of the day and weather",
+                .russian: "Shows your outfits of the day and weather",
+                .portuguese: "Muestra tus outfits del día y el clima",
+                .indonesian: "Shows your outfits of the day and weather"
             ],
-            "Outfit du jour": [
-                .french: "Outfit du jour",
+            "Outfit du jour": [                .french: "Outfit du jour",
                 .english: "Outfit of the day",
                 .spanish: "Outfit del día",
-                .german: "Outfit des Tages",
-                .italian: "Outfit del giorno"
+                .hindi: "Outfit of the day",
+                .chineseSimplified: "Outfit of the day",
+                .arabic: "Outfit of the day",
+                .bengali: "Outfit of the day",
+                .russian: "Outfit of the day",
+                .portuguese: "Outfit del día",
+                .indonesian: "Outfit of the day"
             ],
-            "Ma garde-robe": [
-                .french: "Ma garde-robe",
+            "Ma garde-robe": [                .french: "Ma garde-robe",
                 .english: "My wardrobe",
                 .spanish: "Mi armario",
-                .german: "Mein Kleiderschrank",
-                .italian: "Il mio guardaroba"
+                .hindi: "My wardrobe",
+                .chineseSimplified: "My wardrobe",
+                .arabic: "My wardrobe",
+                .bengali: "My wardrobe",
+                .russian: "My wardrobe",
+                .portuguese: "Mi armario",
+                .indonesian: "My wardrobe"
             ],
-            "articles": [
-                .french: "articles",
+            "articles": [                .french: "articles",
                 .english: "items",
                 .spanish: "artículos",
-                .german: "Artikel",
-                .italian: "articoli"
+                .hindi: "items",
+                .chineseSimplified: "items",
+                .arabic: "items",
+                .bengali: "items",
+                .russian: "items",
+                .portuguese: "artículos",
+                .indonesian: "items"
             ],
             "Cliquez sur \"Configurer Gemini\"": [
                 .french: "Cliquez sur \"Configurer Gemini\"",
                 .english: "Click on \"Configure Gemini\"",
                 .spanish: "Haz clic en \"Configurar Gemini\"",
-                .german: "Klicken Sie auf \"Gemini konfigurieren\"",
-                .italian: "Clicca su \"Configura Gemini\""
             ],
-            "Obtenez votre clé sur makersuite.google.com/app/apikey": [
-                .french: "Obtenez votre clé sur makersuite.google.com/app/apikey",
+            "Obtenez votre clé sur makersuite.google.com/app/apikey": [                .french: "Obtenez votre clé sur makersuite.google.com/app/apikey",
                 .english: "Get your key at makersuite.google.com/app/apikey",
                 .spanish: "Obtén tu clave en makersuite.google.com/app/apikey",
-                .german: "Holen Sie sich Ihren Schlüssel unter makersuite.google.com/app/apikey",
-                .italian: "Ottieni la tua chiave su makersuite.google.com/app/apikey"
+                .hindi: "Get your key at makersuite.google.com/app/apikey",
+                .chineseSimplified: "Get your key at makersuite.google.com/app/apikey",
+                .arabic: "Get your key at makersuite.google.com/app/apikey",
+                .bengali: "Get your key at makersuite.google.com/app/apikey",
+                .russian: "Get your key at makersuite.google.com/app/apikey",
+                .portuguese: "Obtén tu clave en makersuite.google.com/app/apikey",
+                .indonesian: "Get your key at makersuite.google.com/app/apikey"
             ],
-            "La clé sera sauvegardée automatiquement": [
-                .french: "La clé sera sauvegardée automatiquement",
+            "La clé sera sauvegardée automatiquement": [                .french: "La clé sera sauvegardée automatiquement",
                 .english: "The key will be saved automatically",
                 .spanish: "La clave se guardará automáticamente",
-                .german: "Der Schlüssel wird automatisch gespeichert",
-                .italian: "La chiave verrà salvata automaticamente"
+                .hindi: "The key will be saved automatically",
+                .chineseSimplified: "The key will be saved automatically",
+                .arabic: "The key will be saved automatically",
+                .bengali: "The key will be saved automatically",
+                .russian: "The key will be saved automatically",
+                .portuguese: "La clave se guardará automáticamente",
+                .indonesian: "The key will be saved automatically"
             ],
-            "L'utilisation de Gemini est gratuite jusqu'à un certain quota. Au-delà, des frais peuvent s'appliquer selon votre plan Google.": [
-                .french: "L'utilisation de Gemini est gratuite jusqu'à un certain quota. Au-delà, des frais peuvent s'appliquer selon votre plan Google.",
+            "L'utilisation de Gemini est gratuite jusqu'à un certain quota. Au-delà, des frais peuvent s'appliquer selon votre plan Google.": [                .french: "L'utilisation de Gemini est gratuite jusqu'à un certain quota. Au-delà, des frais peuvent s'appliquer selon votre plan Google.",
                 .english: "Gemini usage is free up to a certain quota. Beyond that, fees may apply depending on your Google plan.",
                 .spanish: "El uso de Gemini es gratuito hasta cierto límite. Más allá de eso, pueden aplicarse tarifas según su plan de Google.",
-                .german: "Die Nutzung von Gemini ist bis zu einem bestimmten Kontingent kostenlos. Darüber hinaus können je nach Ihrem Google-Plan Gebühren anfallen.",
-                .italian: "L'uso di Gemini è gratuito fino a un certo limite. Oltre quello, potrebbero applicarsi tariffe in base al tuo piano Google."
+                .hindi: "Gemini usage is free up to a certain quota. Beyond that, fees may apply depending on your Google plan.",
+                .chineseSimplified: "Gemini usage is free up to a certain quota. Beyond that, fees may apply depending on your Google plan.",
+                .arabic: "Gemini usage is free up to a certain quota. Beyond that, fees may apply depending on your Google plan.",
+                .bengali: "Gemini usage is free up to a certain quota. Beyond that, fees may apply depending on your Google plan.",
+                .russian: "Gemini usage is free up to a certain quota. Beyond that, fees may apply depending on your Google plan.",
+                .portuguese: "El uso de Gemini es gratuito hasta cierto límite. Más allá de eso, pueden aplicarse tarifas según su plan de Google.",
+                .indonesian: "Gemini usage is free up to a certain quota. Beyond that, fees may apply depending on your Google plan."
             ],
             // Favoris
-            "Favoris": [
-                .french: "Favoris",
+            "Favoris": [                .french: "Favoris",
                 .english: "Favorites",
                 .spanish: "Favoritos",
-                .german: "Favoriten",
-                .italian: "Preferiti"
+                .hindi: "Favorites",
+                .chineseSimplified: "Favorites",
+                .arabic: "Favorites",
+                .bengali: "Favorites",
+                .russian: "Favorites",
+                .portuguese: "Favoritos",
+                .indonesian: "Favorites"
             ],
-            "Aucun favori": [
-                .french: "Aucun favori",
+            "Aucun favori": [                .french: "Aucun favori",
                 .english: "No favorites",
                 .spanish: "Sin favoritos",
-                .german: "Keine Favoriten",
-                .italian: "Nessun preferito"
+                .hindi: "No favorites",
+                .chineseSimplified: "No favorites",
+                .arabic: "No favorites",
+                .bengali: "No favorites",
+                .russian: "No favorites",
+                .portuguese: "Sin favoritos",
+                .indonesian: "No favorites"
             ],
-            "Ajoutez des outfits de l'historique à vos favoris": [
-                .french: "Ajoutez des outfits de l'historique à vos favoris",
+            "Ajoutez des outfits de l'historique à vos favoris": [                .french: "Ajoutez des outfits de l'historique à vos favoris",
                 .english: "Add outfits from history to your favorites",
                 .spanish: "Agrega outfits del historial a tus favoritos",
-                .german: "Fügen Sie Outfits aus dem Verlauf zu Ihren Favoriten hinzu",
-                .italian: "Aggiungi outfit dalla cronologia ai tuoi preferiti"
+                .hindi: "Add outfits from history to your favorites",
+                .chineseSimplified: "Add outfits from history to your favorites",
+                .arabic: "Add outfits from history to your favorites",
+                .bengali: "Add outfits from history to your favorites",
+                .russian: "Add outfits from history to your favorites",
+                .portuguese: "Agrega outfits del historial a tus favoritos",
+                .indonesian: "Add outfits from history to your favorites"
             ],
-            "Porté le": [
-                .french: "Porté le",
+            "Porté le": [                .french: "Porté le",
                 .english: "Worn on",
                 .spanish: "Usado el",
-                .german: "Getragen am",
-                .italian: "Indossato il"
+                .hindi: "Worn on",
+                .chineseSimplified: "Worn on",
+                .arabic: "Worn on",
+                .bengali: "Worn on",
+                .russian: "Worn on",
+                .portuguese: "Usado el",
+                .indonesian: "Worn on"
             ],
             // Outfit Selection
-            "Outfits pour": [
-                .french: "Outfits pour",
+            "Outfits pour": [                .french: "Outfits pour",
                 .english: "Outfits for",
                 .spanish: "Outfits para",
-                .german: "Outfits für",
-                .italian: "Outfit per"
+                .hindi: "Outfits for",
+                .chineseSimplified: "Outfits for",
+                .arabic: "Outfits for",
+                .bengali: "Outfits for",
+                .russian: "Outfits for",
+                .portuguese: "Outfits para",
+                .indonesian: "Outfits for"
             ],
-            "Choisissez votre style": [
-                .french: "Choisissez votre style",
+            "Choisissez votre style": [                .french: "Choisissez votre style",
                 .english: "Choose your style",
                 .spanish: "Elige tu estilo",
-                .german: "Wählen Sie Ihren Stil",
-                .italian: "Scegli il tuo stile"
+                .hindi: "Choose your style",
+                .chineseSimplified: "Choose your style",
+                .arabic: "Choose your style",
+                .bengali: "Choose your style",
+                .russian: "Choose your style",
+                .portuguese: "Elige tu estilo",
+                .indonesian: "Choose your style"
             ],
-            "Aucun outfit disponible": [
-                .french: "Aucun outfit disponible",
+            "Aucun outfit disponible": [                .french: "Aucun outfit disponible",
                 .english: "No outfit available",
                 .spanish: "No hay outfit disponible",
-                .german: "Kein Outfit verfügbar",
-                .italian: "Nessun outfit disponibile"
+                .hindi: "No outfit available",
+                .chineseSimplified: "No outfit available",
+                .arabic: "No outfit available",
+                .bengali: "No outfit available",
+                .russian: "No outfit available",
+                .portuguese: "No hay outfit disponible",
+                .indonesian: "No outfit available"
             ],
-            "outfit trouvé": [
-                .french: "outfit trouvé",
+            "outfit trouvé": [                .french: "outfit trouvé",
                 .english: "outfit found",
                 .spanish: "outfit encontrado",
-                .german: "Outfit gefunden",
-                .italian: "outfit trovato"
+                .hindi: "outfit found",
+                .chineseSimplified: "outfit found",
+                .arabic: "outfit found",
+                .bengali: "outfit found",
+                .russian: "outfit found",
+                .portuguese: "outfit encontrado",
+                .indonesian: "outfit found"
             ],
-            "outfits trouvés": [
-                .french: "outfits trouvés",
+            "outfits trouvés": [                .french: "outfits trouvés",
                 .english: "outfits found",
                 .spanish: "outfits encontrados",
-                .german: "Outfits gefunden",
-                .italian: "outfit trovati"
+                .hindi: "outfits found",
+                .chineseSimplified: "outfits found",
+                .arabic: "outfits found",
+                .bengali: "outfits found",
+                .russian: "outfits found",
+                .portuguese: "outfits encontrados",
+                .indonesian: "outfits found"
             ],
-            "Essayez une autre combinaison d'humeur et de météo": [
-                .french: "Essayez une autre combinaison d'humeur et de météo",
+            "Essayez une autre combinaison d'humeur et de météo": [                .french: "Essayez une autre combinaison d'humeur et de météo",
                 .english: "Try another combination of mood and weather",
                 .spanish: "Prueba otra combinación de estado de ánimo y clima",
-                .german: "Versuchen Sie eine andere Kombination aus Stimmung und Wetter",
-                .italian: "Prova un'altra combinazione di umore e meteo"
+                .hindi: "Try another combination of mood and weather",
+                .chineseSimplified: "Try another combination of mood and weather",
+                .arabic: "Try another combination of mood and weather",
+                .bengali: "Try another combination of mood and weather",
+                .russian: "Try another combination of mood and weather",
+                .portuguese: "Prueba otra combinación de estado de ánimo y clima",
+                .indonesian: "Try another combination of mood and weather"
             ],
             // Outfit Detail
-            "À propos de cet outfit": [
-                .french: "À propos de cet outfit",
+            "À propos de cet outfit": [                .french: "À propos de cet outfit",
                 .english: "About this outfit",
                 .spanish: "Acerca de este outfit",
-                .german: "Über dieses Outfit",
-                .italian: "Informazioni su questo outfit"
+                .hindi: "About this outfit",
+                .chineseSimplified: "About this outfit",
+                .arabic: "About this outfit",
+                .bengali: "About this outfit",
+                .russian: "About this outfit",
+                .portuguese: "Acerca de este outfit",
+                .indonesian: "About this outfit"
             ],
-            "Composition": [
-                .french: "Composition",
+            "Composition": [                .french: "Composition",
                 .english: "Composition",
                 .spanish: "Composición",
-                .german: "Zusammensetzung",
-                .italian: "Composizione"
+                .hindi: "Composition",
+                .chineseSimplified: "Composition",
+                .arabic: "Composition",
+                .bengali: "Composition",
+                .russian: "Composition",
+                .portuguese: "Composición",
+                .indonesian: "Composition"
             ],
-            "Haut": [
-                .french: "Haut",
+            "Haut": [                .french: "Haut",
                 .english: "Top",
                 .spanish: "Parte superior",
-                .german: "Oberteil",
-                .italian: "Parte superiore"
+                .hindi: "Top",
+                .chineseSimplified: "Top",
+                .arabic: "Top",
+                .bengali: "Top",
+                .russian: "Top",
+                .portuguese: "Parte superior",
+                .indonesian: "Top"
             ],
-            "Bas": [
-                .french: "Bas",
+            "Bas": [                .french: "Bas",
                 .english: "Bottom",
                 .spanish: "Parte inferior",
-                .german: "Unterteil",
-                .italian: "Parte inferiore"
+                .hindi: "Bottom",
+                .chineseSimplified: "Bottom",
+                .arabic: "Bottom",
+                .bengali: "Bottom",
+                .russian: "Bottom",
+                .portuguese: "Parte inferior",
+                .indonesian: "Bottom"
             ],
-            "Chaussures": [
-                .french: "Chaussures",
+            "Chaussures": [                .french: "Chaussures",
                 .english: "Shoes",
                 .spanish: "Zapatos",
-                .german: "Schuhe",
-                .italian: "Scarpe"
+                .hindi: "Shoes",
+                .chineseSimplified: "Shoes",
+                .arabic: "Shoes",
+                .bengali: "Shoes",
+                .russian: "Shoes",
+                .portuguese: "Zapatos",
+                .indonesian: "Shoes"
             ],
-            "Accessoires": [
-                .french: "Accessoires",
+            "Accessoires": [                .french: "Accessoires",
                 .english: "Accessories",
                 .spanish: "Accesorios",
-                .german: "Accessoires",
-                .italian: "Accessori"
+                .hindi: "Accessories",
+                .chineseSimplified: "Accessories",
+                .arabic: "Accessories",
+                .bengali: "Accessories",
+                .russian: "Accessories",
+                .portuguese: "Accesorios",
+                .indonesian: "Accessories"
             ],
-            "Caractéristiques": [
-                .french: "Caractéristiques",
+            "Caractéristiques": [                .french: "Caractéristiques",
                 .english: "Characteristics",
                 .spanish: "Características",
-                .german: "Eigenschaften",
-                .italian: "Caratteristiche"
+                .hindi: "Characteristics",
+                .chineseSimplified: "Characteristics",
+                .arabic: "Characteristics",
+                .bengali: "Characteristics",
+                .russian: "Characteristics",
+                .portuguese: "Características",
+                .indonesian: "Characteristics"
             ],
             // Tutorial
-            "Bienvenue dans Shoply !": [
-                .french: "Bienvenue dans Shoply !",
+            "Bienvenue dans Shoply !": [                .french: "Bienvenue dans Shoply !",
                 .english: "Welcome to Shoply!",
                 .spanish: "¡Bienvenido a Shoply!",
-                .german: "Willkommen bei Shoply!",
-                .italian: "Benvenuto in Shoply!"
+                .hindi: "Welcome to Shoply!",
+                .chineseSimplified: "Welcome to Shoply!",
+                .arabic: "Welcome to Shoply!",
+                .bengali: "Welcome to Shoply!",
+                .russian: "Welcome to Shoply!",
+                .portuguese: "¡Bienvenido a Shoply!",
+                .indonesian: "Welcome to Shoply!"
             ],
-            "Votre assistant personnel pour créer des outfits parfaits adaptés à la météo et à votre style.": [
-                .french: "Votre assistant personnel pour créer des outfits parfaits adaptés à la météo et à votre style.",
+            "Votre assistant personnel pour créer des outfits parfaits adaptés à la météo et à votre style.": [                .french: "Votre assistant personnel pour créer des outfits parfaits adaptés à la météo et à votre style.",
                 .english: "Your personal assistant to create perfect outfits adapted to the weather and your style.",
                 .spanish: "Tu asistente personal para crear outfits perfectos adaptados al clima y a tu estilo.",
-                .german: "Ihr persönlicher Assistent zur Erstellung perfekter Outfits, angepasst an das Wetter und Ihren Stil.",
-                .italian: "Il tuo assistente personale per creare outfit perfetti adattati al meteo e al tuo stile."
+                .hindi: "Your personal assistant to create perfect outfits adapted to the weather and your style.",
+                .chineseSimplified: "Your personal assistant to create perfect outfits adapted to the weather and your style.",
+                .arabic: "Your personal assistant to create perfect outfits adapted to the weather and your style.",
+                .bengali: "Your personal assistant to create perfect outfits adapted to the weather and your style.",
+                .russian: "Your personal assistant to create perfect outfits adapted to the weather and your style.",
+                .portuguese: "Tu asistente personal para crear outfits perfectos adaptados al clima y a tu estilo.",
+                .indonesian: "Your personal assistant to create perfect outfits adapted to the weather and your style."
             ],
-            "Ajoutez vos vêtements": [
-                .french: "Ajoutez vos vêtements",
+            "Ajoutez vos vêtements": [                .french: "Ajoutez vos vêtements",
                 .english: "Add your clothes",
                 .spanish: "Agrega tu ropa",
-                .german: "Fügen Sie Ihre Kleidung hinzu",
-                .italian: "Aggiungi i tuoi vestiti"
+                .hindi: "Add your clothes",
+                .chineseSimplified: "Add your clothes",
+                .arabic: "Add your clothes",
+                .bengali: "Add your clothes",
+                .russian: "Add your clothes",
+                .portuguese: "Agrega tu ropa",
+                .indonesian: "Add your clothes"
             ],
-            "Commencez par ajouter au moins 5 vêtements dans votre garde-robe avec leurs photos pour que l'IA puisse vous proposer les meilleurs outfits.": [
-                .french: "Commencez par ajouter au moins 5 vêtements dans votre garde-robe avec leurs photos pour que l'IA puisse vous proposer les meilleurs outfits.",
+            "Commencez par ajouter au moins 5 vêtements dans votre garde-robe avec leurs photos pour que l'IA puisse vous proposer les meilleurs outfits.": [                .french: "Commencez par ajouter au moins 5 vêtements dans votre garde-robe avec leurs photos pour que l'IA puisse vous proposer les meilleurs outfits.",
                 .english: "Start by adding at least 5 clothes to your wardrobe with their photos so the AI can suggest the best outfits.",
                 .spanish: "Comienza agregando al menos 5 prendas a tu guardarropa con sus fotos para que la IA pueda sugerirte los mejores outfits.",
-                .german: "Beginnen Sie mit dem Hinzufügen von mindestens 5 Kleidungsstücken zu Ihrer Garderobe mit Fotos, damit die KI die besten Outfits vorschlagen kann.",
-                .italian: "Inizia aggiungendo almeno 5 vestiti al tuo guardaroba con le loro foto in modo che l'IA possa suggerirti i migliori outfit."
+                .hindi: "Start by adding at least 5 clothes to your wardrobe with their photos so the AI can suggest the best outfits.",
+                .chineseSimplified: "Start by adding at least 5 clothes to your wardrobe with their photos so the AI can suggest the best outfits.",
+                .arabic: "Start by adding at least 5 clothes to your wardrobe with their photos so the AI can suggest the best outfits.",
+                .bengali: "Start by adding at least 5 clothes to your wardrobe with their photos so the AI can suggest the best outfits.",
+                .russian: "Start by adding at least 5 clothes to your wardrobe with their photos so the AI can suggest the best outfits.",
+                .portuguese: "Comienza agregando al menos 5 prendas a tu guardarropa con sus fotos para que la IA pueda sugerirte los mejores outfits.",
+                .indonesian: "Start by adding at least 5 clothes to your wardrobe with their photos so the AI can suggest the best outfits."
             ],
-            "Sélection Intelligente": [
-                .french: "Sélection Intelligente",
+            "Sélection Intelligente": [                .french: "Sélection Intelligente",
                 .english: "Smart Selection",
                 .spanish: "Selección Inteligente",
-                .german: "Intelligente Auswahl",
-                .italian: "Selezione Intelligente"
+                .hindi: "Smart Selection",
+                .chineseSimplified: "Smart Selection",
+                .arabic: "Smart Selection",
+                .bengali: "Smart Selection",
+                .russian: "Smart Selection",
+                .portuguese: "Selección Inteligente",
+                .indonesian: "Smart Selection"
             ],
-            "Générez des outfits personnalisés en utilisant ChatGPT pour une analyse avancée de vos vêtements, ou utilisez l'algorithme local pour préserver votre confidentialité.": [
-                .french: "Générez des outfits personnalisés en utilisant ChatGPT pour une analyse avancée de vos vêtements, ou utilisez l'algorithme local pour préserver votre confidentialité.",
+            "Générez des outfits personnalisés en utilisant ChatGPT pour une analyse avancée de vos vêtements, ou utilisez l'algorithme local pour préserver votre confidentialité.": [                .french: "Générez des outfits personnalisés en utilisant ChatGPT pour une analyse avancée de vos vêtements, ou utilisez l'algorithme local pour préserver votre confidentialité.",
                 .english: "Generate personalized outfits using ChatGPT for advanced analysis of your clothes, or use the local algorithm to preserve your privacy.",
                 .spanish: "Genera outfits personalizados usando ChatGPT para un análisis avanzado de tu ropa, o usa el algoritmo local para preservar tu privacidad.",
-                .german: "Generieren Sie personalisierte Outfits mit ChatGPT zur fortgeschrittenen Analyse Ihrer Kleidung oder verwenden Sie den lokalen Algorithmus, um Ihre Privatsphäre zu wahren.",
-                .italian: "Genera outfit personalizzati usando ChatGPT per un'analisi avanzata dei tuoi vestiti, o usa l'algoritmo locale per preservare la tua privacy."
+                .hindi: "Generate personalized outfits using ChatGPT for advanced analysis of your clothes, or use the local algorithm to preserve your privacy.",
+                .chineseSimplified: "Generate personalized outfits using ChatGPT for advanced analysis of your clothes, or use the local algorithm to preserve your privacy.",
+                .arabic: "Generate personalized outfits using ChatGPT for advanced analysis of your clothes, or use the local algorithm to preserve your privacy.",
+                .bengali: "Generate personalized outfits using ChatGPT for advanced analysis of your clothes, or use the local algorithm to preserve your privacy.",
+                .russian: "Generate personalized outfits using ChatGPT for advanced analysis of your clothes, or use the local algorithm to preserve your privacy.",
+                .portuguese: "Genera outfits personalizados usando ChatGPT para un análisis avanzado de tu ropa, o usa el algoritmo local para preservar tu privacidad.",
+                .indonesian: "Generate personalized outfits using ChatGPT for advanced analysis of your clothes, or use the local algorithm to preserve your privacy."
             ],
-            "Planifiez vos outfits": [
-                .french: "Planifiez vos outfits",
+            "Planifiez vos outfits": [                .french: "Planifiez vos outfits",
                 .english: "Plan your outfits",
                 .spanish: "Planea tus outfits",
-                .german: "Planen Sie Ihre Outfits",
-                .italian: "Pianifica i tuoi outfit"
+                .hindi: "Plan your outfits",
+                .chineseSimplified: "Plan your outfits",
+                .arabic: "Plan your outfits",
+                .bengali: "Plan your outfits",
+                .russian: "Plan your outfits",
+                .portuguese: "Planea tus outfits",
+                .indonesian: "Plan your outfits"
             ],
-            "Consultez le calendrier pour planifier vos tenues à l'avance selon la météo prévue. L'IA s'adapte automatiquement aux conditions.": [
-                .french: "Consultez le calendrier pour planifier vos tenues à l'avance selon la météo prévue. L'IA s'adapte automatiquement aux conditions.",
+            "Consultez le calendrier pour planifier vos tenues à l'avance selon la météo prévue. L'IA s'adapte automatiquement aux conditions.": [                .french: "Consultez le calendrier pour planifier vos tenues à l'avance selon la météo prévue. L'IA s'adapte automatiquement aux conditions.",
                 .english: "Check the calendar to plan your outfits in advance according to the forecasted weather. The AI automatically adapts to conditions.",
                 .spanish: "Consulta el calendario para planificar tus outfits con anticipación según el clima previsto. La IA se adapta automáticamente a las condiciones.",
-                .german: "Prüfen Sie den Kalender, um Ihre Outfits im Voraus nach der vorhergesagten Wettervorhersage zu planen. Die KI passt sich automatisch an die Bedingungen an.",
-                .italian: "Controlla il calendario per pianificare i tuoi outfit in anticipo secondo il meteo previsto. L'IA si adatta automaticamente alle condizioni."
+                .hindi: "Check the calendar to plan your outfits in advance according to the forecasted weather. The AI automatically adapts to conditions.",
+                .chineseSimplified: "Check the calendar to plan your outfits in advance according to the forecasted weather. The AI automatically adapts to conditions.",
+                .arabic: "Check the calendar to plan your outfits in advance according to the forecasted weather. The AI automatically adapts to conditions.",
+                .bengali: "Check the calendar to plan your outfits in advance according to the forecasted weather. The AI automatically adapts to conditions.",
+                .russian: "Check the calendar to plan your outfits in advance according to the forecasted weather. The AI automatically adapts to conditions.",
+                .portuguese: "Consulta el calendario para planificar tus outfits con anticipación según el clima previsto. La IA se adapta automáticamente a las condiciones.",
+                .indonesian: "Check the calendar to plan your outfits in advance according to the forecasted weather. The AI automatically adapts to conditions."
             ],
-            "Suivez votre historique": [
-                .french: "Suivez votre historique",
+            "Suivez votre historique": [                .french: "Suivez votre historique",
                 .english: "Track your history",
                 .spanish: "Rastrea tu historial",
-                .german: "Verfolgen Sie Ihren Verlauf",
-                .italian: "Traccia la tua cronologia"
+                .hindi: "Track your history",
+                .chineseSimplified: "Track your history",
+                .arabic: "Track your history",
+                .bengali: "Track your history",
+                .russian: "Track your history",
+                .portuguese: "Rastrea tu historial",
+                .indonesian: "Track your history"
             ],
-            "Gardez une trace de vos outfits portés et marquez vos favoris pour retrouver facilement vos combinaisons préférées.": [
-                .french: "Gardez une trace de vos outfits portés et marquez vos favoris pour retrouver facilement vos combinaisons préférées.",
+            "Gardez une trace de vos outfits portés et marquez vos favoris pour retrouver facilement vos combinaisons préférées.": [                .french: "Gardez une trace de vos outfits portés et marquez vos favoris pour retrouver facilement vos combinaisons préférées.",
                 .english: "Keep track of your worn outfits and mark your favorites to easily find your favorite combinations.",
                 .spanish: "Mantén un registro de tus outfits usados y marca tus favoritos para encontrar fácilmente tus combinaciones favoritas.",
-                .german: "Behalten Sie den Überblick über Ihre getragenen Outfits und markieren Sie Ihre Favoriten, um Ihre Lieblingskombinationen leicht zu finden.",
-                .italian: "Tieni traccia dei tuoi outfit indossati e segna i tuoi preferiti per trovare facilmente le tue combinazioni preferite."
+                .hindi: "Keep track of your worn outfits and mark your favorites to easily find your favorite combinations.",
+                .chineseSimplified: "Keep track of your worn outfits and mark your favorites to easily find your favorite combinations.",
+                .arabic: "Keep track of your worn outfits and mark your favorites to easily find your favorite combinations.",
+                .bengali: "Keep track of your worn outfits and mark your favorites to easily find your favorite combinations.",
+                .russian: "Keep track of your worn outfits and mark your favorites to easily find your favorite combinations.",
+                .portuguese: "Mantén un registro de tus outfits usados y marca tus favoritos para encontrar fácilmente tus combinaciones favoritas.",
+                .indonesian: "Keep track of your worn outfits and mark your favorites to easily find your favorite combinations."
             ],
-            "Passer": [
-                .french: "Passer",
+            "Passer": [                .french: "Passer",
                 .english: "Skip",
                 .spanish: "Saltar",
-                .german: "Überspringen",
-                .italian: "Salta"
+                .hindi: "Skip",
+                .chineseSimplified: "Skip",
+                .arabic: "Skip",
+                .bengali: "Skip",
+                .russian: "Skip",
+                .portuguese: "Saltar",
+                .indonesian: "Skip"
             ],
-            "Précédent": [
-                .french: "Précédent",
+            "Précédent": [                .french: "Précédent",
                 .english: "Previous",
                 .spanish: "Anterior",
-                .german: "Zurück",
-                .italian: "Precedente"
+                .hindi: "Previous",
+                .chineseSimplified: "Previous",
+                .arabic: "Previous",
+                .bengali: "Previous",
+                .russian: "Previous",
+                .portuguese: "Anterior",
+                .indonesian: "Previous"
             ],
-            "Suivant": [
-                .french: "Suivant",
+            "Suivant": [                .french: "Suivant",
                 .english: "Next",
                 .spanish: "Siguiente",
-                .german: "Weiter",
-                .italian: "Successivo"
+                .hindi: "Next",
+                .chineseSimplified: "Next",
+                .arabic: "Next",
+                .bengali: "Next",
+                .russian: "Next",
+                .portuguese: "Siguiente",
+                .indonesian: "Next"
             ],
-            "Commencer": [
-                .french: "Commencer",
+            "Commencer": [                .french: "Commencer",
                 .english: "Start",
                 .spanish: "Comenzar",
-                .german: "Beginnen",
-                .italian: "Inizia"
+                .hindi: "Start",
+                .chineseSimplified: "Start",
+                .arabic: "Start",
+                .bengali: "Start",
+                .russian: "Start",
+                .portuguese: "Comenzar",
+                .indonesian: "Start"
             ],
             // Calendrier
-            "Calendrier": [
-                .french: "Calendrier",
+            "Calendrier": [                .french: "Calendrier",
                 .english: "Calendar",
                 .spanish: "Calendario",
-                .german: "Kalender",
-                .italian: "Calendario"
+                .hindi: "Calendar",
+                .chineseSimplified: "Calendar",
+                .arabic: "Calendar",
+                .bengali: "Calendar",
+                .russian: "Calendar",
+                .portuguese: "Calendario",
+                .indonesian: "Calendar"
             ],
-            "Récupérer la météo pour cette date": [
-                .french: "Récupérer la météo pour cette date",
+            "Récupérer la météo pour cette date": [                .french: "Récupérer la météo pour cette date",
                 .english: "Get weather for this date",
                 .spanish: "Obtener el clima para esta fecha",
-                .german: "Wetter für dieses Datum abrufen",
-                .italian: "Ottieni il meteo per questa data"
+                .hindi: "Get weather for this date",
+                .chineseSimplified: "Get weather for this date",
+                .arabic: "Get weather for this date",
+                .bengali: "Get weather for this date",
+                .russian: "Get weather for this date",
+                .portuguese: "Obtener el clima para esta fecha",
+                .indonesian: "Get weather for this date"
             ],
-            "Générer l'outfit pour cette date": [
-                .french: "Générer l'outfit pour cette date",
+            "Générer l'outfit pour cette date": [                .french: "Générer l'outfit pour cette date",
                 .english: "Generate outfit for this date",
                 .spanish: "Generar outfit para esta fecha",
-                .german: "Outfit für dieses Datum generieren",
-                .italian: "Genera outfit per questa data"
+                .hindi: "Generate outfit for this date",
+                .chineseSimplified: "Generate outfit for this date",
+                .arabic: "Generate outfit for this date",
+                .bengali: "Generate outfit for this date",
+                .russian: "Generate outfit for this date",
+                .portuguese: "Generar outfit para esta fecha",
+                .indonesian: "Generate outfit for this date"
             ],
-            "Outfit pour le": [
-                .french: "Outfit pour le",
+            "Outfit pour le": [                .french: "Outfit pour le",
                 .english: "Outfit for",
                 .spanish: "Outfit para el",
-                .german: "Outfit für den",
-                .italian: "Outfit per il"
+                .hindi: "Outfit for",
+                .chineseSimplified: "Outfit for",
+                .arabic: "Outfit for",
+                .bengali: "Outfit for",
+                .russian: "Outfit for",
+                .portuguese: "Outfit para el",
+                .indonesian: "Outfit for"
             ],
-            "J'ai porté cet outfit": [
-                .french: "J'ai porté cet outfit",
+            "J'ai porté cet outfit": [                .french: "J'ai porté cet outfit",
                 .english: "I wore this outfit",
                 .spanish: "Usé este outfit",
-                .german: "Ich habe dieses Outfit getragen",
-                .italian: "Ho indossato questo outfit"
+                .hindi: "I wore this outfit",
+                .chineseSimplified: "I wore this outfit",
+                .arabic: "I wore this outfit",
+                .bengali: "I wore this outfit",
+                .russian: "I wore this outfit",
+                .portuguese: "Usé este outfit",
+                .indonesian: "I wore this outfit"
             ],
             // Sélection intelligente
-            "Sélection intelligente": [
-                .french: "Sélection intelligente",
+            "Sélection intelligente": [                .french: "Sélection intelligente",
                 .english: "Smart selection",
                 .spanish: "Selección inteligente",
-                .german: "Intelligente Auswahl",
-                .italian: "Selezione intelligente"
+                .hindi: "Smart selection",
+                .chineseSimplified: "Smart selection",
+                .arabic: "Smart selection",
+                .bengali: "Smart selection",
+                .russian: "Smart selection",
+                .portuguese: "Selección inteligente",
+                .indonesian: "Smart selection"
             ],
-            "Laissez l'IA choisir vos meilleurs outfits": [
-                .french: "Laissez l'IA choisir vos meilleurs outfits",
+            "Laissez l'IA choisir vos meilleurs outfits": [                .french: "Laissez l'IA choisir vos meilleurs outfits",
                 .english: "Let AI choose your best outfits",
                 .spanish: "Deja que la IA elija tus mejores outfits",
-                .german: "Lassen Sie die KI Ihre besten Outfits auswählen",
-                .italian: "Lascia che l'IA scelga i tuoi migliori outfit"
+                .hindi: "Let AI choose your best outfits",
+                .chineseSimplified: "Let AI choose your best outfits",
+                .arabic: "Let AI choose your best outfits",
+                .bengali: "Let AI choose your best outfits",
+                .russian: "Let AI choose your best outfits",
+                .portuguese: "Deja que la IA elija tus mejores outfits",
+                .indonesian: "Let AI choose your best outfits"
             ],
-            "Générer mes outfits": [
-                .french: "Générer mes outfits",
+            "Générer mes outfits": [                .french: "Générer mes outfits",
                 .english: "Generate my outfits",
                 .spanish: "Generar mis outfits",
-                .german: "Meine Outfits generieren",
-                .italian: "Genera i miei outfit"
+                .hindi: "Generate my outfits",
+                .chineseSimplified: "Generate my outfits",
+                .arabic: "Generate my outfits",
+                .bengali: "Generate my outfits",
+                .russian: "Generate my outfits",
+                .portuguese: "Generar mis outfits",
+                .indonesian: "Generate my outfits"
             ],
-            "Méthode de génération": [
-                .french: "Méthode de génération",
+            "Méthode de génération": [                .french: "Méthode de génération",
                 .english: "Generation method",
                 .spanish: "Método de generación",
-                .german: "Generierungsmethode",
-                .italian: "Metodo di generazione"
+                .hindi: "Generation method",
+                .chineseSimplified: "Generation method",
+                .arabic: "Generation method",
+                .bengali: "Generation method",
+                .russian: "Generation method",
+                .portuguese: "Método de generación",
+                .indonesian: "Generation method"
             ],
-            "Choisissez comment générer vos outfits": [
-                .french: "Choisissez comment générer vos outfits",
+            "Choisissez comment générer vos outfits": [                .french: "Choisissez comment générer vos outfits",
                 .english: "Choose how to generate your outfits",
                 .spanish: "Elige cómo generar tus outfits",
-                .german: "Wählen Sie, wie Sie Ihre Outfits generieren möchten",
-                .italian: "Scegli come generare i tuoi outfit"
+                .hindi: "Choose how to generate your outfits",
+                .chineseSimplified: "Choose how to generate your outfits",
+                .arabic: "Choose how to generate your outfits",
+                .bengali: "Choose how to generate your outfits",
+                .russian: "Choose how to generate your outfits",
+                .portuguese: "Elige cómo generar tus outfits",
+                .indonesian: "Choose how to generate your outfits"
             ],
-            "(IA avancée)": [
-                .french: "(IA avancée)",
+            "(IA avancée)": [                .french: "(IA avancée)",
                 .english: "(Advanced AI)",
                 .spanish: "(IA avanzada)",
-                .german: "(Fortgeschrittene KI)",
-                .italian: "(IA avanzata)"
+                .hindi: "(Advanced AI)",
+                .chineseSimplified: "(Advanced AI)",
+                .arabic: "(Advanced AI)",
+                .bengali: "(Advanced AI)",
+                .russian: "(Advanced AI)",
+                .portuguese: "(IA avanzada)",
+                .indonesian: "(Advanced AI)"
             ],
-            "Plus puissant • Plus de chances de trouver • Données envoyées à": [
-                .french: "Plus puissant • Plus de chances de trouver • Données envoyées à",
+            "Plus puissant • Plus de chances de trouver • Données envoyées à": [                .french: "Plus puissant • Plus de chances de trouver • Données envoyées à",
                 .english: "More powerful • More chances to find • Data sent to",
                 .spanish: "Más poderoso • Más posibilidades de encontrar • Datos enviados a",
-                .german: "Leistungsstärker • Mehr Chancen zu finden • Daten gesendet an",
-                .italian: "Più potente • Più possibilità di trovare • Dati inviati a"
+                .hindi: "More powerful • More chances to find • Data sent to",
+                .chineseSimplified: "More powerful • More chances to find • Data sent to",
+                .arabic: "More powerful • More chances to find • Data sent to",
+                .bengali: "More powerful • More chances to find • Data sent to",
+                .russian: "More powerful • More chances to find • Data sent to",
+                .portuguese: "Más poderoso • Más posibilidades de encontrar • Datos enviados a",
+                .indonesian: "More powerful • More chances to find • Data sent to"
             ],
-            "Mon algorithme (local)": [
-                .french: "Shoply AI",
+            "Mon algorithme (local)": [                .french: "Shoply AI",
                 .english: "Shoply AI",
                 .spanish: "Shoply AI",
-                .german: "Shoply AI",
-                .italian: "Shoply AI"
+                .hindi: "Shoply AI",
+                .chineseSimplified: "Shoply AI",
+                .arabic: "Shoply AI",
+                .bengali: "Shoply AI",
+                .russian: "Shoply AI",
+                .portuguese: "Shoply AI",
+                .indonesian: "Shoply AI"
             ],
-            "Moins puissant • Données restent sur votre appareil": [
-                .french: "Moins puissant • Données restent sur votre appareil",
+            "Moins puissant • Données restent sur votre appareil": [                .french: "Moins puissant • Données restent sur votre appareil",
                 .english: "Less powerful • Data stays on your device",
                 .spanish: "Menos poderoso • Los datos permanecen en tu dispositivo",
-                .german: "Weniger leistungsstark • Daten bleiben auf Ihrem Gerät",
-                .italian: "Meno potente • I dati rimangono sul tuo dispositivo"
+                .hindi: "Less powerful • Data stays on your device",
+                .chineseSimplified: "Less powerful • Data stays on your device",
+                .arabic: "Less powerful • Data stays on your device",
+                .bengali: "Less powerful • Data stays on your device",
+                .russian: "Less powerful • Data stays on your device",
+                .portuguese: "Menos poderoso • Los datos permanecen en tu dispositivo",
+                .indonesian: "Less powerful • Data stays on your device"
             ],
-            "n'est pas configuré. Utilisation de l'algorithme local.": [
-                .french: "n'est pas configuré. Utilisation de l'algorithme local.",
+            "n'est pas configuré. Utilisation de l'algorithme local.": [                .french: "n'est pas configuré. Utilisation de l'algorithme local.",
                 .english: "is not configured. Using local algorithm.",
                 .spanish: "no está configurado. Usando algoritmo local.",
-                .german: "ist nicht konfiguriert. Lokaler Algorithmus wird verwendet.",
-                .italian: "non è configurato. Uso dell'algoritmo locale."
+                .hindi: "is not configured. Using local algorithm.",
+                .chineseSimplified: "is not configured. Using local algorithm.",
+                .arabic: "is not configured. Using local algorithm.",
+                .bengali: "is not configured. Using local algorithm.",
+                .russian: "is not configured. Using local algorithm.",
+                .portuguese: "no está configurado. Usando algoritmo local.",
+                .indonesian: "is not configured. Using local algorithm."
             ],
-            "outfits générés": [
-                .french: "outfits générés",
+            "outfits générés": [                .french: "outfits générés",
                 .english: "outfits generated",
                 .spanish: "outfits generados",
-                .german: "Outfits generiert",
-                .italian: "outfit generati"
+                .hindi: "outfits generated",
+                .chineseSimplified: "outfits generated",
+                .arabic: "outfits generated",
+                .bengali: "outfits generated",
+                .russian: "outfits generated",
+                .portuguese: "outfits generados",
+                .indonesian: "outfits generated"
             ],
-            "Sélectionnés pour vous": [
-                .french: "Sélectionnés pour vous",
+            "Sélectionnés pour vous": [                .french: "Sélectionnés pour vous",
                 .english: "Selected for you",
                 .spanish: "Seleccionados para ti",
-                .german: "Für Sie ausgewählt",
-                .italian: "Selezionati per te"
+                .hindi: "Selected for you",
+                .chineseSimplified: "Selected for you",
+                .arabic: "Selected for you",
+                .bengali: "Selected for you",
+                .russian: "Selected for you",
+                .portuguese: "Seleccionados para ti",
+                .indonesian: "Selected for you"
             ],
-            "a sélectionné ces vêtements pour vous": [
-                .french: "a sélectionné ces vêtements pour vous",
+            "a sélectionné ces vêtements pour vous": [                .french: "a sélectionné ces vêtements pour vous",
                 .english: "selected these clothes for you",
                 .spanish: "seleccionó esta ropa para ti",
-                .german: "hat diese Kleidung für Sie ausgewählt",
-                .italian: "ha selezionato questi vestiti per te"
+                .hindi: "selected these clothes for you",
+                .chineseSimplified: "selected these clothes for you",
+                .arabic: "selected these clothes for you",
+                .bengali: "selected these clothes for you",
+                .russian: "selected these clothes for you",
+                .portuguese: "seleccionó esta ropa para ti",
+                .indonesian: "selected these clothes for you"
             ],
-            "Vêtements sélectionnés par": [
-                .french: "Vêtements sélectionnés par",
+            "Vêtements sélectionnés par": [                .french: "Vêtements sélectionnés par",
                 .english: "Clothes selected by",
                 .spanish: "Ropa seleccionada por",
-                .german: "Kleidung ausgewählt von",
-                .italian: "Vestiti selezionati da"
+                .hindi: "Clothes selected by",
+                .chineseSimplified: "Clothes selected by",
+                .arabic: "Clothes selected by",
+                .bengali: "Clothes selected by",
+                .russian: "Clothes selected by",
+                .portuguese: "Ropa seleccionada por",
+                .indonesian: "Clothes selected by"
             ],
-            "Retour": [
-                .french: "Retour",
+            "Retour": [                .french: "Retour",
                 .english: "Back",
                 .spanish: "Volver",
-                .german: "Zurück",
-                .italian: "Indietro"
+                .hindi: "Back",
+                .chineseSimplified: "Back",
+                .arabic: "Back",
+                .bengali: "Back",
+                .russian: "Back",
+                .portuguese: "Volver",
+                .indonesian: "Back"
             ],
-            "Préparation de vos vêtements...": [
-                .french: "Préparation de vos vêtements...",
+            "Préparation de vos vêtements...": [                .french: "Préparation de vos vêtements...",
                 .english: "Preparing your clothes...",
                 .spanish: "Preparando tu ropa...",
-                .german: "Vorbereitung Ihrer Kleidung...",
-                .italian: "Preparazione dei tuoi vestiti..."
+                .hindi: "Preparing your clothes...",
+                .chineseSimplified: "Preparing your clothes...",
+                .arabic: "Preparing your clothes...",
+                .bengali: "Preparing your clothes...",
+                .russian: "Preparing your clothes...",
+                .portuguese: "Preparando tu ropa...",
+                .indonesian: "Preparing your clothes..."
             ],
-            "Chargement de": [
-                .french: "Chargement de",
+            "Chargement de": [                .french: "Chargement de",
                 .english: "Loading",
                 .spanish: "Cargando",
-                .german: "Laden von",
-                .italian: "Caricamento di"
+                .hindi: "Loading",
+                .chineseSimplified: "Loading",
+                .arabic: "Loading",
+                .bengali: "Loading",
+                .russian: "Loading",
+                .portuguese: "Cargando",
+                .indonesian: "Loading"
             ],
-            "article(s)...": [
-                .french: "article(s)...",
+            "article(s)...": [                .french: "article(s)...",
                 .english: "item(s)...",
                 .spanish: "artículo(s)...",
-                .german: "Artikel...",
-                .italian: "articolo(i)..."
+                .hindi: "item(s)...",
+                .chineseSimplified: "item(s)...",
+                .arabic: "item(s)...",
+                .bengali: "item(s)...",
+                .russian: "item(s)...",
+                .portuguese: "artículo(s)...",
+                .indonesian: "item(s)..."
             ],
-            "Envoi des photos à": [
-                .french: "Envoi des photos à",
+            "Envoi des photos à": [                .french: "Envoi des photos à",
                 .english: "Sending photos to",
                 .spanish: "Enviando fotos a",
-                .german: "Senden von Fotos an",
-                .italian: "Invio foto a"
+                .hindi: "Sending photos to",
+                .chineseSimplified: "Sending photos to",
+                .arabic: "Sending photos to",
+                .bengali: "Sending photos to",
+                .russian: "Sending photos to",
+                .portuguese: "Enviando fotos a",
+                .indonesian: "Sending photos to"
             ],
-            "...": [
-                .french: "...",
+            "...": [                .french: "...",
                 .english: "...",
                 .spanish: "...",
-                .german: "...",
-                .italian: "..."
+                .hindi: "...",
+                .chineseSimplified: "...",
+                .arabic: "...",
+                .bengali: "...",
+                .russian: "...",
+                .portuguese: "...",
+                .indonesian: "..."
             ],
-            "réfléchit...": [
-                .french: "réfléchit...",
+            "réfléchit...": [                .french: "réfléchit...",
                 .english: "is thinking...",
                 .spanish: "está pensando...",
-                .german: "denkt nach...",
-                .italian: "sta pensando..."
+                .hindi: "is thinking...",
+                .chineseSimplified: "is thinking...",
+                .arabic: "is thinking...",
+                .bengali: "is thinking...",
+                .russian: "is thinking...",
+                .portuguese: "está pensando...",
+                .indonesian: "is thinking..."
             ],
-            "sélectionne vos vêtements...": [
-                .french: "sélectionne vos vêtements...",
+            "sélectionne vos vêtements...": [                .french: "sélectionne vos vêtements...",
                 .english: "is selecting your clothes...",
                 .spanish: "está seleccionando tu ropa...",
-                .german: "wählt Ihre Kleidung aus...",
-                .italian: "sta selezionando i tuoi vestiti..."
+                .hindi: "is selecting your clothes...",
+                .chineseSimplified: "is selecting your clothes...",
+                .arabic: "is selecting your clothes...",
+                .bengali: "is selecting your clothes...",
+                .russian: "is selecting your clothes...",
+                .portuguese: "está seleccionando tu ropa...",
+                .indonesian: "is selecting your clothes..."
             ],
-            "Création des meilleurs outfits...": [
-                .french: "Création des meilleurs outfits...",
+            "Création des meilleurs outfits...": [                .french: "Création des meilleurs outfits...",
                 .english: "Creating the best outfits...",
                 .spanish: "Creando los mejores outfits...",
-                .german: "Erstellen der besten Outfits...",
-                .italian: "Creazione dei migliori outfit..."
+                .hindi: "Creating the best outfits...",
+                .chineseSimplified: "Creating the best outfits...",
+                .arabic: "Creating the best outfits...",
+                .bengali: "Creating the best outfits...",
+                .russian: "Creating the best outfits...",
+                .portuguese: "Creando los mejores outfits...",
+                .indonesian: "Creating the best outfits..."
             ],
-            "Finalisation...": [
-                .french: "Finalisation...",
+            "Finalisation...": [                .french: "Finalisation...",
                 .english: "Finalizing...",
                 .spanish: "Finalizando...",
-                .german: "Abschließen...",
-                .italian: "Finalizzazione..."
+                .hindi: "Finalizing...",
+                .chineseSimplified: "Finalizing...",
+                .arabic: "Finalizing...",
+                .bengali: "Finalizing...",
+                .russian: "Finalizing...",
+                .portuguese: "Finalizando...",
+                .indonesian: "Finalizing..."
             ],
-            "Analyse des couleurs, matières et styles...": [
-                .french: "Analyse des couleurs, matières et styles...",
+            "Analyse des couleurs, matières et styles...": [                .french: "Analyse des couleurs, matières et styles...",
                 .english: "Analyzing colors, materials and styles...",
                 .spanish: "Analizando colores, materiales y estilos...",
-                .german: "Analysieren von Farben, Materialien und Stilen...",
-                .italian: "Analisi di colori, materiali e stili..."
+                .hindi: "Analyzing colors, materials and styles...",
+                .chineseSimplified: "Analyzing colors, materials and styles...",
+                .arabic: "Analyzing colors, materials and styles...",
+                .bengali: "Analyzing colors, materials and styles...",
+                .russian: "Analyzing colors, materials and styles...",
+                .portuguese: "Analizando colores, materiales y estilos...",
+                .indonesian: "Analyzing colors, materials and styles..."
             ],
-            "Analyse de votre garde-robe...": [
-                .french: "Analyse de votre garde-robe...",
+            "Analyse de votre garde-robe...": [                .french: "Analyse de votre garde-robe...",
                 .english: "Analyzing your wardrobe...",
                 .spanish: "Analizando tu guardarropa...",
-                .german: "Analysieren Ihrer Garderobe...",
-                .italian: "Analisi del tuo guardaroba..."
+                .hindi: "Analyzing your wardrobe...",
+                .chineseSimplified: "Analyzing your wardrobe...",
+                .arabic: "Analyzing your wardrobe...",
+                .bengali: "Analyzing your wardrobe...",
+                .russian: "Analyzing your wardrobe...",
+                .portuguese: "Analizando tu guardarropa...",
+                .indonesian: "Analyzing your wardrobe..."
             ],
-            "Articles insuffisants": [
-                .french: "Articles insuffisants",
+            "Articles insuffisants": [                .french: "Articles insuffisants",
                 .english: "Insufficient items",
                 .spanish: "Artículos insuficientes",
-                .german: "Unzureichende Artikel",
-                .italian: "Articoli insufficienti"
+                .hindi: "Insufficient items",
+                .chineseSimplified: "Insufficient items",
+                .arabic: "Insufficient items",
+                .bengali: "Insufficient items",
+                .russian: "Insufficient items",
+                .portuguese: "Artículos insuficientes",
+                .indonesian: "Insufficient items"
             ],
             "Vous devez avoir au moins 2 articles dans votre garde-robe avec leurs photos pour générer des outfits. Ajoutez des vêtements depuis la section \"Ma Garde-robe\".": [
                 .french: "Vous devez avoir au moins 2 articles dans votre garde-robe avec leurs photos pour générer des outfits. Ajoutez des vêtements depuis la section \"Ma Garde-robe\".",
                 .english: "You must have at least 2 items in your wardrobe with their photos to generate outfits. Add clothes from the \"My Wardrobe\" section.",
-                .spanish: "Debes tener al menos 2 artículos en tu guardarropa con sus fotos para generar outfits. Agrega ropa desde la sección \"Mi Guardarropa\".",
-                .german: "Sie müssen mindestens 2 Artikel in Ihrer Garderobe mit Fotos haben, um Outfits zu generieren. Fügen Sie Kleidung aus dem Abschnitt \"Meine Garderobe\" hinzu.",
-                .italian: "Devi avere almeno 2 articoli nel tuo guardaroba con le loro foto per generare outfit. Aggiungi vestiti dalla sezione \"Il Mio Guardaroba\"."
+                .spanish: "Debes tener al menos 2 artículos en tu guardarropa con sus fotos para generar outfits. Agrega ropa desde la sección \"Mi Armario\".",
+                .hindi: "You must have at least 2 items in your wardrobe with their photos to generate outfits. Add clothes from the \"My Wardrobe\" section.",
+                .chineseSimplified: "You must have at least 2 items in your wardrobe with their photos to generate outfits. Add clothes from the \"My Wardrobe\" section.",
+                .arabic: "You must have at least 2 items in your wardrobe with their photos to generate outfits. Add clothes from the \"My Wardrobe\" section.",
+                .bengali: "You must have at least 2 items in your wardrobe with their photos to generate outfits. Add clothes from the \"My Wardrobe\" section.",
+                .russian: "You must have at least 2 items in your wardrobe with their photos to generate outfits. Add clothes from the \"My Wardrobe\" section.",
+                .portuguese: "Você deve ter pelo menos 2 itens em seu guarda-roupa com suas fotos para gerar outfits. Adicione roupas da seção \"Meu Guarda-roupa\".",
+                .indonesian: "You must have at least 2 items in your wardrobe with their photos to generate outfits. Add clothes from the \"My Wardrobe\" section."
             ],
-            "Vous devez avoir au moins 2 articles dans votre garde-robe pour générer des outfits.": [
-                .french: "Vous devez avoir au moins 2 articles dans votre garde-robe pour générer des outfits.",
+            "Vous devez avoir au moins 2 articles dans votre garde-robe pour générer des outfits.": [                .french: "Vous devez avoir au moins 2 articles dans votre garde-robe pour générer des outfits.",
                 .english: "You must have at least 2 items in your wardrobe to generate outfits.",
                 .spanish: "Debes tener al menos 2 artículos en tu guardarropa para generar outfits.",
-                .german: "Sie müssen mindestens 2 Artikel in Ihrer Garderobe haben, um Outfits zu generieren.",
-                .italian: "Devi avere almeno 2 articoli nel tuo guardaroba per generare outfit."
+                .hindi: "You must have at least 2 items in your wardrobe to generate outfits.",
+                .chineseSimplified: "You must have at least 2 items in your wardrobe to generate outfits.",
+                .arabic: "You must have at least 2 items in your wardrobe to generate outfits.",
+                .bengali: "You must have at least 2 items in your wardrobe to generate outfits.",
+                .russian: "You must have at least 2 items in your wardrobe to generate outfits.",
+                .portuguese: "Debes tener al menos 2 artículos en tu guardarropa para generar outfits.",
+                .indonesian: "You must have at least 2 items in your wardrobe to generate outfits."
             ],
-            "Aucun outfit trouvé. Assurez-vous d'avoir au moins un haut et un bas dans votre garde-robe.": [
-                .french: "Aucun outfit trouvé. Assurez-vous d'avoir au moins un haut et un bas dans votre garde-robe.",
+            "Aucun outfit trouvé. Assurez-vous d'avoir au moins un haut et un bas dans votre garde-robe.": [                .french: "Aucun outfit trouvé. Assurez-vous d'avoir au moins un haut et un bas dans votre garde-robe.",
                 .english: "No outfit found. Make sure you have at least a top and a bottom in your wardrobe.",
                 .spanish: "No se encontró ningún outfit. Asegúrate de tener al menos una parte superior y una inferior en tu guardarropa.",
-                .german: "Kein Outfit gefunden. Stellen Sie sicher, dass Sie mindestens ein Oberteil und ein Unterteil in Ihrer Garderobe haben.",
-                .italian: "Nessun outfit trovato. Assicurati di avere almeno una parte superiore e una inferiore nel tuo guardaroba."
+                .hindi: "No outfit found. Make sure you have at least a top and a bottom in your wardrobe.",
+                .chineseSimplified: "No outfit found. Make sure you have at least a top and a bottom in your wardrobe.",
+                .arabic: "No outfit found. Make sure you have at least a top and a bottom in your wardrobe.",
+                .bengali: "No outfit found. Make sure you have at least a top and a bottom in your wardrobe.",
+                .russian: "No outfit found. Make sure you have at least a top and a bottom in your wardrobe.",
+                .portuguese: "No se encontró ningún outfit. Asegúrate de tener al menos una parte superior y una inferior en tu guardarropa.",
+                .indonesian: "No outfit found. Make sure you have at least a top and a bottom in your wardrobe."
             ],
-            "Impossible de récupérer la météo. Vérifiez votre connexion et la localisation.": [
-                .french: "Impossible de récupérer la météo. Vérifiez votre connexion et la localisation.",
+            "Impossible de récupérer la météo. Vérifiez votre connexion et la localisation.": [                .french: "Impossible de récupérer la météo. Vérifiez votre connexion et la localisation.",
                 .english: "Unable to retrieve weather. Check your connection and location.",
                 .spanish: "No se puede recuperar el clima. Verifica tu conexión y ubicación.",
-                .german: "Wetter kann nicht abgerufen werden. Überprüfen Sie Ihre Verbindung und Ihren Standort.",
-                .italian: "Impossibile recuperare il meteo. Verifica la connessione e la posizione."
+                .hindi: "Unable to retrieve weather. Check your connection and location.",
+                .chineseSimplified: "Unable to retrieve weather. Check your connection and location.",
+                .arabic: "Unable to retrieve weather. Check your connection and location.",
+                .bengali: "Unable to retrieve weather. Check your connection and location.",
+                .russian: "Unable to retrieve weather. Check your connection and location.",
+                .portuguese: "No se puede recuperar el clima. Verifica tu conexión y ubicación.",
+                .indonesian: "Unable to retrieve weather. Check your connection and location."
             ],
-            "Veuillez d'abord récupérer la météo pour cette date.": [
-                .french: "Veuillez d'abord récupérer la météo pour cette date.",
+            "Veuillez d'abord récupérer la météo pour cette date.": [                .french: "Veuillez d'abord récupérer la météo pour cette date.",
                 .english: "Please first get the weather for this date.",
                 .spanish: "Por favor, primero obtén el clima para esta fecha.",
-                .german: "Bitte holen Sie zuerst das Wetter für dieses Datum ab.",
-                .italian: "Per favore, ottieni prima il meteo per questa data."
+                .hindi: "Please first get the weather for this date.",
+                .chineseSimplified: "Please first get the weather for this date.",
+                .arabic: "Please first get the weather for this date.",
+                .bengali: "Please first get the weather for this date.",
+                .russian: "Please first get the weather for this date.",
+                .portuguese: "Por favor, primero obtén el clima para esta fecha.",
+                .indonesian: "Please first get the weather for this date."
             ],
-            "Profil utilisateur non trouvé.": [
-                .french: "Profil utilisateur non trouvé.",
+            "Profil utilisateur non trouvé.": [                .french: "Profil utilisateur non trouvé.",
                 .english: "User profile not found.",
                 .spanish: "Perfil de usuario no encontrado.",
-                .german: "Benutzerprofil nicht gefunden.",
-                .italian: "Profilo utente non trovato."
+                .hindi: "User profile not found.",
+                .chineseSimplified: "User profile not found.",
+                .arabic: "User profile not found.",
+                .bengali: "User profile not found.",
+                .russian: "User profile not found.",
+                .portuguese: "Perfil de usuario no encontrado.",
+                .indonesian: "User profile not found."
             ],
-            "Ajouté à l'historique": [
-                .french: "Ajouté à l'historique",
+            "Ajouté à l'historique": [                .french: "Ajouté à l'historique",
                 .english: "Added to history",
                 .spanish: "Agregado al historial",
-                .german: "Zu Verlauf hinzugefügt",
-                .italian: "Aggiunto alla cronologia"
+                .hindi: "Added to history",
+                .chineseSimplified: "Added to history",
+                .arabic: "Added to history",
+                .bengali: "Added to history",
+                .russian: "Added to history",
+                .portuguese: "Agregado al historial",
+                .indonesian: "Added to history"
             ],
             // Wardrobe Management
-            "Rechercher...": [
-                .french: "Rechercher...",
+            "Rechercher...": [                .french: "Rechercher...",
                 .english: "Search...",
                 .spanish: "Buscar...",
-                .german: "Suchen...",
-                .italian: "Cerca..."
+                .hindi: "Search...",
+                .chineseSimplified: "Search...",
+                .arabic: "Search...",
+                .bengali: "Search...",
+                .russian: "Search...",
+                .portuguese: "Buscar...",
+                .indonesian: "Search..."
             ],
-            "Aucun {category} dans votre garde-robe": [
-                .french: "Aucun {category} dans votre garde-robe",
+            "Aucun {category} dans votre garde-robe": [                .french: "Aucun {category} dans votre garde-robe",
                 .english: "No {category} in your wardrobe",
                 .spanish: "No hay {category} en tu armario",
-                .german: "Kein {category} in Ihrer Garderobe",
-                .italian: "Nessun {category} nel tuo guardaroba"
+                .hindi: "No {category} in your wardrobe",
+                .chineseSimplified: "No {category} in your wardrobe",
+                .arabic: "No {category} in your wardrobe",
+                .bengali: "No {category} in your wardrobe",
+                .russian: "No {category} in your wardrobe",
+                .portuguese: "No hay {category} en tu armario",
+                .indonesian: "No {category} in your wardrobe"
             ],
-            "Appuyez sur + pour ajouter vos premiers vêtements": [
-                .french: "Appuyez sur + pour ajouter vos premiers vêtements",
+            "Appuyez sur + pour ajouter vos premiers vêtements": [                .french: "Appuyez sur + pour ajouter vos premiers vêtements",
                 .english: "Press + to add your first clothes",
                 .spanish: "Presiona + para agregar tu primera ropa",
-                .german: "Drücken Sie +, um Ihre erste Kleidung hinzuzufügen",
-                .italian: "Premi + per aggiungere i tuoi primi vestiti"
+                .hindi: "Press + to add your first clothes",
+                .chineseSimplified: "Press + to add your first clothes",
+                .arabic: "Press + to add your first clothes",
+                .bengali: "Press + to add your first clothes",
+                .russian: "Press + to add your first clothes",
+                .portuguese: "Presiona + para agregar tu primera ropa",
+                .indonesian: "Press + to add your first clothes"
             ],
-            "Nom": [
-                .french: "Nom",
+            "Nom": [                .french: "Nom",
                 .english: "Name",
                 .spanish: "Nombre",
-                .german: "Name",
-                .italian: "Nome"
+                .hindi: "Name",
+                .chineseSimplified: "Name",
+                .arabic: "Name",
+                .bengali: "Name",
+                .russian: "Name",
+                .portuguese: "Nombre",
+                .indonesian: "Name"
             ],
-            "Catégorie": [
-                .french: "Catégorie",
+            "Catégorie": [                .french: "Catégorie",
                 .english: "Category",
                 .spanish: "Categoría",
-                .german: "Kategorie",
-                .italian: "Categoria"
+                .hindi: "Category",
+                .chineseSimplified: "Category",
+                .arabic: "Category",
+                .bengali: "Category",
+                .russian: "Category",
+                .portuguese: "Categoría",
+                .indonesian: "Category"
             ],
-            "Couleur": [
-                .french: "Couleur",
+            "Couleur": [                .french: "Couleur",
                 .english: "Color",
                 .spanish: "Color",
-                .german: "Farbe",
-                .italian: "Colore"
+                .hindi: "Color",
+                .chineseSimplified: "Color",
+                .arabic: "Color",
+                .bengali: "Color",
+                .russian: "Color",
+                .portuguese: "Color",
+                .indonesian: "Color"
             ],
-            "Marque": [
-                .french: "Marque",
+            "Marque": [                .french: "Marque",
                 .english: "Brand",
                 .spanish: "Marca",
-                .german: "Marke",
-                .italian: "Marca"
+                .hindi: "Brand",
+                .chineseSimplified: "Brand",
+                .arabic: "Brand",
+                .bengali: "Brand",
+                .russian: "Brand",
+                .portuguese: "Marca",
+                .indonesian: "Brand"
             ],
-            "Matière": [
-                .french: "Matière",
+            "Matière": [                .french: "Matière",
                 .english: "Material",
                 .spanish: "Material",
-                .german: "Material",
-                .italian: "Materiale"
+                .hindi: "Material",
+                .chineseSimplified: "Material",
+                .arabic: "Material",
+                .bengali: "Material",
+                .russian: "Material",
+                .portuguese: "Material",
+                .indonesian: "Material"
             ],
-            "Saisons": [
-                .french: "Saisons",
+            "Saisons": [                .french: "Saisons",
                 .english: "Seasons",
                 .spanish: "Estaciones",
-                .german: "Jahreszeiten",
-                .italian: "Stagioni"
+                .hindi: "Seasons",
+                .chineseSimplified: "Seasons",
+                .arabic: "Seasons",
+                .bengali: "Seasons",
+                .russian: "Seasons",
+                .portuguese: "Estaciones",
+                .indonesian: "Seasons"
             ],
-            "Supprimer": [
-                .french: "Supprimer",
+            "Supprimer": [                .french: "Supprimer",
                 .english: "Delete",
                 .spanish: "Eliminar",
-                .german: "Löschen",
-                .italian: "Elimina"
+                .hindi: "Delete",
+                .chineseSimplified: "Delete",
+                .arabic: "Delete",
+                .bengali: "Delete",
+                .russian: "Delete",
+                .portuguese: "Eliminar",
+                .indonesian: "Delete"
             ],
-            "Êtes-vous sûr de vouloir supprimer cet article de votre garde-robe ?": [
-                .french: "Êtes-vous sûr de vouloir supprimer cet article de votre garde-robe ?",
+            "Êtes-vous sûr de vouloir supprimer cet article de votre garde-robe ?": [                .french: "Êtes-vous sûr de vouloir supprimer cet article de votre garde-robe ?",
                 .english: "Are you sure you want to delete this item from your wardrobe?",
                 .spanish: "¿Estás seguro de que quieres eliminar este artículo de tu armario?",
-                .german: "Sind Sie sicher, dass Sie diesen Artikel aus Ihrer Garderobe löschen möchten?",
-                .italian: "Sei sicuro di voler eliminare questo articolo dal tuo guardaroba?"
+                .hindi: "Are you sure you want to delete this item from your wardrobe?",
+                .chineseSimplified: "Are you sure you want to delete this item from your wardrobe?",
+                .arabic: "Are you sure you want to delete this item from your wardrobe?",
+                .bengali: "Are you sure you want to delete this item from your wardrobe?",
+                .russian: "Are you sure you want to delete this item from your wardrobe?",
+                .portuguese: "¿Estás seguro de que quieres eliminar este artículo de tu armario?",
+                .indonesian: "Are you sure you want to delete this item from your wardrobe?"
             ]
         ]
         
@@ -1427,8 +2219,8 @@ struct LocalizedString {
                 return translation
             }
             
-            // Fallback: essayer les langues de base dans l'ordre de priorité
-            let fallbackLanguages: [AppLanguage] = [.english, .french, .spanish, .german, .italian]
+            // Fallback: essayer les langues les plus parlées dans l'ordre de priorité
+            let fallbackLanguages: [AppLanguage] = [.english, .spanish, .french, .portuguese, .russian, .arabic, .hindi, .chineseSimplified, .bengali, .indonesian]
             for fallbackLang in fallbackLanguages {
                 if let translation = translationsForKey[fallbackLang] {
                     return translation

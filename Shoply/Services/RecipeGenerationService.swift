@@ -15,7 +15,10 @@ class RecipeGenerationService: ObservableObject {
     private let geminiService = GeminiService.shared
     private let intelligentLocalAI = IntelligentLocalAI.shared
     
-    private init() {}
+    private init() {
+        // S'assurer que Gemini est activé au démarrage
+        geminiService.reloadAPIKey()
+    }
     
     /// Générer une recette à partir d'une liste d'ingrédients
     func generateRecipe(from ingredients: [FoodItem]) async throws -> Recipe {
@@ -38,10 +41,12 @@ class RecipeGenerationService: ObservableObject {
         }
         """
         
-        // Utiliser Gemini, puis Shoply AI en fallback
+        // Utiliser Gemini (toujours activé avec la clé intégrée), puis Shoply AI en fallback
+        // Gemini est toujours activé car on a une clé API intégrée
         if geminiService.isEnabled {
             return try await generateRecipeWithGemini(prompt: prompt)
         } else {
+            // Fallback sur Shoply AI si jamais Gemini est désactivé
             return try await generateRecipeWithLocalAI(prompt: prompt, ingredients: ingredients)
         }
     }
