@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-struct ChatMessage: Identifiable, Codable {
+struct ChatMessage: Identifiable, Codable, Equatable {
     let id: UUID
     let content: String
     let isUser: Bool
@@ -29,6 +29,11 @@ struct ChatMessage: Identifiable, Codable {
     var image: UIImage? {
         guard let imageData = imageData else { return nil }
         return UIImage(data: imageData)
+    }
+    
+    // Conformité à Equatable - comparer uniquement l'ID pour l'efficacité
+    static func == (lhs: ChatMessage, rhs: ChatMessage) -> Bool {
+        return lhs.id == rhs.id
     }
 }
 

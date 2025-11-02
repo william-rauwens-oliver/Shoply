@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Combine
+import CoreLocation
 
 /// Écran de sélection intelligente d'outfit avec météo automatique - Design moderne
 struct SmartOutfitSelectionScreen: View {
@@ -377,6 +379,10 @@ struct SmartOutfitSelectionScreen: View {
 
 struct ModernHeaderView: View {
     let userProfile: UserProfile
+    @StateObject private var weatherService = WeatherService.shared
+    @StateObject private var settingsManager = AppSettingsManager.shared
+    @State private var greetingKey = "Bonjour"
+    @State private var currentTime = Date()
     
     var body: some View {
         VStack(spacing: 12) {
@@ -385,7 +391,8 @@ struct ModernHeaderView: View {
                 .foregroundColor(AppColors.primaryText)
             
             if !userProfile.firstName.isEmpty {
-                Text("Bonjour \(userProfile.firstName)")
+                let greetingText = greetingKey.localized
+                Text("\(greetingText), \(userProfile.firstName)")
                     .font(.playfairDisplayBold(size: 32))
                     .foregroundColor(AppColors.primaryText)
             } else {
@@ -399,6 +406,28 @@ struct ModernHeaderView: View {
                 .foregroundColor(AppColors.secondaryText)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+        }
+        .onAppear {
+            updateGreeting()
+        }
+        .onChange(of: currentTime) { _, _ in
+            updateGreeting()
+        }
+        .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
+            currentTime = Date()
+        }
+    }
+    
+    private func updateGreeting() {
+        if let location = weatherService.location {
+            greetingKey = SunsetService.shared.getGreeting(
+                latitude: location.coordinate.latitude,
+                longitude: location.coordinate.longitude,
+                currentTime: currentTime
+            )
+        } else {
+            let hour = Calendar.current.component(.hour, from: currentTime)
+            greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
         }
     }
 }

@@ -109,48 +109,71 @@ struct SimpleHeader: View {
     let currentTime: Date
     @StateObject private var dataManager = DataManager.shared
     @StateObject private var weatherService = WeatherService.shared
-    @State private var greetingText = "Bonjour"
+    @StateObject private var settingsManager = AppSettingsManager.shared
+    @State private var greetingKey = "Bonjour"
     
     var body: some View {
-                VStack(alignment: .leading, spacing: 8) {
-                    if let profile = dataManager.loadUserProfile(), !profile.firstName.isEmpty {
+        VStack(alignment: .leading, spacing: 8) {
+            let greetingText = greetingKey.localized
+            if let profile = dataManager.loadUserProfile(), !profile.firstName.isEmpty {
                 Text("\(greetingText), \(profile.firstName)")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(AppColors.primaryText)
-                    } else {
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(AppColors.primaryText)
+            } else {
                 Text(greetingText)
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(AppColors.primaryText)
-                    }
-                    
-                    Text(formattedDate)
-                        .font(.system(size: 15, weight: .regular))
-                        .foregroundColor(AppColors.secondaryText)
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(AppColors.primaryText)
+            }
+            
+            Text(formattedDate)
+                .font(.system(size: 15, weight: .regular))
+                .foregroundColor(AppColors.secondaryText)
         }
         .padding(.horizontal, 20)
         .onAppear {
+            updateGreeting()
+        }
+        .onChange(of: currentTime) { _, _ in
+            updateGreeting()
+        }
+        .onChange(of: settingsManager.selectedLanguage) { _, _ in
             updateGreeting()
         }
     }
     
     private func updateGreeting() {
         if let location = weatherService.location {
-            let isDay = SunsetService.shared.isDaytime(
+            greetingKey = SunsetService.shared.getGreeting(
                 latitude: location.coordinate.latitude,
                 longitude: location.coordinate.longitude,
                 currentTime: currentTime
             )
-            greetingText = isDay ? "Bonjour" : "Bonsoir"
         } else {
-        let hour = Calendar.current.component(.hour, from: currentTime)
-            greetingText = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
-            }
+            let hour = Calendar.current.component(.hour, from: currentTime)
+            greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
         }
+    }
     
     private var formattedDate: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE d MMMM"
-        formatter.locale = Locale(identifier: "fr_FR")
+        
+        // Utiliser la locale appropriée selon la langue sélectionnée
+        let localeIdentifier: String
+        switch settingsManager.selectedLanguage {
+        case .english: localeIdentifier = "en_US"
+        case .spanish: localeIdentifier = "es_ES"
+        case .french: localeIdentifier = "fr_FR"
+        case .portuguese: localeIdentifier = "pt_PT"
+        case .russian: localeIdentifier = "ru_RU"
+        case .arabic: localeIdentifier = "ar_SA"
+        case .hindi: localeIdentifier = "hi_IN"
+        case .chineseSimplified: localeIdentifier = "zh_CN"
+        case .bengali: localeIdentifier = "bn_BD"
+        case .indonesian: localeIdentifier = "id_ID"
+        }
+        
+        formatter.locale = Locale(identifier: localeIdentifier)
         return formatter.string(from: currentTime).capitalized
     }
 }
@@ -160,11 +183,11 @@ struct SimpleSelectionCard: View {
     var body: some View {
         HStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Sélection IA")
+                Text("Sélection IA".localized)
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(AppColors.primaryText)
                 
-                Text("Créez vos tenues avec l'intelligence artificielle")
+                Text("Créez vos tenues avec l'intelligence artificielle".localized)
                     .font(.system(size: 14, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
                     .lineLimit(2)
@@ -201,12 +224,12 @@ struct SimpleWardrobeCard: View {
                     .font(.system(size: 20, weight: .medium))
                     .foregroundColor(AppColors.buttonPrimary)
                 
-                Text("Garde-robe")
+                Text("Garde-robe".localized)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(AppColors.primaryText)
             }
             
-            Text("Vos vêtements")
+            Text("Vos vêtements".localized)
                 .font(.system(size: 13, weight: .regular))
                 .foregroundColor(AppColors.secondaryText)
         }
@@ -234,12 +257,12 @@ struct SimpleHistoryCard: View {
                     .font(.system(size: 20, weight: .medium))
                     .foregroundColor(AppColors.buttonPrimary)
                 
-                Text("Historique")
+                Text("Historique".localized)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(AppColors.primaryText)
             }
             
-            Text("Tenues portées")
+            Text("Tenues portées".localized)
                 .font(.system(size: 13, weight: .regular))
                 .foregroundColor(AppColors.secondaryText)
         }
@@ -263,11 +286,11 @@ struct SimpleCalendarCard: View {
     var body: some View {
         HStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Calendrier")
+                Text("Calendrier".localized)
                     .font(.system(size: 22, weight: .bold))
                         .foregroundColor(AppColors.primaryText)
 
-                Text("Planifiez vos tenues")
+                Text("Planifiez vos tenues".localized)
                         .font(.system(size: 14, weight: .regular))
                         .foregroundColor(AppColors.secondaryText)
                 }
@@ -304,13 +327,13 @@ struct SimpleChatButton: View {
             Button {
                 showingChat = true
             } label: {
-                Label("Nouvelle conversation", systemImage: "square.and.pencil")
+                Label("Nouvelle conversation".localized, systemImage: "square.and.pencil")
             }
             
             Button {
                 showingConversations = true
             } label: {
-                Label("Historique", systemImage: "message.fill")
+                Label("Historique".localized, systemImage: "message.fill")
             }
         } label: {
                 Image(systemName: "sparkles")

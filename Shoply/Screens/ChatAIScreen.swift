@@ -115,6 +115,122 @@ struct ChatAIScreen: View {
         isIPad ? 700 : .infinity
     }
     
+    // Vue principale du contenu
+    private var contentView: some View {
+        VStack(spacing: 0) {
+            // Zone des messages avec design épuré
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: isIPad ? 24 : 20) {
+                        // Message de bienvenue
+                        if messages.isEmpty {
+                            WelcomeMessageView(isIPad: isIPad)
+                                .padding(.top, isIPad ? 60 : 40)
+                                .id("welcome")
+                        }
+                        
+                        // Messages avec espacement optimisé
+                        ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                            MessageBubble(message: message, isIPad: isIPad)
+                                .id(message.id)
+                        }
+                        
+                        // Indicateur de chargement moderne
+                        if isSending {
+                            LoadingIndicatorView(isIPad: isIPad)
+                                .padding(.top, isIPad ? 8 : 4)
+                                .id("loading")
+                        }
+                        
+                        // Spacer pour pousser vers le bas
+                        Color.clear
+                            .frame(height: 1)
+                            .id("bottom")
+                    }
+                    .padding(.horizontal, isIPad ? 40 : 20)
+                    .padding(.vertical, isIPad ? 32 : 20)
+                    .frame(maxWidth: maxContentWidth)
+                    .frame(maxWidth: .infinity)
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .defaultScrollAnchor(.bottom)
+                .onAppear {
+                    scrollToBottom(proxy: proxy)
+                }
+                .onChange(of: messages.count) { oldValue, newValue in
+                    if newValue > oldValue {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            scrollToMessage(proxy: proxy)
+                        }
+                    }
+                }
+                .onChange(of: isSending) { oldValue, newValue in
+                    if newValue {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.easeOut(duration: 0.4)) {
+                                proxy.scrollTo("loading", anchor: .bottom)
+                            }
+                        }
+                    } else {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            scrollToMessage(proxy: proxy)
+                        }
+                    }
+                }
+                .onChange(of: aiMode) { oldValue, newValue in
+                    if oldValue != newValue {
+                        handleAIModeChange(newValue: newValue, proxy: proxy)
+                    }
+                }
+            }
+            
+            // Suggestions de messages
+            if messages.isEmpty || (messages.count <= 2 && messages.allSatisfy { !$0.isUser }) {
+                MessageSuggestionsView(
+                    suggestions: getSuggestions(),
+                    onSuggestionTapped: { suggestion in
+                        inputText = suggestion
+                    },
+                    isIPad: isIPad,
+                    maxWidth: maxContentWidth
+                )
+                .padding(.horizontal, isIPad ? 40 : 20)
+                .padding(.vertical, isIPad ? 12 : 10)
+            }
+            
+            // Séparateur
+            Rectangle()
+                .fill(AppColors.separator)
+                .frame(height: 0.5)
+                .padding(.horizontal, isIPad ? 40 : 20)
+            
+            // Zone de saisie
+            ModernInputArea(
+                inputText: $inputText,
+                isSending: isSending,
+                isIPad: isIPad,
+                selectedPhoto: $selectedPhoto,
+                selectedImage: $selectedImage,
+                onSend: sendMessage,
+                maxWidth: maxContentWidth
+            )
+            .onChange(of: selectedPhoto) { oldValue, newValue in
+                Task {
+                    if let newValue = newValue {
+                        if let data = try? await newValue.loadTransferable(type: Data.self),
+                           let image = UIImage(data: data) {
+                            await MainActor.run {
+                                selectedImage = image
+                            }
+                        }
+                    } else {
+                        selectedImage = nil
+                    }
+                }
+            }
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -122,168 +238,7 @@ struct ChatAIScreen: View {
                 AppColors.background
                     .ignoresSafeArea()
                 
-                VStack(spacing: 0) {
-                    // Zone des messages avec design épuré
-                    ScrollViewReader { proxy in
-                        ScrollView {
-                            LazyVStack(spacing: isIPad ? 24 : 20) {
-                                // Message de bienvenue
-                                if messages.isEmpty {
-                                    WelcomeMessageView(isIPad: isIPad)
-                                        .padding(.top, isIPad ? 60 : 40)
-                                        .id("welcome")
-                                }
-                                
-                                // Messages avec espacement optimisé
-                                ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
-                                    MessageBubble(message: message, isIPad: isIPad)
-                                        .id(message.id)
-                                }
-                                
-                                // Indicateur de chargement moderne
-                                if isSending {
-                                    LoadingIndicatorView(isIPad: isIPad)
-                                        .padding(.top, isIPad ? 8 : 4)
-                                        .id("loading")
-                                }
-                                
-                                // Spacer pour pousser vers le bas
-                                Color.clear
-                                    .frame(height: 1)
-                                    .id("bottom")
-                            }
-                            .padding(.horizontal, isIPad ? 40 : 20)
-                            .padding(.vertical, isIPad ? 32 : 20)
-                            .frame(maxWidth: maxContentWidth)
-                            .frame(maxWidth: .infinity)
-                        }
-                        .scrollDismissesKeyboard(.interactively)
-                        .defaultScrollAnchor(.bottom)
-                        .onAppear {
-                            // Scroller vers le bas immédiatement au chargement
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                withAnimation(.easeOut(duration: 0.3)) {
-                                    if let lastMessage = messages.last {
-                                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                                    } else if !messages.isEmpty && messages.count > 0 {
-                                        proxy.scrollTo(messages[messages.count - 1].id, anchor: .bottom)
-                                    } else {
-                                        proxy.scrollTo("bottom", anchor: .bottom)
-                                    }
-                                }
-                            }
-                        }
-                        .onChange(of: messages.count) { oldValue, newValue in
-                            // Scroller vers le dernier message quand un nouveau est ajouté
-                            if newValue > oldValue {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                    withAnimation(.easeOut(duration: 0.4)) {
-                                        if isSending {
-                                            proxy.scrollTo("loading", anchor: .bottom)
-                                        } else if let lastMessage = messages.last {
-                                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                                        } else {
-                                            proxy.scrollTo("bottom", anchor: .bottom)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .onChange(of: isSending) { oldValue, newValue in
-                            // Scroller vers le loading quand il apparaît
-                            if newValue {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                    withAnimation(.easeOut(duration: 0.4)) {
-                                        proxy.scrollTo("loading", anchor: .bottom)
-                                    }
-                                }
-                            } else {
-                                // Quand le loading disparaît (réponse reçue), scroller vers le dernier message
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                    withAnimation(.easeOut(duration: 0.4)) {
-                                        if let lastMessage = messages.last {
-                                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                                        } else {
-                                            proxy.scrollTo("bottom", anchor: .bottom)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .onChange(of: aiMode) { oldValue, newValue in
-                            if oldValue != newValue {
-                                let modeName = newValue.rawValue
-                                
-                                if let lastMessage = messages.last, lastMessage.isSystemMessage {
-                                    messages.removeLast()
-                                }
-                                
-                                let switchMessage = ChatMessage(
-                                    content: modeName,
-                                    isUser: false,
-                                    isSystemMessage: true
-                                )
-                                messages.append(switchMessage)
-                                saveConversation()
-                                
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                    withAnimation(.easeOut(duration: 0.4)) {
-                                        if let lastMessage = messages.last {
-                                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                                        } else {
-                                            proxy.scrollTo("bottom", anchor: .bottom)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Suggestions de messages (affichées uniquement s'il y a peu ou pas de messages)
-                    if messages.isEmpty || (messages.count <= 2 && messages.allSatisfy { !$0.isUser }) {
-                        MessageSuggestionsView(
-                            suggestions: getSuggestions(),
-                            onSuggestionTapped: { suggestion in
-                                inputText = suggestion
-                            },
-                            isIPad: isIPad,
-                            maxWidth: maxContentWidth
-                        )
-                        .padding(.horizontal, isIPad ? 40 : 20)
-                        .padding(.vertical, isIPad ? 12 : 10)
-                    }
-                    
-                    // Séparateur élégant
-                    Rectangle()
-                        .fill(AppColors.separator)
-                        .frame(height: 0.5)
-                        .padding(.horizontal, isIPad ? 40 : 20)
-                    
-                    // Zone de saisie moderne et épurée
-                    ModernInputArea(
-                        inputText: $inputText,
-                        isSending: isSending,
-                        isIPad: isIPad,
-                        selectedPhoto: $selectedPhoto,
-                        selectedImage: $selectedImage,
-                        onSend: sendMessage,
-                        maxWidth: maxContentWidth
-                    )
-                    .onChange(of: selectedPhoto) { oldValue, newValue in
-                        Task {
-                            if let newValue = newValue {
-                                if let data = try? await newValue.loadTransferable(type: Data.self),
-                                   let image = UIImage(data: data) {
-                                    await MainActor.run {
-                                        selectedImage = image
-                                    }
-                                }
-                            } else {
-                                selectedImage = nil
-                            }
-                        }
-                    }
-                }
+                contentView
             }
             .navigationBarTitleDisplayMode(isIPad ? .large : .inline)
             .toolbar {
@@ -734,6 +689,59 @@ struct ChatAIScreen: View {
             messages.append(responseMessage)
             saveConversation()
             isSending = false
+        }
+    }
+    
+    // Helper functions pour le scrolling
+    private func scrollToBottom(proxy: ScrollViewProxy) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(.easeOut(duration: 0.3)) {
+                if let lastMessage = messages.last {
+                    proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                } else {
+                    proxy.scrollTo("bottom", anchor: .bottom)
+                }
+            }
+        }
+    }
+    
+    private func scrollToMessage(proxy: ScrollViewProxy) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.easeOut(duration: 0.4)) {
+                if isSending {
+                    proxy.scrollTo("loading", anchor: .bottom)
+                } else if let lastMessage = messages.last {
+                    proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                } else {
+                    proxy.scrollTo("bottom", anchor: .bottom)
+                }
+            }
+        }
+    }
+    
+    private func handleAIModeChange(newValue: AIMode, proxy: ScrollViewProxy) {
+        let modeName = newValue.rawValue
+        
+        if let lastMessage = messages.last, lastMessage.isSystemMessage {
+            messages.removeLast()
+        }
+        
+        let switchMessage = ChatMessage(
+            content: modeName,
+            isUser: false,
+            isSystemMessage: true
+        )
+        messages.append(switchMessage)
+        saveConversation()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            withAnimation(.easeOut(duration: 0.4)) {
+                if let lastMessage = messages.last {
+                    proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                } else {
+                    proxy.scrollTo("bottom", anchor: .bottom)
+                }
+            }
         }
     }
 }
