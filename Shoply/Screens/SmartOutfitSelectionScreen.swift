@@ -23,12 +23,8 @@ struct SmartOutfitSelectionScreen: View {
     @State private var showingArticleError = false
     
     private var isAdvancedAIAvailable: Bool {
-        switch settingsManager.aiProvider {
-        case .chatGPT:
-            return openAIService.isEnabled
-        case .gemini:
-            return geminiService.isEnabled
-        }
+        // Utiliser Gemini uniquement
+        return geminiService.isEnabled
     }
     
     private var userProfile: UserProfile {
@@ -116,8 +112,7 @@ struct SmartOutfitSelectionScreen: View {
                             // Sélecteur d'algorithme (IA locale vs IA avancée)
                             AlgorithmSelectionCard(
                                 useAdvancedAI: $useAdvancedAI,
-                                isAdvancedAIAvailable: isAdvancedAIAvailable,
-                                aiProvider: settingsManager.aiProvider
+                                isAdvancedAIAvailable: isAdvancedAIAvailable
                             )
                             .slideIn()
                             
@@ -511,7 +506,7 @@ struct ModernLoadingView: View {
     @StateObject private var settingsManager = AppSettingsManager.shared
     
     private var aiSteps: [(message: String, threshold: Double)] {
-        let providerName = settingsManager.aiProvider == .chatGPT ? "ChatGPT" : "Gemini"
+        let providerName = "Gemini"
         return [
             ("Préparation de vos vêtements...", 0.1),
             ("Chargement de \(wardrobeService.items.count) article(s)...", 0.2),
@@ -539,8 +534,7 @@ struct ModernLoadingView: View {
                     .animation(.linear(duration: 0.3), value: progress)
                 
                 VStack(spacing: 4) {
-                    let isAIActive = (settingsManager.aiProvider == .chatGPT && OpenAIService.shared.isEnabled) ||
-                                     (settingsManager.aiProvider == .gemini && GeminiService.shared.isEnabled)
+                    let isAIActive = GeminiService.shared.isEnabled
                     if isAIActive && progress > 0.5 && progress < 0.9 {
                         // Animation de réflexion pendant que l'IA pense
                         Image(systemName: "brain.head.profile")
@@ -564,8 +558,7 @@ struct ModernLoadingView: View {
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(AppColors.primaryText)
             
-            let isAIActive = (settingsManager.aiProvider == .chatGPT && OpenAIService.shared.isEnabled) ||
-                             (settingsManager.aiProvider == .gemini && GeminiService.shared.isEnabled)
+            let isAIActive = GeminiService.shared.isEnabled
             if isAIActive {
                     VStack(spacing: 12) {
                         ForEach(Array(aiSteps.enumerated()), id: \.offset) { index, step in
@@ -796,7 +789,7 @@ struct ModernOutfitCard: View {
                 }
                 
                 // Badge "IA a sélectionné"
-                let providerName = settingsManager.aiProvider == .chatGPT ? "ChatGPT" : "Gemini"
+                let providerName = "Gemini"
                 if outfit.reason.contains("ChatGPT") || outfit.reason.contains("Gemini") || outfit.reason.contains("Suggestion") {
                     HStack(spacing: 6) {
                         Image(systemName: "sparkles")
@@ -818,7 +811,7 @@ struct ModernOutfitCard: View {
             
             // Items avec indication claire des vêtements sélectionnés
             VStack(spacing: 0) {
-                let providerName = settingsManager.aiProvider == .chatGPT ? "ChatGPT" : "Gemini"
+                let providerName = "Gemini"
                 Text("Vêtements sélectionnés par".localized + " \(providerName):")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(AppColors.secondaryText)
@@ -932,10 +925,10 @@ struct ModernOutfitItemRow: View {
 struct AlgorithmSelectionCard: View {
     @Binding var useAdvancedAI: Bool
     let isAdvancedAIAvailable: Bool
-    let aiProvider: AppSettingsManager.AIProvider
+    // Utiliser Gemini uniquement
     
     var body: some View {
-        let providerDisplayName = aiProvider == .chatGPT ? "ChatGPT" : "Google Gemini"
+        let providerDisplayName = "Gemini"
         
         VStack(spacing: 16) {
             HStack {

@@ -30,17 +30,32 @@ class GeminiOAuthService: ObservableObject {
     }
     
     func authenticate() async throws {
-        // Utiliser Google Sign-In pour obtenir un token OAuth automatiquement
-        // On utilise l'API Google OAuth 2.0 avec le flux Authorization Code
-        
-        // Configuration OAuth Google - utilise le client ID par défaut du bundle
+        // Configuration OAuth Google
         let clientID = getGoogleClientID()
-        let scopes = "https://www.googleapis.com/auth/generative-language"
+        
+        // Vérifier que le Client ID est valide
+        if clientID == "YOUR_GOOGLE_CLIENT_ID" || clientID.isEmpty {
+            struct ConfigurationError: LocalizedError {
+                let message: String
+                var errorDescription: String? { message }
+            }
+            throw ConfigurationError(message: "Le Client ID Google n'est pas configuré. Veuillez configurer GOOGLE_CLIENT_ID dans Info.plist ou utilisez une clé API Gemini directement.")
+        }
+        
+        // Scopes nécessaires pour Gemini
+        let scopes = "https://www.googleapis.com/auth/generative-language openid email profile"
+        
+        // Encoder correctement l'URL
+        guard let redirectURIEncoded = redirectURI.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let scopeEncoded = scopes.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            throw OAuthError.authenticationFailed
+        }
+        
         let authURLString = "https://accounts.google.com/o/oauth2/v2/auth?" +
             "client_id=\(clientID)&" +
-            "redirect_uri=\(redirectURI.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&" +
+            "redirect_uri=\(redirectURIEncoded)&" +
             "response_type=code&" +
-            "scope=\(scopes.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&" +
+            "scope=\(scopeEncoded)&" +
             "access_type=offline&" +
             "prompt=consent"
         
@@ -55,12 +70,35 @@ class GeminiOAuthService: ObservableObject {
                 callbackURLScheme: "com.shoply.app"
             ) { callbackURL, error in
                 if let error = error {
-                    continuation.resume(throwing: error)
+                    // Analyser l'erreur pour donner un message plus utile
+                    if let nsError = error as NSError? {
+                        if nsError.domain == "ASWebAuthenticationSessionErrorDomain" {
+                            if nsError.code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
+                                // Utilisateur a annulé - on utilise authenticationFailed
+                                continuation.resume(throwing: OAuthError.authenticationFailed)
+                                return
+                            }
+                        }
+                    }
+                    continuation.resume(throwing: OAuthError.authenticationFailed)
                     return
                 }
                 
-                guard let callbackURL = callbackURL,
-                      let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
+                guard let callbackURL = callbackURL else {
+                    continuation.resume(throwing: OAuthError.authenticationFailed)
+                    return
+                }
+                
+                // Vérifier s'il y a une erreur dans le callback
+                if let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
+                   let error = components.queryItems?.first(where: { $0.name == "error" })?.value {
+                    let errorDescription = components.queryItems?.first(where: { $0.name == "error_description" })?.value ?? ""
+                    continuation.resume(throwing: OAuthError.authenticationFailed)
+                    return
+                }
+                
+                // Extraire le code d'autorisation
+                guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
                       let code = components.queryItems?.first(where: { $0.name == "code" })?.value else {
                     continuation.resume(throwing: OAuthError.authenticationFailed)
                     return
@@ -89,21 +127,28 @@ class GeminiOAuthService: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
-        // Pour utiliser Google OAuth avec Gemini, on a besoin d'un client secret
-        // Pour les apps publiques, on peut utiliser PKCE mais Google nécessite souvent un client secret
-        // Pour simplifier, on récupère un access token qui peut être utilisé avec l'API Gemini
-        
-        // Obtenir le client secret depuis Info.plist si disponible
+        // Obtenir le client secret depuis Info.plist
         let clientSecret = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_CLIENT_SECRET") as? String ?? ""
         
-        var body = "client_id=\(clientID)&" +
-            "code=\(code)&" +
-            "redirect_uri=\(redirectURI.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&" +
-            "grant_type=authorization_code"
-        
-        if !clientSecret.isEmpty {
-            body += "&client_secret=\(clientSecret)"
+        // Pour les apps iOS, Google recommande d'utiliser un client secret
+        // Si non disponible, on peut essayer sans mais cela échouera souvent
+        guard !clientSecret.isEmpty else {
+            struct ConfigurationError: LocalizedError {
+                let message: String
+                var errorDescription: String? { message }
+            }
+            throw ConfigurationError(message: "Le Client Secret Google n'est pas configuré. Ajoutez GOOGLE_CLIENT_SECRET dans Info.plist ou utilisez directement une clé API Gemini depuis Google AI Studio (https://aistudio.google.com/app/apikey).")
         }
+        
+        guard let redirectURIEncoded = redirectURI.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            throw OAuthError.authenticationFailed
+        }
+        
+        let body = "client_id=\(clientID)&" +
+            "client_secret=\(clientSecret)&" +
+            "code=\(code)&" +
+            "redirect_uri=\(redirectURIEncoded)&" +
+            "grant_type=authorization_code"
         
         request.httpBody = body.data(using: .utf8)
         
@@ -113,25 +158,33 @@ class GeminiOAuthService: ObservableObject {
             throw OAuthError.authenticationFailed
         }
         
-        if httpResponse.statusCode == 200,
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let accessToken = json["access_token"] as? String {
-            
-            // Sauvegarder le token d'accès OAuth
-            await MainActor.run {
-                self.accessToken = accessToken
-                self.isAuthenticated = true
-                UserDefaults.standard.set(accessToken, forKey: self.tokenKey)
+        // Analyser la réponse
+        if httpResponse.statusCode != 200 {
+            if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let errorDescription = errorData["error_description"] as? String {
+                struct ConfigurationError: LocalizedError {
+                    let message: String
+                    var errorDescription: String? { message }
+                }
+                throw ConfigurationError(message: "Erreur Google OAuth (\(httpResponse.statusCode)): \(errorDescription)")
             }
-            
-            // Récupérer l'email de l'utilisateur
-            try await fetchUserEmail(token: accessToken)
-        } else {
-            // Si l'échange échoue, cela peut être dû à l'absence de client secret
-            // Dans ce cas, on peut quand même marquer comme authentifié et utiliser
-            // une clé API générée par l'utilisateur depuis Google AI Studio
             throw OAuthError.authenticationFailed
         }
+        
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let accessToken = json["access_token"] as? String else {
+            throw OAuthError.authenticationFailed
+        }
+        
+        // Sauvegarder le token d'accès OAuth
+        await MainActor.run {
+            self.accessToken = accessToken
+            self.isAuthenticated = true
+            UserDefaults.standard.set(accessToken, forKey: self.tokenKey)
+        }
+        
+        // Récupérer l'email de l'utilisateur
+        try await fetchUserEmail(token: accessToken)
     }
     
     private func fetchUserEmail(token: String) async throws {
@@ -186,6 +239,7 @@ class GeminiOAuthService: ObservableObject {
         }
     }
 }
+
 
 class OAuthPresentationContextProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
     static let shared = OAuthPresentationContextProvider()

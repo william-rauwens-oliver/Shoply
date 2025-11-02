@@ -46,46 +46,25 @@ class OutfitMatchingAlgorithm: ObservableObject {
             afternoon: afternoonWeather.condition
         )
         
-        // Utiliser le fournisseur IA sélectionné s'il est activé et non forcé en local
-        let selectedProvider = AppSettingsManager.shared.aiProvider
-        let isAIServiceEnabled = (selectedProvider == .chatGPT && OpenAIService.shared.isEnabled) ||
-                                 (selectedProvider == .gemini && GeminiService.shared.isEnabled)
+        // Utiliser Gemini si activé et non forcé en local
+        let isAIServiceEnabled = GeminiService.shared.isEnabled
         
         if !forceLocal && isAIServiceEnabled && wardrobeService.items.count >= 2 {
             await progressCallback(0.2) // 20% - Préparation
             
             do {
-                // Générer avec le service IA sélectionné (ChatGPT ou Gemini)
-                let suggestions: [String]
-                
-                if selectedProvider == .chatGPT && OpenAIService.shared.isEnabled {
-                    suggestions = try await OpenAIService.shared.generateOutfitSuggestions(
-                        wardrobeItems: wardrobeService.items,
-                        weather: WeatherData(
-                            temperature: avgTemperature,
-                            condition: dominantCondition,
-                            humidity: 50,
-                            windSpeed: 0
-                        ),
-                        userProfile: userProfile,
-                        progressCallback: progressCallback
-                    )
-                } else if selectedProvider == .gemini && GeminiService.shared.isEnabled {
-                    suggestions = try await GeminiService.shared.generateOutfitSuggestions(
-                        wardrobeItems: wardrobeService.items,
-                        weather: WeatherData(
-                            temperature: avgTemperature,
-                            condition: dominantCondition,
-                            humidity: 50,
-                            windSpeed: 0
-                        ),
-                        userProfile: userProfile,
-                        progressCallback: progressCallback
-                    )
-                } else {
-                    // Fallback si le service sélectionné n'est pas disponible
-                    throw NSError(domain: "OutfitMatching", code: 1, userInfo: [NSLocalizedDescriptionKey: "Service IA non disponible"])
-                }
+                // Générer avec Gemini
+                let suggestions = try await GeminiService.shared.generateOutfitSuggestions(
+                    wardrobeItems: wardrobeService.items,
+                    weather: WeatherData(
+                        temperature: avgTemperature,
+                        condition: dominantCondition,
+                        humidity: 50,
+                        windSpeed: 0
+                    ),
+                    userProfile: userProfile,
+                    progressCallback: progressCallback
+                )
                 
                 await progressCallback(0.8) // 80% - Suggestions reçues
                 
@@ -133,7 +112,7 @@ class OutfitMatchingAlgorithm: ObservableObject {
                 return uniqueOutfits.sorted { $0.score > $1.score }
                 
             } catch {
-                let providerName = selectedProvider == .chatGPT ? "ChatGPT" : "Gemini"
+                let providerName = "Gemini"
                 print("⚠️ Erreur \(providerName): \(error), utilisation de l'algorithme local")
                 await progressCallback(0.3) // 30% - Erreur, fallback local
                 // Fallback sur l'algorithme local
@@ -284,7 +263,7 @@ class OutfitMatchingAlgorithm: ObservableObject {
         let avgTemp = ((weatherService.morningWeather?.temperature ?? 20.0) + (weatherService.afternoonWeather?.temperature ?? 20.0)) / 2
         let condition = weatherService.morningWeather?.condition ?? WeatherCondition.sunny
         
-        let providerName = AppSettingsManager.shared.aiProvider == .chatGPT ? "ChatGPT" : "Gemini"
+        let providerName = "Gemini"
         return MatchedOutfit(
             items: selectedItems,
             score: 90.0, // Score élevé pour les suggestions IA

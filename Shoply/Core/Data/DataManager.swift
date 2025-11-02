@@ -76,10 +76,6 @@ class DataManager: ObservableObject {
         if !favorites.contains(outfitId) {
             favorites.append(outfitId)
             saveFavoriteUUIDs(favorites)
-            // Synchroniser avec Apple Watch
-            #if !WIDGET_EXTENSION
-            syncToWatch()
-            #endif
         }
     }
     
@@ -87,10 +83,6 @@ class DataManager: ObservableObject {
         var favorites = getFavoriteUUIDs()
         favorites.removeAll { $0 == outfitId }
         saveFavoriteUUIDs(favorites)
-        // Synchroniser avec Apple Watch
-        #if !WIDGET_EXTENSION
-        syncToWatch()
-        #endif
     }
     
     func isFavorite(outfitId: UUID) -> Bool {

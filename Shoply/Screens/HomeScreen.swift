@@ -49,6 +49,12 @@ struct HomeScreen: View {
                             CalendarCard()
                         }
                         .buttonStyle(PlainButtonStyle())
+                        
+                        // Génération de recettes
+                        NavigationLink(destination: RecipeGenerationScreen()) {
+                            RecipeCard()
+                        }
+                        .buttonStyle(PlainButtonStyle())
                                 }
                     .padding(.horizontal)
                     .padding(.bottom, 100) // Plus d'espace pour la bulle de chat
@@ -392,6 +398,46 @@ struct HistoryCard: View {
     }
 }
 
+// Carte génération de recettes
+struct RecipeCard: View {
+    @StateObject private var settingsManager = AppSettingsManager.shared
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Recettes".localized)
+                        .font(.playfairDisplayBold(size: 22))
+                        .foregroundColor(AppColors.primaryText)
+
+                    Text("Photo → Recette".localized)
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+
+                Spacer()
+
+                Image(systemName: "camera.fill")
+                    .font(.system(size: 28))
+                    .foregroundColor(AppColors.primaryText)
+            }
+
+            HStack {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 16))
+                    .foregroundColor(AppColors.accent)
+                
+                Text("Photographiez vos ingrédients et obtenez une recette personnalisée".localized)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(AppColors.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(24)
+        .cleanCard(cornerRadius: 24)
+        .id("recipe-\(settingsManager.selectedLanguage)")
+    }
+}
 
 #Preview {
     NavigationStack {

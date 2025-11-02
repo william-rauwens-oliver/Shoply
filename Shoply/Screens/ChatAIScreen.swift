@@ -11,7 +11,6 @@ struct ChatAIScreen: View {
     let initialMessages: [ChatMessage]
     let initialAIMode: AIMode
     
-    @StateObject private var openAIService = OpenAIService.shared
     @StateObject private var geminiService = GeminiService.shared
     @StateObject private var dataManager = DataManager.shared
     @StateObject private var wardrobeService = WardrobeService()
@@ -103,7 +102,7 @@ struct ChatAIScreen: View {
                                             .font(.playfairDisplayBold(size: 24))
                                             .foregroundColor(AppColors.primaryText)
                                         
-                                        Text("Posez-moi vos questions sur vos outfits, la météo, ou vos vêtements !".localized)
+                                        Text("Posez-moi n'importe quelle question !".localized)
                                             .font(.system(size: 16))
                                             .foregroundColor(AppColors.secondaryText)
                                             .multilineTextAlignment(.center)
@@ -143,7 +142,7 @@ struct ChatAIScreen: View {
                             if oldValue != newValue {
                                 let modeName: String
                                 if newValue == .advancedAI {
-                                    modeName = settingsManager.aiProvider.displayName
+                                    modeName = "Gemini"
                                 } else {
                                     modeName = "Shoply AI"
                                 }
@@ -206,7 +205,7 @@ struct ChatAIScreen: View {
                         Picker("Mode IA".localized, selection: $aiMode) {
                             ForEach(AIMode.allCases, id: \.self) { mode in
                                 if mode == .advancedAI {
-                                    Text(settingsManager.aiProvider.displayName).tag(mode)
+                                    Text("Gemini").tag(mode)
                                 } else {
                                     Text("Shoply AI".localized).tag(mode)
                                 }
@@ -267,10 +266,8 @@ struct ChatAIScreen: View {
                 
                 // Utiliser le mode sélectionné dans le picker
                 if aiMode == .advancedAI {
-                    // IA Avancée sélectionnée : utiliser le provider choisi dans les paramètres (ChatGPT ou Gemini)
-                    let selectedProvider = settingsManager.aiProvider
-                    
-                    if selectedProvider == .gemini && geminiService.isEnabled {
+                    // IA Avancée sélectionnée : utiliser Gemini
+                    if geminiService.isEnabled {
                         // Utiliser Gemini
                         response = try await geminiService.askAboutClothing(
                             question: question,
@@ -278,32 +275,8 @@ struct ChatAIScreen: View {
                             currentWeather: currentWeather,
                             wardrobeItems: wardrobeItems
                         )
-                    } else if selectedProvider == .chatGPT && openAIService.isEnabled {
-                        // Utiliser ChatGPT
-                        response = try await openAIService.askAboutClothing(
-                            question: question,
-                            userProfile: userProfile,
-                            currentWeather: currentWeather,
-                            wardrobeItems: wardrobeItems
-                        )
-                    } else if selectedProvider == .gemini && !geminiService.isEnabled {
-                        // Gemini sélectionné mais non disponible - utiliser Shoply AI sans message (silencieux)
-                        response = await answerWithLocalAI(
-                            question: question,
-                            userProfile: userProfile,
-                            currentWeather: currentWeather,
-                            wardrobeItems: wardrobeItems
-                        )
-                    } else if selectedProvider == .chatGPT && !openAIService.isEnabled {
-                        // ChatGPT sélectionné mais non disponible - utiliser Shoply AI sans message (silencieux)
-                        response = await answerWithLocalAI(
-                            question: question,
-                            userProfile: userProfile,
-                            currentWeather: currentWeather,
-                            wardrobeItems: wardrobeItems
-                        )
                     } else {
-                        // Si aucun service IA avancé n'est disponible, utiliser Shoply AI sans message
+                        // Gemini non disponible - utiliser Shoply AI sans message (silencieux)
                         response = await answerWithLocalAI(
                             question: question,
                             userProfile: userProfile,
@@ -361,50 +334,8 @@ struct ChatAIScreen: View {
                 await MainActor.run {
                     var errorMessage: String
                     
-                    // Gestion spécifique des erreurs OpenAI
-                    if let openAIError = error as? OpenAIError {
-                        switch openAIError {
-                        case .apiKeyMissing:
-                            errorMessage = "Clé API ChatGPT manquante. Veuillez la configurer dans les paramètres.".localized
-                        case .apiKeyInvalid:
-                            errorMessage = "Clé API ChatGPT invalide ou expirée. Veuillez la vérifier dans les paramètres.".localized
-                        case .rateLimitExceeded:
-                            errorMessage = "Limite de requêtes atteinte. Veuillez réessayer dans quelques instants.".localized
-                        case .apiErrorWithMessage(let message):
-                            // Traduire les erreurs courantes en français
-                            var translatedMessage = message
-                            if message.lowercased().contains("quota") || message.lowercased().contains("exceeded") {
-                                translatedMessage = "Votre quota OpenAI a été dépassé. Veuillez vérifier votre plan et vos détails de facturation."
-                            } else if message.lowercased().contains("invalid") || message.lowercased().contains("unauthorized") {
-                                translatedMessage = "Clé API invalide ou non autorisée."
-                            } else if message.lowercased().contains("rate limit") {
-                                translatedMessage = "Limite de taux atteinte. Veuillez réessayer plus tard."
-                            }
-                            // Basculer automatiquement sur Shoply AI sans afficher de message d'erreur
-                            let questionText = question
-                            let userProfile = dataManager.loadUserProfile() ?? UserProfile()
-                            let currentWeather = weatherService.currentWeather
-                            let wardrobeItems = wardrobeService.items
-                            
-                            // Répondre directement avec Shoply AI sans message d'erreur
-                            Task { @MainActor in
-                                let localResponse = await answerWithLocalAI(
-                                    question: questionText,
-                                    userProfile: userProfile,
-                                    currentWeather: currentWeather,
-                                    wardrobeItems: wardrobeItems
-                                )
-                                let responseMessage = ChatMessage(content: localResponse, isUser: false)
-                                messages.append(responseMessage)
-                                saveConversation()
-                                isSending = false
-                            }
-                            return
-                        default:
-                            let providerName = settingsManager.aiProvider.displayName
-                            errorMessage = "Erreur de connexion à \(providerName). Essayez de réessayer.".localized
-                        }
-                    } else if let geminiError = error as? GeminiError {
+                    // Gestion spécifique des erreurs Gemini
+                    if let geminiError = error as? GeminiError {
                         switch geminiError {
                         case .apiKeyMissing:
                             errorMessage = "Clé API Gemini manquante. Veuillez la configurer dans les paramètres.".localized
@@ -457,7 +388,7 @@ struct ChatAIScreen: View {
                         case .noItems:
                             errorMessage = "Votre garde-robe est vide. Ajoutez des vêtements d'abord.".localized
                         }
-                    } else if aiMode == .advancedAI && !openAIService.isEnabled && !geminiService.isEnabled {
+                    } else if aiMode == .advancedAI && !geminiService.isEnabled {
                         // Basculer automatiquement sur Shoply AI sans message d'erreur
                         let questionText = question
                         let userProfile = dataManager.loadUserProfile() ?? UserProfile()
@@ -478,10 +409,9 @@ struct ChatAIScreen: View {
                         }
                         return
                     } else {
-                        // En cas d'erreur avec l'IA avancée, essayer automatiquement de basculer sur Shoply AI
-                        let providerName = settingsManager.aiProvider.displayName
-                        print("⚠️ Erreur avec \(providerName), basculement automatique sur Shoply AI")
-                        let questionText = question // Capturer la question avant le Task
+                        // En cas d'erreur avec Gemini, essayer automatiquement de basculer sur Shoply AI
+                        print("⚠️ Erreur avec Gemini, basculement automatique sur Shoply AI")
+                        let questionText = question
                         let userProfile = dataManager.loadUserProfile() ?? UserProfile()
                         let currentWeather = weatherService.currentWeather
                         let wardrobeItems = wardrobeService.items
@@ -543,7 +473,7 @@ struct ChatAIScreen: View {
         // Déterminer le nom du mode IA pour la sauvegarde
         let aiModeString: String
         if aiMode == .advancedAI {
-            aiModeString = settingsManager.aiProvider.displayName
+            aiModeString = "Gemini"
         } else {
             aiModeString = "Shoply AI"
         }

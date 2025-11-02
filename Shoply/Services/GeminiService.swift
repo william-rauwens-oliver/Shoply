@@ -13,22 +13,19 @@ import UIKit
 class GeminiService: ObservableObject {
     static let shared = GeminiService()
     
-    // Plus de clé API intégrée - uniquement OAuth Google
+    // Clé API Gemini intégrée par défaut
+    private var embeddedAPIKey = "AIzaSyBJToCQ-5iBa7-mTpkTXGjqY_ZbOeSUEaI"
+    
     private var apiKey: String? {
-        // Uniquement OAuth - l'utilisateur doit se connecter à son compte Google
-        if let oauthToken = GeminiOAuthService.shared.accessToken,
-           !oauthToken.isEmpty {
-            // Utiliser le token OAuth Google
-            return oauthToken
+        // Utiliser directement la clé API intégrée (plus de OAuth)
+        // L'utilisateur peut toujours remplacer par sa propre clé
+        if let storedKey = UserDefaults.standard.string(forKey: "gemini_api_key"),
+           !storedKey.isEmpty {
+            return storedKey
         }
         
-        // Si l'utilisateur est authentifié mais n'a pas encore de token API,
-        // on peut utiliser une clé API stockée de sa session précédente
-        if GeminiOAuthService.shared.isAuthenticated {
-            return UserDefaults.standard.string(forKey: "gemini_api_key")
-        }
-        
-        return nil
+        // Clé API intégrée par défaut
+        return embeddedAPIKey
     }
     
     private let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
@@ -36,29 +33,9 @@ class GeminiService: ObservableObject {
     @Published var isEnabled = false
     
     private init() {
+        // Toujours activé car on a une clé API intégrée
+        isEnabled = true
         reloadAPIKey()
-        
-        // Vérifier aussi si OAuth est disponible
-        checkOAuthStatus()
-    }
-    
-    private func checkOAuthStatus() {
-        // Vérifier si l'utilisateur est authentifié via OAuth Google
-        if GeminiOAuthService.shared.isAuthenticated,
-           let token = GeminiOAuthService.shared.accessToken,
-           !token.isEmpty {
-            // Si un token OAuth Google valide existe, activer le service
-            DispatchQueue.main.async {
-                self.isEnabled = true
-            }
-        } else if GeminiOAuthService.shared.isAuthenticated {
-            // Si authentifié mais pas de token valide, vérifier si une clé API est stockée
-            if UserDefaults.standard.string(forKey: "gemini_api_key") != nil {
-                DispatchQueue.main.async {
-                    self.isEnabled = true
-                }
-            }
-        }
     }
     
     // MARK: - Outfit Suggestions
@@ -141,24 +118,22 @@ class GeminiService: ObservableObject {
         // Pour les images, gemini-2.5-flash supporte également les images
         let model = "gemini-2.5-flash"
         
-        // Construire l'URL - toujours utiliser OAuth si disponible, sinon utiliser une clé API stockée
+        // Construire l'URL - utiliser la clé API intégrée ou stockée
         let urlString: String
         let useOAuth: Bool
         
-        if GeminiOAuthService.shared.isAuthenticated,
-           let oauthToken = GeminiOAuthService.shared.accessToken,
-           !oauthToken.isEmpty {
-            // Utiliser OAuth token avec Authorization header
-            urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent"
-            useOAuth = true
-        } else if let storedAPIKey = UserDefaults.standard.string(forKey: "gemini_api_key"),
-                  !storedAPIKey.isEmpty {
-            // Utiliser une clé API stockée (fallback si OAuth n'est pas disponible)
-            urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(storedAPIKey)"
-            useOAuth = false
+        // Vérifier si une clé API est stockée par l'utilisateur, sinon utiliser la clé intégrée
+        let apiKeyToUse: String
+        if let storedAPIKey = UserDefaults.standard.string(forKey: "gemini_api_key"),
+           !storedAPIKey.isEmpty {
+            apiKeyToUse = storedAPIKey
         } else {
-            throw GeminiError.apiKeyMissing
+            // Utiliser la clé API intégrée par défaut
+            apiKeyToUse = embeddedAPIKey
         }
+        
+        urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(apiKeyToUse)"
+        useOAuth = false
         
         guard let url = URL(string: urlString) else {
             throw GeminiError.invalidURL
@@ -179,12 +154,6 @@ class GeminiService: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        // Ajouter le header Authorization si OAuth
-        if useOAuth,
-           let oauthToken = GeminiOAuthService.shared.accessToken {
-            request.setValue("Bearer \(oauthToken)", forHTTPHeaderField: "Authorization")
-        }
         
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
         
@@ -335,9 +304,9 @@ class GeminiService: ObservableObject {
         
         // Construire le contexte
         var contextPrompt = """
-        Tu es un assistant intelligent et utile pour l'application Shoply. Tu peux répondre à toutes sortes de questions, avec une expertise particulière en mode, stylisme et conseils vestimentaires.
+        Tu es un assistant intelligent et utile. Tu peux répondre à toutes sortes de questions sur n'importe quel sujet. Réponds librement et de manière naturelle à ce que l'utilisateur te demande.
         
-        PROFIL UTILISATEUR:
+        PROFIL UTILISATEUR (informations optionnelles si la question concerne la mode):
         - Genre: \(userProfile.gender.rawValue)
         - Âge: \(userProfile.age)
         """
@@ -345,7 +314,7 @@ class GeminiService: ObservableObject {
         if let weather = currentWeather {
             contextPrompt += """
             
-            MÉTÉO ACTUELLE:
+            MÉTÉO ACTUELLE (informations optionnelles si la question concerne la mode ou la météo):
             - Température: \(Int(weather.temperature))°C
             - Conditions: \(weather.condition.rawValue)
             """
@@ -358,7 +327,7 @@ class GeminiService: ObservableObject {
             
             contextPrompt += """
             
-            GARDE-ROBE DE L'UTILISATEUR (échantillon):
+            GARDE-ROBE DE L'UTILISATEUR (informations optionnelles, utilise seulement si la question concerne la mode):
             \(itemsDescription)
             """
         }
@@ -369,32 +338,31 @@ class GeminiService: ObservableObject {
         \(question)
         
         INSTRUCTIONS:
-        1. Réponds de manière concise et amicale (maximum 200 mots)
-        2. Réponds à la question de l'utilisateur de manière naturelle et utile
-        3. Si la question concerne les vêtements, outfits, mode ou style, utilise les informations du profil utilisateur et de la météo
-        4. Sois pratique et donne des conseils actionnables quand c'est pertinent
-        5. Si tu peux aider avec la question, réponds directement sans restrictions
+        1. Réponds librement à la question de l'utilisateur, quelle qu'elle soit
+        2. N'aie aucune restriction de sujet - tu peux parler de tout
+        3. Sois naturel, amical et utile dans ta réponse
+        4. Si la question concerne la mode/vêtements, utilise les informations du profil et de la météo si pertinentes
+        5. Si la question concerne un autre sujet, réponds simplement et librement sans te limiter
+        6. Réponds de manière concise mais complète (maximum 300 mots)
         """
         
         // Utiliser gemini-2.5-flash avec v1beta selon la documentation officielle
-        // Construire l'URL - toujours utiliser OAuth si disponible, sinon utiliser une clé API stockée
+        // Construire l'URL - utiliser la clé API intégrée ou stockée
         let urlString: String
         let useOAuth: Bool
         
-        if GeminiOAuthService.shared.isAuthenticated,
-           let oauthToken = GeminiOAuthService.shared.accessToken,
-           !oauthToken.isEmpty {
-            // Utiliser OAuth token avec Authorization header
-            urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-            useOAuth = true
-        } else if let storedAPIKey = UserDefaults.standard.string(forKey: "gemini_api_key"),
-                  !storedAPIKey.isEmpty {
-            // Utiliser une clé API stockée (fallback si OAuth n'est pas disponible)
-            urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\(storedAPIKey)"
-            useOAuth = false
+        // Vérifier si une clé API est stockée par l'utilisateur, sinon utiliser la clé intégrée
+        let apiKeyToUse: String
+        if let storedAPIKey = UserDefaults.standard.string(forKey: "gemini_api_key"),
+           !storedAPIKey.isEmpty {
+            apiKeyToUse = storedAPIKey
         } else {
-            throw GeminiError.apiKeyMissing
+            // Utiliser la clé API intégrée par défaut
+            apiKeyToUse = embeddedAPIKey
         }
+        
+        urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\(apiKeyToUse)"
+        useOAuth = false
         
         guard let url = URL(string: urlString) else {
             throw GeminiError.invalidURL
@@ -419,12 +387,6 @@ class GeminiService: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        // Ajouter le header Authorization si OAuth
-        if useOAuth,
-           let oauthToken = GeminiOAuthService.shared.accessToken {
-            request.setValue("Bearer \(oauthToken)", forHTTPHeaderField: "Authorization")
-        }
         
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
         
@@ -475,25 +437,8 @@ class GeminiService: ObservableObject {
     }
     
     func reloadAPIKey() {
-        // Vérifier si OAuth Google est disponible
-        if let oauthToken = GeminiOAuthService.shared.accessToken,
-           !oauthToken.isEmpty {
-            self.isEnabled = true
-            self.objectWillChange.send()
-            return
-        }
-        
-        // Vérifier si une clé API est stockée (pour compatibilité avec sessions précédentes)
-        if GeminiOAuthService.shared.isAuthenticated,
-           let storedKey = UserDefaults.standard.string(forKey: "gemini_api_key"),
-           !storedKey.isEmpty {
-            self.isEnabled = true
-            self.objectWillChange.send()
-            return
-        }
-        
-        // Sinon, désactiver le service
-        self.isEnabled = false
+        // Toujours activé car on a une clé API intégrée par défaut
+        self.isEnabled = true
         self.objectWillChange.send()
     }
 }

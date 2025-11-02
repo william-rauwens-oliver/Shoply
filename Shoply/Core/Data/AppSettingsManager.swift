@@ -26,28 +26,11 @@ class AppSettingsManager: ObservableObject {
         }
     }
     
-    @Published var aiProvider: AIProvider = .chatGPT {
-        didSet {
-            saveAIProvider()
-        }
-    }
-    
-    enum AIProvider: String, CaseIterable {
-        case chatGPT = "ChatGPT"
-        case gemini = "Gemini"
-        
-        var displayName: String {
-            switch self {
-            case .chatGPT: return "ChatGPT"
-            case .gemini: return "Google Gemini"
-            }
-        }
-    }
+    // Plus de sélection de provider - uniquement Gemini
     
     // MARK: - Clés UserDefaults
     private let colorSchemeKey = "app_color_scheme" // "light", "dark", "system"
     private let languageKey = "app_language"
-    private let aiProviderKey = "app_ai_provider"
     
     private init() {
         loadSettings()
@@ -79,13 +62,7 @@ class AppSettingsManager: ObservableObject {
             selectedLanguage = .french // Langue par défaut
         }
         
-        // Charger le fournisseur IA
-        if let providerString = UserDefaults.standard.string(forKey: aiProviderKey),
-           let provider = AIProvider(rawValue: providerString) {
-            aiProvider = provider
-        } else {
-            aiProvider = .chatGPT // Par défaut ChatGPT
-        }
+        // Plus de chargement de provider - uniquement Gemini
     }
     
     // MARK: - Sauvegarde des paramètres
@@ -108,9 +85,6 @@ class AppSettingsManager: ObservableObject {
         UserDefaults.standard.set(selectedLanguage.rawValue, forKey: languageKey)
     }
     
-    private func saveAIProvider() {
-        UserDefaults.standard.set(aiProvider.rawValue, forKey: aiProviderKey)
-    }
     
     // MARK: - Méthodes publiques
     func setColorScheme(_ scheme: ColorScheme?) {
@@ -121,9 +95,6 @@ class AppSettingsManager: ObservableObject {
         self.selectedLanguage = language
     }
     
-    func setAIProvider(_ provider: AIProvider) {
-        self.aiProvider = provider
-    }
 }
 
 /// Langues supportées par l'application

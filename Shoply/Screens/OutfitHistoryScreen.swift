@@ -26,10 +26,6 @@ final class OutfitHistoryStore: ObservableObject {
         )
         outfits.insert(historical, at: 0) // Ajouter au début
         saveHistory()
-        // Synchroniser avec Apple Watch
-        #if !WIDGET_EXTENSION
-        dataManager.syncToWatch()
-        #endif
     }
     
     func removeOutfit(at index: Int) {

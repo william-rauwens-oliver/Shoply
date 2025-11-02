@@ -12,10 +12,7 @@ import UIKit
 
 /// Écran de paramètres complet
 struct SettingsScreen: View {
-    @StateObject private var openAIService = OpenAIService.shared
     @StateObject private var geminiService = GeminiService.shared
-    @StateObject private var openAIOAuth = OpenAIOAuthService.shared
-    @StateObject private var geminiOAuth = GeminiOAuthService.shared
     @StateObject private var settingsManager = AppSettingsManager.shared
     // CloudKitService sera accédé uniquement quand nécessaire, pas au démarrage
     // Utilisation lazy pour éviter l'initialisation au chargement de l'écran
@@ -107,121 +104,15 @@ struct SettingsScreen: View {
                         
                         // Section IA
                         SettingsSection(title: "Intelligence Artificielle".localized) {
-                            // Sélecteur de fournisseur IA
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Fournisseur IA".localized)
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(AppColors.primaryText)
-                                
-                                Picker("Fournisseur IA".localized, selection: Binding(
-                                    get: { settingsManager.aiProvider },
-                                    set: { settingsManager.setAIProvider($0) }
-                                )) {
-                                    ForEach(AppSettingsManager.AIProvider.allCases, id: \.self) { provider in
-                                        Text(provider.displayName).tag(provider)
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                                .tint(AppColors.buttonPrimary)
+                            // Statut Gemini
+                            SettingRow(
+                                icon: "checkmark.circle.fill",
+                                title: "Gemini activé".localized,
+                                subtitle: "Gemini est prêt à être utilisé".localized,
+                                iconColor: .green
+                            ) {
+                                EmptyView()
                             }
-                            .padding()
-                            .background(AppColors.buttonSecondary)
-                            .roundedCorner(20)
-                            
-                            Divider()
-                                .background(AppColors.separator)
-                                .padding(.vertical, 8)
-                            
-                            // Statut de connexion
-                            if (settingsManager.aiProvider == .chatGPT && (openAIService.isEnabled || openAIOAuth.isAuthenticated)) ||
-                               (settingsManager.aiProvider == .gemini && (geminiService.isEnabled || geminiOAuth.isAuthenticated)) {
-                                SettingRow(
-                                    icon: "checkmark.circle.fill",
-                                    title: settingsManager.aiProvider == .chatGPT ? "Connecté à ChatGPT".localized : "Connecté à Gemini".localized,
-                                    subtitle: getConnectionStatusSubtitle(),
-                                    iconColor: .green
-                                ) {
-                                    Button("Déconnecter".localized) {
-                                        if settingsManager.aiProvider == .chatGPT {
-                                            openAIOAuth.signOut()
-                                        } else {
-                                            geminiOAuth.signOut()
-                                        }
-                                        alertMessage = "Déconnexion réussie.".localized
-                                        showingAlert = true
-                                    }
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.red)
-                                }
-                                
-                                Divider()
-                                    .background(AppColors.separator)
-                                    .padding(.vertical, 8)
-                            } else {
-                                // Options de connexion (OAuth ou clé API)
-                                VStack(spacing: 12) {
-                                    // Bouton OAuth (recommandé)
-                                    Button(action: {
-                                        if settingsManager.aiProvider == .chatGPT {
-                                            authenticateOpenAI()
-                                        } else {
-                                            authenticateGemini()
-                                        }
-                                    }) {
-                                        HStack {
-                                            Image(systemName: "person.circle.fill")
-                                                .foregroundColor(AppColors.buttonPrimary)
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text(settingsManager.aiProvider == .chatGPT ? "Se connecter avec OpenAI".localized : "Se connecter avec Google".localized)
-                                                    .font(.system(size: 16, weight: .semibold))
-                                                    .foregroundColor(AppColors.primaryText)
-                                                Text(settingsManager.aiProvider == .chatGPT ? "Utiliser votre compte OpenAI (avec quota)".localized : "Utiliser votre compte Google (avec quota)".localized)
-                                                    .font(.system(size: 12))
-                                                    .foregroundColor(AppColors.secondaryText)
-                                            }
-                                            Spacer()
-                                            Image(systemName: "arrow.right.circle.fill")
-                                                .foregroundColor(AppColors.buttonPrimary)
-                                        }
-                                        .padding()
-                                        .background(AppColors.buttonSecondary)
-                                        .roundedCorner(16)
-                                    }
-                                    
-                                    // Divider avec "OU"
-                                }
-                                .padding(.vertical, 8)
-                                
-                                Divider()
-                                    .background(AppColors.separator)
-                                    .padding(.vertical, 8)
-                            }
-                            
-                            // Instructions selon le fournisseur
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Comment ça marche ?".localized)
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(AppColors.primaryText)
-                                
-                                if settingsManager.aiProvider == .chatGPT {
-                                    VStack(alignment: .leading, spacing: 10) {
-                                        InstructionStep(number: 1, text: LocalizedString.localized("Cliquez sur \"Se connecter avec OpenAI\"", for: settingsManager.selectedLanguage))
-                                        InstructionStep(number: 2, text: LocalizedString.localized("Connectez-vous avec votre compte OpenAI/ChatGPT", for: settingsManager.selectedLanguage))
-                                        InstructionStep(number: 3, text: LocalizedString.localized("Autorisez l'application à accéder à votre compte", for: settingsManager.selectedLanguage))
-                                        InstructionStep(number: 4, text: LocalizedString.localized("Vous pourrez utiliser votre quota directement", for: settingsManager.selectedLanguage))
-                                    }
-                                } else {
-                                    VStack(alignment: .leading, spacing: 10) {
-                                        InstructionStep(number: 1, text: LocalizedString.localized("Cliquez sur \"Se connecter avec Google\"", for: settingsManager.selectedLanguage))
-                                        InstructionStep(number: 2, text: LocalizedString.localized("Connectez-vous avec votre compte Google", for: settingsManager.selectedLanguage))
-                                        InstructionStep(number: 3, text: LocalizedString.localized("Autorisez l'application à utiliser Gemini", for: settingsManager.selectedLanguage))
-                                        InstructionStep(number: 4, text: LocalizedString.localized("Vous pourrez utiliser Gemini avec votre quota", for: settingsManager.selectedLanguage))
-                                    }
-                                }
-                            }
-                            .padding()
-                            .background(AppColors.buttonSecondary)
-                            .roundedCorner(20)
                             
                             Divider()
                                 .background(AppColors.separator)
@@ -238,9 +129,7 @@ struct SettingsScreen: View {
                                         .foregroundColor(AppColors.primaryText)
                                 }
                                 
-                                Text(settingsManager.aiProvider == .chatGPT ? 
-                                     LocalizedString.localized("Connectez-vous avec votre compte OpenAI pour utiliser automatiquement votre quota. Aucune clé API nécessaire !", for: settingsManager.selectedLanguage) :
-                                     LocalizedString.localized("Connectez-vous avec votre compte Google pour utiliser automatiquement votre quota Gemini. Aucune clé API nécessaire !", for: settingsManager.selectedLanguage))
+                                Text("Gemini est intégré et prêt à être utilisé dans toute l'application.".localized)
                                     .font(.system(size: 14, weight: .regular))
                                     .foregroundColor(AppColors.secondaryText)
                                     .lineSpacing(4)
@@ -387,7 +276,6 @@ struct SettingsScreen: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
-                openAIService.reloadAPIKey()
                 geminiService.reloadAPIKey()
             }
             .sheet(isPresented: $showingGeminiKeyInput) {
@@ -411,17 +299,6 @@ struct SettingsScreen: View {
                 }
             } message: {
                 Text("Êtes-vous sûr de vouloir supprimer toutes vos données ? Cette action est irréversible et supprimera votre profil, vos favoris, votre garde-robe et toutes vos préférences.")
-            }
-            .sheet(isPresented: $showingWebView) {
-                NavigationStack {
-                    ChatGPTConnectionWebView(onConnected: { key in
-                        // Sauvegarder la clé API dans OpenAI Service
-                        openAIService.setAPIKey(key)
-                        alertMessage = "Clé API enregistrée avec succès.".localized
-                        showingAlert = true
-                        showingWebView = false
-                    })
-                }
             }
             .sheet(isPresented: $showingLanguagePicker) {
                 LanguagePickerView(selectedLanguage: $settingsManager.selectedLanguage)
@@ -457,45 +334,6 @@ struct SettingsScreen: View {
         return "1.0.0"
     }
     
-    private func authenticateOpenAI() {
-        Task {
-            do {
-                try await openAIOAuth.authenticate()
-                alertMessage = "Connexion réussie ! Vous pouvez maintenant utiliser ChatGPT avec votre compte.".localized
-                showingAlert = true
-            } catch {
-                alertMessage = "Erreur de connexion: \(error.localizedDescription)".localized
-                showingAlert = true
-            }
-        }
-    }
-    
-    private func authenticateGemini() {
-        Task {
-            do {
-                try await geminiOAuth.authenticate()
-                alertMessage = "Connexion réussie ! Vous pouvez maintenant utiliser Gemini avec votre compte Google.".localized
-                showingAlert = true
-            } catch {
-                alertMessage = "Erreur de connexion: \(error.localizedDescription)".localized
-                showingAlert = true
-            }
-        }
-    }
-    
-    private func getConnectionStatusSubtitle() -> String {
-        if settingsManager.aiProvider == .chatGPT {
-            if openAIOAuth.isAuthenticated, let email = openAIOAuth.userEmail {
-                return "Connecté avec votre compte: \(email)"
-            }
-            return "Non connecté"
-        } else {
-            if geminiOAuth.isAuthenticated, let email = geminiOAuth.userEmail {
-                return "Connecté avec votre compte: \(email)"
-            }
-            return "Non connecté"
-        }
-    }
     
     private func syncToiCloud() {
         Task {

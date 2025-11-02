@@ -27,12 +27,8 @@ struct OutfitCalendarScreen: View {
     @State private var showingArticleError = false
     
     private var isAdvancedAIAvailable: Bool {
-        switch settingsManager.aiProvider {
-        case .chatGPT:
-            return openAIService.isEnabled
-        case .gemini:
-            return geminiService.isEnabled
-        }
+        // Utiliser Gemini uniquement
+        return geminiService.isEnabled
     }
     @State private var weatherFetchedForSelectedDate = false
     @State private var isFetchingWeather = false
@@ -144,7 +140,7 @@ struct OutfitCalendarScreen: View {
                             AlgorithmSelectionCard(
                                 useAdvancedAI: $useAdvancedAI,
                                 isAdvancedAIAvailable: isAdvancedAIAvailable,
-                                aiProvider: settingsManager.aiProvider
+                                // Gemini uniquement
                             )
                             .padding(.horizontal)
                             
