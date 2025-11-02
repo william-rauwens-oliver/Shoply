@@ -12,24 +12,68 @@ struct OnboardingScreen: View {
     @State private var currentStep = 0
     @State private var firstName = ""
     @State private var email = ""
-    @State private var age = 18 // Âge par défaut >= 15 ans
+    @State private var dateOfBirth: Date = {
+        // Date par défaut : il y a 18 ans (donc 18 ans actuellement)
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        var components = DateComponents()
+        components.year = currentYear - 18
+        components.month = 1
+        components.day = 1
+        return calendar.date(from: components) ?? Date()
+    }()
     @State private var selectedGender: Gender = .notSpecified
     @State private var showingTutorial = false
     @State private var showingAgeError = false
     @State private var showingEmailError = false
     @EnvironmentObject var dataManager: DataManager
     
+    // Propriété calculée pour l'âge minimum (15 ans)
+    private var minimumDate: Date {
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        var components = DateComponents()
+        components.year = currentYear - 15 // Maximum 15 ans
+        components.month = 12
+        components.day = 31
+        return calendar.date(from: components) ?? Date()
+    }
+    
+    private var maximumDate: Date {
+        let calendar = Calendar.current
+        var components = DateComponents()
+        components.year = 1920 // Minimum 1920
+        components.month = 1
+        components.day = 1
+        return calendar.date(from: components) ?? Date()
+    }
+    
+    // Calculer l'âge à partir de la date de naissance
+    private var calculatedAge: Int {
+        let calendar = Calendar.current
+        let ageComponents = calendar.dateComponents([.year], from: dateOfBirth, to: Date())
+        return ageComponents.year ?? 0
+    }
+    
     var body: some View {
         ZStack {
-            AppColors.background
+            // Fond avec dégradé subtil
+            LinearGradient(
+                colors: [
+                    AppColors.background,
+                    AppColors.background.opacity(0.96)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // Indicateur de progression (masqué sur la page de bienvenue)
                 if currentStep > 0 {
                     ProgressIndicator(currentStep: currentStep - 1, totalSteps: 4)
-                        .padding(.top, 50)
-                        .padding(.horizontal)
+                    .padding(.top, 50)
+                    .padding(.horizontal)
                 } else {
                     // Espace vide pour maintenir la structure
                     Spacer()
@@ -42,11 +86,11 @@ struct OnboardingScreen: View {
                     case 0:
                         OnboardingStep0_Welcome()
                     case 1:
-                        OnboardingStep1(firstName: $firstName)
+                    OnboardingStep1(firstName: $firstName)
                     case 2:
                         OnboardingStep2_Email(email: $email, showingError: $showingEmailError)
                     case 3:
-                        OnboardingStep3_Age(age: $age, showingError: $showingAgeError)
+                        OnboardingStep3_DateOfBirth(dateOfBirth: $dateOfBirth, showingError: $showingAgeError, calculatedAge: calculatedAge, minimumDate: minimumDate, maximumDate: maximumDate)
                     case 4:
                         OnboardingStep4_Gender(selectedGender: $selectedGender)
                     default:
@@ -61,28 +105,28 @@ struct OnboardingScreen: View {
                 
                 // Boutons de navigation
                 if currentStep > 0 {
-                    HStack(spacing: 20) {
+                HStack(spacing: 20) {
                         if currentStep > 1 {
-                            Button(action: {
-                                withAnimation {
-                                    currentStep -= 1
-                                }
-                            }) {
-                                Text("Précédent")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(AppColors.primaryText)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(AppColors.buttonSecondary)
-                                    .roundedCorner(20)
+                        Button(action: {
+                            withAnimation {
+                                currentStep -= 1
+                            }
+                        }) {
+                            Text("Précédent")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(AppColors.primaryText)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(AppColors.buttonSecondary)
+                                .roundedCorner(20)
                                     .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
                             }
                         } else {
                             Spacer()
                                 .frame(maxWidth: .infinity)
-                        }
-                        
-                        Button(action: {
+                    }
+                    
+                    Button(action: {
                             if currentStep < 4 {
                                 // Valider avant de passer à l'étape suivante
                                 if currentStep == 1 {
@@ -105,10 +149,10 @@ struct OnboardingScreen: View {
                                     }
                                 } else if currentStep == 3 {
                                     // Validation âge - doit être au minimum 15 ans
-                                    if age >= 15 {
+                                    if calculatedAge >= 15 {
                                         showingAgeError = false
-                                        withAnimation {
-                                            currentStep += 1
+                            withAnimation {
+                                currentStep += 1
                                         }
                                     } else {
                                         showingAgeError = true
@@ -118,11 +162,11 @@ struct OnboardingScreen: View {
                                     withAnimation {
                                         currentStep += 1
                                     }
-                                }
-                            } else {
-                                completeOnboarding()
                             }
-                        }) {
+                        } else {
+                            completeOnboarding()
+                        }
+                    }) {
                             Text(currentStep < 4 ? "Suivant" : "Terminer")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundColor(AppColors.buttonPrimaryText)
@@ -135,12 +179,12 @@ struct OnboardingScreen: View {
                         .disabled(
                             (currentStep == 1 && firstName.trimmingCharacters(in: .whitespaces).isEmpty) ||
                             (currentStep == 2 && (email.trimmingCharacters(in: .whitespaces).isEmpty || !isValidEmail(email.trimmingCharacters(in: .whitespaces)))) ||
-                            (currentStep == 3 && age < 15)
+                            (currentStep == 3 && calculatedAge < 15)
                         )
                         .opacity(
                             (currentStep == 1 && firstName.trimmingCharacters(in: .whitespaces).isEmpty) ||
                             (currentStep == 2 && (email.trimmingCharacters(in: .whitespaces).isEmpty || !isValidEmail(email.trimmingCharacters(in: .whitespaces)))) ||
-                            (currentStep == 3 && age < 15) ? 0.5 : 1.0
+                            (currentStep == 3 && calculatedAge < 15) ? 0.5 : 1.0
                         )
                     }
                     .padding(.horizontal, 30)
@@ -160,9 +204,9 @@ struct OnboardingScreen: View {
                             .background(AppColors.buttonPrimary)
                             .roundedCorner(20)
                             .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
-                    }
+                }
                     .padding(.horizontal, 40)
-                    .padding(.bottom, 50)
+                .padding(.bottom, 50)
                 }
             }
             .sheet(isPresented: $showingTutorial) {
@@ -184,9 +228,9 @@ struct OnboardingScreen: View {
         guard !trimmedFirstName.isEmpty,
               !trimmedEmail.isEmpty,
               isValidEmail(trimmedEmail),
-              age >= 15 else {
+              calculatedAge >= 15 else {
             // Si l'âge est invalide, afficher l'erreur
-            if age < 15 {
+            if calculatedAge < 15 {
                 showingAgeError = true
             }
             return
@@ -197,11 +241,11 @@ struct OnboardingScreen: View {
         // Créer un nouveau profil avec toutes les informations
         let profile = UserProfile(
             firstName: trimmedFirstName,
-            age: age,
+            dateOfBirth: dateOfBirth,
             gender: selectedGender, // Peut être notSpecified
             email: trimmedEmail, // Email saisi par l'utilisateur
-            createdAt: Date()
-        )
+                createdAt: Date()
+            )
         
         // Sauvegarder le profil en local (UserDefaults via DataManager)
         dataManager.saveUserProfile(profile)
@@ -492,10 +536,13 @@ struct OnboardingStep2_Email: View {
     }
 }
 
-// MARK: - Étape 3: Âge
-struct OnboardingStep3_Age: View {
-    @Binding var age: Int
+// MARK: - Étape 3: Date de naissance
+struct OnboardingStep3_DateOfBirth: View {
+    @Binding var dateOfBirth: Date
     @Binding var showingError: Bool
+    let calculatedAge: Int
+    let minimumDate: Date
+    let maximumDate: Date
     
     var body: some View {
         VStack(spacing: 30) {
@@ -506,42 +553,56 @@ struct OnboardingStep3_Age: View {
                 .padding(.top, 80)
             
             VStack(spacing: 12) {
-                Text("Quel est votre âge ?")
+                Text("Quelle est votre date de naissance ?")
                     .font(.playfairDisplayBold(size: 32))
-                    .foregroundColor(AppColors.primaryText)
+                        .foregroundColor(AppColors.primaryText)
                     .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
                 
                 Text("Vous devez avoir au minimum 15 ans")
                     .font(.system(size: 14, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
+                
+                if calculatedAge > 0 {
+                    Text("Vous avez \(calculatedAge) ans")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(calculatedAge >= 15 ? .green : .red)
+                        .padding(.top, 4)
+                }
             }
             .padding(.horizontal)
             
-            Picker("Âge", selection: $age) {
-                ForEach(15..<100) { age in
-                    Text("\(age) ans")
-                        .foregroundColor(AppColors.primaryText)
-                        .tag(age)
-                }
-            }
-            .pickerStyle(.wheel)
+            // DatePicker avec design moderne
+            VStack(spacing: 20) {
+                DatePicker(
+                    "",
+                    selection: $dateOfBirth,
+                    in: maximumDate...minimumDate,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.wheel)
+                .labelsHidden()
             .frame(height: 200)
-            .padding(.vertical, 16)
-            .padding(.horizontal, 40)
-            .background(AppColors.buttonSecondary)
-            .roundedCorner(20)
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 1)
-            )
-            .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
-            .tint(AppColors.buttonPrimary)
-            .onChange(of: age) { oldValue, newValue in
-                // Cacher l'erreur si l'âge devient valide
-                if newValue >= 15 {
-                    showingError = false
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+                .background(AppColors.buttonSecondary)
+                .roundedCorner(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 1)
+                )
+                .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
+                .tint(AppColors.buttonPrimary)
+                .onChange(of: dateOfBirth) { oldValue, newValue in
+                    // Cacher l'erreur si l'âge devient valide
+                    let calendar = Calendar.current
+                    let ageComponents = calendar.dateComponents([.year], from: newValue, to: Date())
+                    if let age = ageComponents.year, age >= 15 {
+                        showingError = false
+                    }
                 }
             }
+            .padding(.horizontal, 40)
             
             if showingError {
                 HStack(spacing: 8) {
@@ -551,6 +612,7 @@ struct OnboardingStep3_Age: View {
                     Text("Vous devez avoir au minimum 15 ans pour utiliser l'application")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.red)
+                        .multilineTextAlignment(.leading)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
@@ -583,16 +645,16 @@ struct OnboardingStep4_Gender: View {
                 .padding(.top, 80)
             
             VStack(spacing: 8) {
-                Text("Quel est votre genre ?")
-                    .font(.playfairDisplayBold(size: 32))
-                    .foregroundColor(AppColors.primaryText)
-                    .multilineTextAlignment(.center)
+            Text("Quel est votre genre ?")
+                .font(.playfairDisplayBold(size: 32))
+                .foregroundColor(AppColors.primaryText)
+                .multilineTextAlignment(.center)
                 
                 Text("(Optionnel)")
                     .font(.system(size: 16, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
             }
-            .padding(.horizontal)
+                .padding(.horizontal)
             
             VStack(spacing: 20) {
                 ForEach(Gender.allCases, id: \.rawValue) { gender in

@@ -21,10 +21,6 @@ struct AccessibilityHelpers {
         """
     }
     
-    static func moodAccessibilityLabel(mood: Mood) -> String {
-        return "Humeur \(mood.rawValue)"
-    }
-    
     static func weatherAccessibilityLabel(weather: WeatherType) -> String {
         return "Météo \(weather.rawValue)"
     }

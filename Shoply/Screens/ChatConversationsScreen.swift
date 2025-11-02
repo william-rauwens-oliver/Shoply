@@ -38,7 +38,25 @@ struct ChatConversationsScreen: View {
                 } else {
                     List {
                         ForEach(conversations.sorted(by: { $0.lastMessageAt > $1.lastMessageAt })) { conversation in
-                            NavigationLink(destination: ChatAIScreen(conversationId: conversation.id, initialMessages: conversation.messages, initialAIMode: conversation.aiMode == "Shoply AI" ? .shoplyAI : .advancedAI)) {
+                            NavigationLink(destination: ChatAIScreen(conversationId: conversation.id, initialMessages: conversation.messages, initialAIMode: {
+                                let mode: ChatAIScreen.AIMode
+                                switch conversation.aiMode {
+                                case "Apple Intelligence":
+                                    mode = .appleIntelligence
+                                case "Shoply AI":
+                                    mode = .shoplyAI
+                                case "Gemini", "Advanced", "ChatGPT":
+                                    mode = .gemini
+                                default:
+                                    // Utiliser Apple Intelligence par défaut si disponible
+                                    if #available(iOS 18.0, *), AppleIntelligenceServiceWrapper.shared.isEnabled {
+                                        mode = .appleIntelligence
+                                    } else {
+                                        mode = .gemini
+                                    }
+                                }
+                                return mode
+                            }())) {
                                 ConversationRow(conversation: conversation)
                             }
                         }
@@ -47,7 +65,7 @@ struct ChatConversationsScreen: View {
                     .listStyle(.plain)
                 }
             }
-            .navigationTitle("Conversations".localized)
+            .navigationTitle("Conversations")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -56,7 +74,7 @@ struct ChatConversationsScreen: View {
                             Button(role: .destructive) {
                                 deleteAllConversations()
                             } label: {
-                                Label("Supprimer toutes les conversations".localized, systemImage: "trash")
+                                Label("Supprimer tout", systemImage: "trash")
                             }
                         } label: {
                             Image(systemName: "ellipsis.circle")
@@ -72,17 +90,17 @@ struct ChatConversationsScreen: View {
                     }
                 }
             }
-            .alert("Supprimer toutes les conversations ?".localized, isPresented: $showingDeleteAllAlert) {
-                Button("Annuler".localized, role: .cancel) { }
-                Button("Supprimer".localized, role: .destructive) {
+            .alert("Supprimer toutes les conversations ?", isPresented: $showingDeleteAllAlert) {
+                Button("Annuler", role: .cancel) { }
+                Button("Supprimer", role: .destructive) {
                     deleteAllConversationsConfirmed()
                 }
             } message: {
-                Text("Cette action est irréversible.".localized)
+                Text("Cette action est irréversible")
             }
         }
         .sheet(isPresented: $showingNewChat) {
-            ChatAIScreen(conversationId: nil, initialMessages: [], initialAIMode: .advancedAI)
+            ChatAIScreen(conversationId: nil, initialMessages: [], initialAIMode: nil)
         }
         .onAppear {
             loadConversations()
@@ -163,7 +181,7 @@ struct ConversationRow: View {
             .frame(width: 50, height: 50)
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(conversation.title.isEmpty ? "Nouvelle conversation".localized : conversation.title)
+                Text(conversation.title.isEmpty ? "Nouvelle conversation" : conversation.title)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(AppColors.primaryText)
                     .lineLimit(1)

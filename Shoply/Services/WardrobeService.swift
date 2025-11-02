@@ -43,8 +43,12 @@ class WardrobeService: ObservableObject {
     
     func deleteItem(_ item: WardrobeItem) {
         items.removeAll { $0.id == item.id }
-        // Supprimer aussi la photo
-        if let photoURL = item.photoURL {
+        // Supprimer toutes les photos
+        if !item.photoURLs.isEmpty {
+            for photoURL in item.photoURLs {
+                photoManager.deletePhoto(at: photoURL)
+            }
+        } else if let photoURL = item.photoURL {
             photoManager.deletePhoto(at: photoURL)
         }
         saveItems()

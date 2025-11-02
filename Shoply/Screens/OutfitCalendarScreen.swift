@@ -13,8 +13,8 @@ struct OutfitCalendarScreen: View {
     @StateObject private var wardrobeService = WardrobeService()
     @StateObject private var weatherService = WeatherService.shared
     @StateObject private var historyStore = OutfitHistoryStore()
-    @StateObject private var openAIService = OpenAIService.shared
     @StateObject private var geminiService = GeminiService.shared
+    @StateObject private var appleIntelligenceWrapper = AppleIntelligenceServiceWrapper.shared
     @StateObject private var settingsManager = AppSettingsManager.shared
     @State private var selectedDate = Date()
     @State private var scheduledOutfits: [Date: MatchedOutfit] = [:]
@@ -25,14 +25,72 @@ struct OutfitCalendarScreen: View {
     @State private var generationProgress: Double = 0.0
     @State private var useAdvancedAI: Bool = true // Par défaut, utiliser l'IA avancée si disponible
     @State private var showingArticleError = false
+    @State private var selectedStyle: OutfitType? = nil
+    @State private var userSpecificRequest: String = ""
+    @State private var showingUserRequestInput = false
     
-    private var isAdvancedAIAvailable: Bool {
-        // Utiliser Gemini uniquement
-        return geminiService.isEnabled
-    }
     @State private var weatherFetchedForSelectedDate = false
     @State private var isFetchingWeather = false
     @State private var weatherErrorMessage: String?
+    
+    private var isAdvancedAIAvailable: Bool {
+        // Vérifier si Apple Intelligence est disponible (priorité)
+        if #available(iOS 18.0, *) {
+            if appleIntelligenceWrapper.isEnabled {
+                return true
+            }
+        }
+        // Sinon utiliser Gemini
+        return geminiService.isEnabled
+    }
+    
+    private var selectedAIService: AIServiceType {
+        if #available(iOS 18.0, *) {
+            if appleIntelligenceWrapper.isEnabled && useAdvancedAI {
+                return .appleIntelligence
+            }
+        }
+        if geminiService.isEnabled && useAdvancedAI {
+            return .gemini
+        }
+        return .local
+    }
+    
+    enum AIServiceType {
+        case appleIntelligence
+        case gemini
+        case local
+    }
+    
+    private var canGenerate: Bool {
+        // Vérifier qu'un style est sélectionné (obligatoire)
+        guard selectedStyle != nil else {
+            return false
+        }
+        
+        // Vérifier que la météo a été récupérée
+        guard weatherFetchedForSelectedDate,
+              weatherService.morningWeather != nil,
+              weatherService.afternoonWeather != nil else {
+            return false
+        }
+        
+        // Vérifier qu'on a au moins 3 hauts et 3 bas différents
+        let tops = wardrobeService.items.filter { $0.category == .top }
+        let bottoms = wardrobeService.items.filter { $0.category == .bottom }
+        
+        guard tops.count >= 3, bottoms.count >= 3 else {
+            return false
+        }
+        
+        return true
+    }
+    
+    private func hasEnoughItems() -> Bool {
+        let tops = wardrobeService.items.filter { $0.category == .top }
+        let bottoms = wardrobeService.items.filter { $0.category == .bottom }
+        return tops.count >= 3 && bottoms.count >= 3
+    }
     
     // Vérifier si la date est trop loin dans le futur
     private var isDateTooFar: Bool {
@@ -44,6 +102,7 @@ struct OutfitCalendarScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                // Fond avec dégradé subtil
                 AppColors.background
                     .ignoresSafeArea()
                 
@@ -160,6 +219,21 @@ struct OutfitCalendarScreen: View {
                             }
                             .padding(.horizontal, 20)
                             
+                            // Sélection de style vestimentaire
+                            StyleSelectionCard(
+                                selectedStyle: $selectedStyle,
+                                customStylePrompt: .constant(""),
+                                showingCustomInput: .constant(false)
+                            )
+                            .padding(.horizontal, 20)
+                            
+                            // Demande spécifique de l'utilisateur
+                            UserRequestCard(
+                                userRequest: $userSpecificRequest,
+                                showingInput: $showingUserRequestInput
+                            )
+                            .padding(.horizontal, 20)
+                            
                             // Sélecteur d'algorithme
                             AlgorithmSelectionCard(
                                 useAdvancedAI: $useAdvancedAI,
@@ -169,7 +243,10 @@ struct OutfitCalendarScreen: View {
                             
                             // Bouton pour générer l'outfit
                             Button(action: {
-                                if wardrobeService.items.count < 2 {
+                                // Vérifier les conditions avant de générer
+                                if selectedStyle == nil {
+                                    showingArticleError = true
+                                } else if !hasEnoughItems() {
                                     showingArticleError = true
                                 } else {
                                     Task {
@@ -183,12 +260,13 @@ struct OutfitCalendarScreen: View {
                                     Text("Générer l'outfit pour cette date".localized)
                                         .font(.system(size: 15, weight: .semibold))
                                 }
-                                .foregroundColor(AppColors.buttonPrimaryText)
+                                .foregroundColor(canGenerate ? AppColors.buttonPrimaryText : AppColors.secondaryText)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(AppColors.buttonPrimary)
+                                .background(canGenerate ? AppColors.buttonPrimary : AppColors.buttonSecondary)
                                 .roundedCorner(14)
                             }
+                            .disabled(!canGenerate)
                             .padding(.horizontal, 20)
                         }
                         
@@ -243,7 +321,7 @@ struct OutfitCalendarScreen: View {
                     .padding(.vertical)
                 }
             }
-            .navigationTitle("Calendrier".localized)
+            .navigationTitle("Calendrier")
             .navigationBarTitleDisplayMode(.large)
             .sheet(item: $selectedOutfit) { outfit in
                 ScheduledOutfitDetailView(outfit: outfit, date: selectedDate)
@@ -255,7 +333,16 @@ struct OutfitCalendarScreen: View {
             .alert("Articles insuffisants".localized, isPresented: $showingArticleError) {
                 Button("OK", role: .cancel) { }
             } message: {
-                Text("Vous devez avoir au moins 2 articles dans votre garde-robe avec leurs photos pour générer des outfits. Ajoutez des vêtements depuis la section \"Ma Garde-robe\".".localized)
+                Group {
+                    if selectedStyle == nil {
+                        Text("Veuillez sélectionner un style vestimentaire avant de générer des outfits.".localized)
+                    } else {
+                        let tops = wardrobeService.items.filter { $0.category == .top }.count
+                        let bottoms = wardrobeService.items.filter { $0.category == .bottom }.count
+                        let messageText = "Vous devez avoir au moins 3 hauts et 3 bas différents dans votre garde-robe pour générer des outfits.".localized + "\n\n" + String(format: "Actuellement : %d haut(s), %d bas".localized, tops, bottoms)
+                        Text(messageText)
+                    }
+                }
             }
         }
     }
@@ -305,10 +392,21 @@ struct OutfitCalendarScreen: View {
     // MARK: - Génération d'outfit
     
     private func generateOutfitForDate() async {
-        // Vérifier qu'on a assez d'articles
-        guard wardrobeService.items.count >= 2 else {
+        // Vérifier qu'on a au moins 3 hauts et 3 bas
+        guard hasEnoughItems() else {
             await MainActor.run {
-                showingArticleError = true
+                let tops = wardrobeService.items.filter { $0.category == .top }.count
+                let bottoms = wardrobeService.items.filter { $0.category == .bottom }.count
+                generationError = String(format: "Pas assez d'articles. Vous devez avoir au moins 3 hauts et 3 bas différents. Actuellement : %d haut(s), %d bas".localized, tops, bottoms)
+                isGenerating = false
+            }
+            return
+        }
+        
+        // Vérifier que le style est sélectionné
+        guard selectedStyle != nil else {
+            await MainActor.run {
+                generationError = "Veuillez sélectionner un style vestimentaire avant de générer des outfits.".localized
                 isGenerating = false
             }
             return
@@ -348,26 +446,36 @@ struct OutfitCalendarScreen: View {
             generationProgress = 0.2
         }
         
+        // Préparer le style vestimentaire pour l'algorithme
+        var profileWithStyle = userProfile
+        if let style = selectedStyle {
+            profileWithStyle.preferences.preferredStyle = style
+        }
+        
         // Utiliser l'algorithme selon le choix de l'utilisateur
         let algorithm = OutfitMatchingAlgorithm(
             wardrobeService: wardrobeService,
             weatherService: weatherService,
-            userProfile: userProfile
+            userProfile: profileWithStyle
         )
+        
+        // Préparer la demande spécifique de l'utilisateur
+        let userRequest = userSpecificRequest.trimmingCharacters(in: .whitespaces)
+        let finalUserRequest = !userRequest.isEmpty ? userRequest : nil
         
         // Étape 3: Générer selon le choix de l'utilisateur (50-90%)
         let outfits: [MatchedOutfit]
         
         if useAdvancedAI && isAdvancedAIAvailable {
             // Utiliser l'IA avancée sélectionnée (ChatGPT ou Gemini)
-            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: false) { progress in
+            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: false, userRequest: finalUserRequest) { progress in
                 await MainActor.run {
                     self.generationProgress = 0.3 + (progress * 0.6)
                 }
             }
         } else {
             // Utiliser l'algorithme local uniquement
-            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: true) { progress in
+            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: true, userRequest: finalUserRequest) { progress in
                 await MainActor.run {
                     self.generationProgress = 0.3 + (progress * 0.6)
                 }

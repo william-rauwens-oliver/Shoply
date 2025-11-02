@@ -92,12 +92,22 @@ class IntelligentOutfitMatchingAlgorithm: ObservableObject {
             }
         }
         
-        // Trier par score et retourner les 5 meilleurs
+        // Trier par score et retourner les 3 meilleurs max
         candidateOutfits.sort { $0.score > $1.score }
         
         // Éliminer les doublons
         var uniqueOutfits: [MatchedOutfit] = []
         var seenCombinations: Set<Set<UUID>> = []
+        
+        // Calculer le nombre max selon la taille de la garde-robe
+        let maxOutfits: Int
+        if wardrobeService.items.count < 10 {
+            maxOutfits = 1
+        } else if wardrobeService.items.count < 20 {
+            maxOutfits = 2
+        } else {
+            maxOutfits = 3
+        }
         
         for outfit in candidateOutfits {
             let itemIds = Set(outfit.items.map { $0.id })
@@ -105,7 +115,7 @@ class IntelligentOutfitMatchingAlgorithm: ObservableObject {
                 seenCombinations.insert(itemIds)
                 uniqueOutfits.append(outfit)
                 
-                if uniqueOutfits.count >= 5 {
+                if uniqueOutfits.count >= maxOutfits {
                     break
                 }
             }
@@ -322,22 +332,35 @@ class IntelligentOutfitMatchingAlgorithm: ObservableObject {
         
         var selectedItems: [WardrobeItem] = []
         
-        // 1. Bas (obligatoire) - Choisir parmi les meilleurs scores
-        if let bottoms = selectBestItem(from: organizedItems[.bottom]) {
-            selectedItems.append(bottoms)
-        } else {
+        // Prendre en compte le style vestimentaire souhaité
+        let preferredStyle = userProfile.preferences.preferredStyle
+        let customStyle = userProfile.preferences.preferredStyleRawValue
+        
+        // 1. Bas (obligatoire) - Choisir parmi les meilleurs scores, en respectant le style
+        guard let bottoms = selectBestItem(from: organizedItems[.bottom], matchingStyle: preferredStyle, customStyle: customStyle) else {
             return nil
         }
+        selectedItems.append(bottoms)
         
-        // 2. Haut (obligatoire) - Choisir parmi les meilleurs scores
-        guard let tops = selectBestItem(from: organizedItems[.top]) else {
+        // 2. Haut (obligatoire) - Choisir parmi les meilleurs scores, en respectant le style et la couleur du bas
+        guard let tops = selectBestItem(
+            from: organizedItems[.top],
+            matchingStyle: preferredStyle,
+            customStyle: customStyle,
+            harmonizingWith: bottoms
+        ) else {
             return nil
         }
         selectedItems.append(tops)
         
         // 3. Veste/Manteau (intelligent selon météo et cohérence)
         if shouldIncludeOuterwear(temperature: temperature, condition: condition) {
-            if let outerwear = selectBestItem(from: organizedItems[.outerwear]) {
+            if let outerwear = selectBestItem(
+                from: organizedItems[.outerwear],
+                matchingStyle: preferredStyle,
+                customStyle: customStyle,
+                harmonizingWith: tops
+            ) {
                 // Vérifier la cohérence avec le haut
                 if isColorHarmonious(item1: tops, item2: outerwear) {
                     selectedItems.append(outerwear)
@@ -348,7 +371,9 @@ class IntelligentOutfitMatchingAlgorithm: ObservableObject {
         // 4. Chaussures (optionnelles si pas disponibles) - Cohérentes avec le style
         if let shoes = selectBestShoes(
             from: organizedItems[.shoes],
-            outfitStyle: determineOutfitStyle(items: selectedItems)
+            outfitStyle: determineOutfitStyle(items: selectedItems, preferredStyle: preferredStyle),
+            matchingStyle: preferredStyle,
+            customStyle: customStyle
         ) {
             selectedItems.append(shoes)
         } else {
@@ -383,12 +408,70 @@ class IntelligentOutfitMatchingAlgorithm: ObservableObject {
         )
     }
     
-    private func selectBestItem(from items: [(item: WardrobeItem, score: Double)]?) -> WardrobeItem? {
+    private func selectBestItem(
+        from items: [(item: WardrobeItem, score: Double)]?,
+        matchingStyle: OutfitType? = nil,
+        customStyle: String? = nil,
+        harmonizingWith: WardrobeItem? = nil
+    ) -> WardrobeItem? {
         guard let items = items, !items.isEmpty else { return nil }
         
+        // Filtrer selon le style si spécifié
+        var filteredItems = items
+        if let style = matchingStyle {
+            // Filtrer les items qui correspondent au style (basé sur la catégorie et les tags)
+            filteredItems = items.filter { tupleItem in
+                matchesStyle(item: tupleItem.item, style: style)
+            }
+            // Si aucun item ne correspond, utiliser tous les items
+            if filteredItems.isEmpty {
+                filteredItems = items
+            }
+        } else if let customStyle = customStyle, !customStyle.isEmpty {
+            // Pour style personnalisé, privilégier les items avec tags correspondants
+            filteredItems = items.map { (item, score) in
+                let styleScore = item.tags.contains { tag in
+                    customStyle.lowercased().contains(tag.lowercased()) || tag.lowercased().contains(customStyle.lowercased())
+                } ? score + 0.3 : score
+                return (item: item, score: styleScore)
+            }
+        }
+        
+        // Si on doit harmoniser avec un autre item, privilégier ceux qui s'harmonisent
+        if let harmonizingItem = harmonizingWith {
+            filteredItems = filteredItems.map { (item, score) in
+                let harmonyScore = isColorHarmonious(item1: harmonizingItem, item2: item) ? score + 0.2 : score
+                return (item: item, score: harmonyScore)
+            }
+        }
+        
+        // Trier par score
+        filteredItems.sort { $0.score > $1.score }
+        
         // Prendre parmi les 3 meilleurs (pour varier)
-        let topItems = Array(items.prefix(min(3, items.count)))
+        let topItems = Array(filteredItems.prefix(min(3, filteredItems.count)))
         return topItems.randomElement()?.item
+    }
+    
+    private func matchesStyle(item: WardrobeItem, style: OutfitType) -> Bool {
+        // Vérifier si l'item correspond au style demandé
+        switch style {
+        case .casual:
+            // Style décontracté : favorise les catégories casual
+            return item.category == .bottom || item.category == .top || item.tags.contains(where: { $0.lowercased().contains("casual") || $0.lowercased().contains("décontracté") })
+        case .business:
+            // Style business : favorise les vêtements formels
+            return item.category == .outerwear || item.tags.contains(where: { $0.lowercased().contains("business") || $0.lowercased().contains("professionnel") || $0.lowercased().contains("formel") })
+        case .smartCasual:
+            // Smart casual : mélange de casual et formel
+            return true // Plus flexible
+        case .formal:
+            // Formel : vêtements élégants
+            return item.tags.contains(where: { $0.lowercased().contains("formel") || $0.lowercased().contains("élégant") || $0.lowercased().contains("soirée") }) || item.category == .outerwear
+        case .weekend:
+            // Weekend : confortable et décontracté
+            return item.tags.contains(where: { $0.lowercased().contains("weekend") || $0.lowercased().contains("détente") || $0.lowercased().contains("confortable") }) || item.category == .bottom
+        }
     }
     
     private func shouldIncludeOuterwear(temperature: Double, condition: WeatherCondition) -> Bool {
@@ -406,17 +489,36 @@ class IntelligentOutfitMatchingAlgorithm: ObservableObject {
     
     private func selectBestShoes(
         from items: [(item: WardrobeItem, score: Double)]?,
-        outfitStyle: String
+        outfitStyle: String,
+        matchingStyle: OutfitType? = nil,
+        customStyle: String? = nil
     ) -> WardrobeItem? {
         guard let items = items, !items.isEmpty else { return nil }
         
+        // Filtrer selon le style si spécifié
+        var filteredItems = items
+        if let style = matchingStyle {
+            filteredItems = items.filter { matchesStyle(item: $0.item, style: style) }
+            if filteredItems.isEmpty {
+                filteredItems = items
+            }
+        }
+        
+        // Trier par score
+        filteredItems.sort { $0.score > $1.score }
+        
         // Choisir parmi les 5 meilleurs
-        let topItems = Array(items.prefix(min(5, items.count)))
+        let topItems = Array(filteredItems.prefix(min(5, filteredItems.count)))
         return topItems.randomElement()?.item
     }
     
-    private func determineOutfitStyle(items: [WardrobeItem]) -> String {
-        // Déterminer le style global de l'outfit
+    private func determineOutfitStyle(items: [WardrobeItem], preferredStyle: OutfitType?) -> String {
+        // Si un style est préféré, l'utiliser
+        if let style = preferredStyle {
+            return style.rawValue.lowercased()
+        }
+        
+        // Sinon, déterminer le style global de l'outfit
         if items.contains(where: { $0.category == .outerwear }) {
             return "casual"
         }

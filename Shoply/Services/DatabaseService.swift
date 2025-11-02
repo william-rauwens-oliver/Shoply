@@ -276,6 +276,22 @@ class NoSQLDatabaseService {
     func fetchDocuments(recordType: String, predicate: NSPredicate? = nil, completion: @escaping (Result<[CKRecord], Error>) -> Void) {
         let query = CKQuery(recordType: recordType, predicate: predicate ?? NSPredicate(value: true))
         
+        if #available(iOS 15.0, *) {
+            privateDatabase.fetch(withQuery: query, inZoneWith: nil, desiredKeys: nil, resultsLimit: 100) { (result: Result<(matchResults: [(CKRecord.ID, Result<CKRecord, Error>)], queryCursor: CKQueryOperation.Cursor?), Error>) in
+                switch result {
+                case .success(let (matchResults, _)):
+                    var records: [CKRecord] = []
+                    for (_, recordResult) in matchResults {
+                        if case .success(let record) = recordResult {
+                            records.append(record)
+                        }
+                    }
+                    completion(.success(records))
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        } else {
         privateDatabase.perform(query, inZoneWith: nil) { records, error in
             if let error = error {
                 completion(.failure(error))
@@ -283,6 +299,7 @@ class NoSQLDatabaseService {
                 completion(.success(records))
             } else {
                 completion(.success([]))
+                }
             }
         }
     }

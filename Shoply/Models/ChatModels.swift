@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 struct ChatMessage: Identifiable, Codable {
     let id: UUID
@@ -13,13 +14,21 @@ struct ChatMessage: Identifiable, Codable {
     let isUser: Bool
     let timestamp: Date
     var isSystemMessage: Bool
+    var imageData: Data? // Image en format Data pour la persistance
     
-    init(content: String, isUser: Bool, isSystemMessage: Bool = false) {
+    init(content: String, isUser: Bool, isSystemMessage: Bool = false, imageData: Data? = nil) {
         self.id = UUID()
         self.content = content
         self.isUser = isUser
         self.timestamp = Date()
         self.isSystemMessage = isSystemMessage
+        self.imageData = imageData
+    }
+    
+    // Propriété calculée pour obtenir l'image si disponible
+    var image: UIImage? {
+        guard let imageData = imageData else { return nil }
+        return UIImage(data: imageData)
     }
 }
 

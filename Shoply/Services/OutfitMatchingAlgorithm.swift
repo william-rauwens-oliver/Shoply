@@ -8,6 +8,12 @@
 import Foundation
 import Combine
 
+enum AIServiceType {
+    case appleIntelligence
+    case gemini
+    case local
+}
+
 /// Algorithme intelligent de matching d'outfits (utilise IntelligentOutfitMatchingAlgorithm en local)
 class OutfitMatchingAlgorithm: ObservableObject {
     
@@ -29,8 +35,10 @@ class OutfitMatchingAlgorithm: ObservableObject {
     }
     
     /// Génère avec progression pour l'UI
-    /// - Parameter forceLocal: Si true, force l'utilisation de l'algorithme local même si ChatGPT est disponible
-    func generateOutfitsWithProgress(forceLocal: Bool = false, progressCallback: @escaping (Double) async -> Void) async -> [MatchedOutfit] {
+    /// - Parameters:
+    ///   - forceLocal: Si true, force l'utilisation de l'algorithme local même si ChatGPT est disponible
+    ///   - userRequest: Demande spécifique de l'utilisateur (ex: "je veux mon short rouge")
+    func generateOutfitsWithProgress(forceLocal: Bool = false, userRequest: String? = nil, progressCallback: @escaping (Double) async -> Void) async -> [MatchedOutfit] {
         guard let morningWeather = weatherService.morningWeather,
               let afternoonWeather = weatherService.afternoonWeather else {
             return []
@@ -46,15 +54,44 @@ class OutfitMatchingAlgorithm: ObservableObject {
             afternoon: afternoonWeather.condition
         )
         
-        // Utiliser Gemini si activé et non forcé en local
-        let isAIServiceEnabled = GeminiService.shared.isEnabled
+        // Vérifier la disponibilité des services IA (priorité à Apple Intelligence)
+        var aiServiceType: AIServiceType = .local
+        if !forceLocal && wardrobeService.items.count >= 2 {
+            if #available(iOS 18.0, *) {
+                if AppleIntelligenceServiceWrapper.shared.isEnabled {
+                    aiServiceType = .appleIntelligence
+                } else if GeminiService.shared.isEnabled {
+                    aiServiceType = .gemini
+                }
+            } else if GeminiService.shared.isEnabled {
+                aiServiceType = .gemini
+            }
+        }
         
-        if !forceLocal && isAIServiceEnabled && wardrobeService.items.count >= 2 {
+        if !forceLocal && aiServiceType != .local {
             await progressCallback(0.2) // 20% - Préparation
             
             do {
-                // Générer avec Gemini
-                let suggestions = try await GeminiService.shared.generateOutfitSuggestions(
+                let suggestions: [String]
+                
+                // Générer selon le service sélectionné
+                if #available(iOS 18.0, *), aiServiceType == .appleIntelligence {
+                    // Utiliser Apple Intelligence
+                    suggestions = try await AppleIntelligenceServiceWrapper.shared.generateOutfitSuggestions(
+                        wardrobeItems: wardrobeService.items,
+                        weather: WeatherData(
+                            temperature: avgTemperature,
+                            condition: dominantCondition,
+                            humidity: 50,
+                            windSpeed: 0
+                        ),
+                        userProfile: userProfile,
+                        userRequest: userRequest,
+                        progressCallback: progressCallback
+                    )
+                } else {
+                    // Utiliser Gemini
+                    suggestions = try await GeminiService.shared.generateOutfitSuggestions(
                     wardrobeItems: wardrobeService.items,
                     weather: WeatherData(
                         temperature: avgTemperature,
@@ -63,15 +100,18 @@ class OutfitMatchingAlgorithm: ObservableObject {
                         windSpeed: 0
                     ),
                     userProfile: userProfile,
+                        userRequest: userRequest,
                     progressCallback: progressCallback
                 )
+                }
                 
                 await progressCallback(0.8) // 80% - Suggestions reçues
                 
                 // Convertir les suggestions IA en MatchedOutfit
                 var outfits: [MatchedOutfit] = []
                 
-                for suggestion in suggestions.prefix(5) {
+                // Limiter à 3 outfits max
+                for suggestion in suggestions.prefix(3) {
                     // Utiliser TOUS les items pour le parsing
                     if let outfit = parseAISuggestion(suggestion, from: wardrobeService.items) {
                         outfits.append(outfit)
@@ -97,23 +137,26 @@ class OutfitMatchingAlgorithm: ObservableObject {
                     }
                 }
                 
-                // Éliminer les doublons et retourner les 5 meilleurs
+                // Éliminer les doublons et retourner les 3 meilleurs max
                 var uniqueOutfits: [MatchedOutfit] = []
                 var seenCombinations: Set<Set<UUID>> = []
                 
-                for outfit in outfits.prefix(5) {
+                for outfit in outfits.prefix(3) {
                     let itemIds = Set(outfit.items.map { $0.id })
                     if !seenCombinations.contains(itemIds) {
                         seenCombinations.insert(itemIds)
                         uniqueOutfits.append(outfit)
+                        
+                        if uniqueOutfits.count >= 3 {
+                            break
+                        }
                     }
                 }
                 
                 return uniqueOutfits.sorted { $0.score > $1.score }
                 
             } catch {
-                let providerName = "Gemini"
-                print("⚠️ Erreur \(providerName): \(error), utilisation de l'algorithme local")
+                print("⚠️ Erreur \(aiServiceType == .appleIntelligence ? "Apple Intelligence" : "Gemini"): \(error), utilisation de l'algorithme local")
                 await progressCallback(0.3) // 30% - Erreur, fallback local
                 // Fallback sur l'algorithme local
                 let intelligentAlgorithm = IntelligentOutfitMatchingAlgorithm(
@@ -263,13 +306,12 @@ class OutfitMatchingAlgorithm: ObservableObject {
         let avgTemp = ((weatherService.morningWeather?.temperature ?? 20.0) + (weatherService.afternoonWeather?.temperature ?? 20.0)) / 2
         let condition = weatherService.morningWeather?.condition ?? WeatherCondition.sunny
         
-        let providerName = "Gemini"
         return MatchedOutfit(
             items: selectedItems,
             score: 90.0, // Score élevé pour les suggestions IA
             temperature: avgTemp,
             weatherCondition: condition,
-            reason: "Suggestion \(providerName): \(suggestion)"
+            reason: "Suggestion IA: \(suggestion)"
         )
     }
     

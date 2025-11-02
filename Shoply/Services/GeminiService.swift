@@ -46,13 +46,14 @@ class GeminiService: ObservableObject {
         wardrobeItems: [WardrobeItem],
         weather: WeatherData,
         userProfile: UserProfile,
+        userRequest: String? = nil,
         progressCallback: ((Double) async -> Void)? = nil
     ) async throws -> [String] {
         guard !wardrobeItems.isEmpty else {
             throw GeminiError.noItems
         }
         
-        guard let apiKey = apiKey, isEnabled else {
+        guard isEnabled else {
             throw GeminiError.apiKeyMissing
         }
         
@@ -65,11 +66,19 @@ class GeminiService: ObservableObject {
         for (index, item) in wardrobeItems.enumerated() {
             var itemDesc = "- \(item.name) | Catégorie: \(item.category.rawValue) | Couleur: \(item.color)"
             
+            // Ajouter la marque si disponible
+            if let brand = item.brand, !brand.isEmpty {
+                itemDesc += " | Marque: \(brand)"
+            }
+            
             if let material = item.material, !material.isEmpty {
                 itemDesc += " | Matière: \(material)"
             }
             if !item.season.isEmpty {
                 itemDesc += " | Saisons: \(item.season.map { $0.rawValue }.joined(separator: ", "))"
+            }
+            if !item.tags.isEmpty {
+                itemDesc += " | Tags: \(item.tags.joined(separator: ", "))"
             }
             if item.isFavorite {
                 itemDesc += " | ⭐ Favori"
@@ -104,7 +113,8 @@ class GeminiService: ObservableObject {
             weather: weather,
             userProfile: userProfile,
             hasImages: !imageParts.isEmpty,
-            numberOfItems: wardrobeItems.count
+            numberOfItems: wardrobeItems.count,
+            userRequest: userRequest
         )
         
         // Construire le contenu pour Gemini (texte + images)
@@ -121,7 +131,6 @@ class GeminiService: ObservableObject {
         
         // Construire l'URL - utiliser la clé API intégrée ou stockée
         let urlString: String
-        let useOAuth: Bool
         
         // Vérifier si une clé API est stockée par l'utilisateur, sinon utiliser la clé intégrée
         let apiKeyToUse: String
@@ -134,7 +143,6 @@ class GeminiService: ObservableObject {
         }
         
         urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(apiKeyToUse)"
-        useOAuth = false
         
         guard let url = URL(string: urlString) else {
             throw GeminiError.invalidURL
@@ -238,25 +246,63 @@ class GeminiService: ObservableObject {
         weather: WeatherData,
         userProfile: UserProfile,
         hasImages: Bool,
-        numberOfItems: Int
+        numberOfItems: Int,
+        userRequest: String? = nil
     ) -> String {
         let itemsDescription = itemsDescriptions.joined(separator: "\n")
         
-        let numberOfOutfits = min(5, max(1, numberOfItems))
+        // Calculer le nombre d'outfits : max 3 si beaucoup d'items, 1 seul si peu d'items
+        let numberOfOutfits: Int
+        if numberOfItems < 10 {
+            numberOfOutfits = 1 // Peu d'items = 1 seul outfit
+        } else if numberOfItems < 20 {
+            numberOfOutfits = 2 // Moyen = 2 outfits
+        } else {
+            numberOfOutfits = 3 // Beaucoup = 3 outfits max
+        }
+        
+        // Récupérer le style vestimentaire sélectionné
+        var styleInfo = ""
+        if let preferredStyle = userProfile.preferences.preferredStyle {
+            styleInfo = "\n- Style vestimentaire souhaité: \(preferredStyle.rawValue) (TRÈS IMPORTANT: Respecte exactement ce style dans tes suggestions)"
+        } else if let customStyle = userProfile.preferences.preferredStyleRawValue, !customStyle.isEmpty {
+            styleInfo = "\n- Style vestimentaire personnalisé: \(customStyle) (TRÈS IMPORTANT: Respecte exactement ce style décrit dans tes suggestions)"
+        }
+        
+        // Ajouter la demande spécifique de l'utilisateur si elle existe
+        var userRequestSection = ""
+        if let request = userRequest, !request.trimmingCharacters(in: .whitespaces).isEmpty {
+            userRequestSection = """
+            
+            ⚠️ DEMANDE SPÉCIFIQUE DE L'UTILISATEUR (PRIORITÉ ABSOLUE):
+            "\(request)"
+            
+            Cette demande est TRÈS IMPORTANTE. Analyse attentivement cette demande et respecte-la EXACTEMENT :
+            - Si l'utilisateur demande un vêtement spécifique (ex: "je veux mon short rouge"), trouve UNIQUEMENT ce vêtement exact dans la liste ci-dessus et utilise-le dans TOUS les outfits.
+            - Si une couleur est mentionnée (ex: "rouge", "bleu"), utilise UNIQUEMENT les vêtements de cette couleur EXACTE, jamais une autre couleur.
+            - Si un type de vêtement est mentionné (ex: "short", "t-shirt", "robe"), utilise UNIQUEMENT ce type de vêtement, pas un autre.
+            - Si l'utilisateur dit "mon [vêtement] [couleur]", cela signifie qu'il veut spécifiquement CE vêtement avec CETTE couleur de SA garde-robe listée ci-dessus.
+            - Ignore cette demande uniquement si le vêtement demandé n'existe vraiment pas dans la garde-robe listée.
+            """
+        }
         
         var prompt = """
-        Analyse cette garde-robe et génère \(numberOfOutfits) outfit(s) parfaitement adapté(s).
+        Analyse cette garde-robe et génère \(numberOfOutfits) outfit(s) parfaitement adapté(s).\(userRequestSection)
         
         PROFIL UTILISATEUR:
         - Genre: \(userProfile.gender.rawValue) (IMPORTANT: Adapte les outfits à ce genre spécifique)
-        - Âge: \(userProfile.age)
+        - Âge: \(userProfile.age)\(styleInfo)
         
         CONDITIONS MÉTÉOROLOGIQUES D'AUJOURD'HUI:
         - Température: \(Int(weather.temperature))°C (IMPORTANT: Adapte les vêtements à cette température)
         - Conditions: \(weather.condition.rawValue) (IMPORTANT: Prends en compte cette condition météo)
         
-        GARDE-ROBE DISPONIBLE:
+        GARDE-ROBE DISPONIBLE (avec toutes les informations):
         \(itemsDescription)
+        
+        IMPORTANT - INFORMATIONS DES VÊTEMENTS:
+        Chaque vêtement ci-dessus contient: son nom exact, sa catégorie, sa couleur PRÉCISE, sa marque (si renseignée), sa matière, et ses tags.
+        UTILISE EXACTEMENT ces informations dans tes suggestions. Si l'utilisateur demande un vêtement d'une couleur spécifique, utilise UNIQUEMENT les vêtements de cette couleur exacte.
         """
         
         if hasImages {
@@ -269,10 +315,12 @@ class GeminiService: ObservableObject {
         1. Génère EXACTEMENT \(numberOfOutfits) suggestion(s) d'outfit(s) différent(s) et adapté(s)
         2. Chaque outfit doit inclure: un haut (obligatoire), un bas (obligatoire), des chaussures (obligatoire), et éventuellement des accessoires
         3. **ADAPTE CHAQUE OUTFIT AU GENRE** (\(userProfile.gender.rawValue)) - Les vêtements doivent être adaptés à ce genre spécifique
-        4. **ADAPTE CHAQUE OUTFIT À LA MÉTÉO** (\(Int(weather.temperature))°C, \(weather.condition.rawValue)) - Les vêtements doivent être adaptés à cette température et condition météo
-        5. Utilise UNIQUEMENT les vêtements listés ci-dessus
-        6. Si tu as peu d'articles, tu peux réutiliser certains vêtements dans différents outfits mais varie les combinaisons
-        7. Réponds UNIQUEMENT avec les \(numberOfOutfits) suggestion(s), une par ligne, format:
+        4. **ADAPTE CHAQUE OUTFIT À LA MÉTÉO** (\(Int(weather.temperature))°C, \(weather.condition.rawValue)) - Les vêtements doivent être adaptés à cette température et condition météo\(styleInfo.isEmpty ? "" : "\n5. **RESPECTE LE STYLE VESTIMENTAIRE** - Si un style a été spécifié, adapte TOUS les outfits à ce style exactement")
+        6. **RESPECTE ABSOLUMENT LA DEMANDE SPÉCIFIQUE DE L'UTILISATEUR** - Si une demande spécifique a été fournie (ex: "je veux mon short rouge"), trouve ce vêtement exact dans la liste ci-dessus par son nom ET sa couleur, et utilise-le. Ne substitue JAMAIS un autre vêtement même s'il est similaire.
+        7. **UTILISE LES COULEURS EXACTES** - Si un vêtement est décrit comme "rouge", utilise UNIQUEMENT ce vêtement rouge, pas un autre vêtement d'une autre couleur. Si l'utilisateur demande spécifiquement un vêtement d'une couleur précise, respecte EXACTEMENT cette couleur demandée. Ne confonds JAMAIS les couleurs.
+        8. Utilise UNIQUEMENT les vêtements listés ci-dessus avec leurs noms EXACTS
+        9. Si tu as peu d'articles, tu peux réutiliser certains vêtements dans différents outfits mais varie les combinaisons
+        10. Réponds UNIQUEMENT avec les \(numberOfOutfits) suggestion(s), une par ligne, format:
            Outfit 1: [nom exact du haut] + [nom exact du bas] + [nom exact des chaussures] + [accessoires optionnels]
            Outfit 2: [nom exact du haut] + [nom exact du bas] + [nom exact des chaussures] + [accessoires optionnels]
            ...
@@ -297,9 +345,10 @@ class GeminiService: ObservableObject {
         question: String,
         userProfile: UserProfile,
         currentWeather: WeatherData?,
-        wardrobeItems: [WardrobeItem]
+        wardrobeItems: [WardrobeItem],
+        image: UIImage? = nil
     ) async throws -> String {
-        guard let apiKey = apiKey, isEnabled else {
+        guard isEnabled else {
             throw GeminiError.apiKeyMissing
         }
         
@@ -350,7 +399,6 @@ class GeminiService: ObservableObject {
         // Utiliser gemini-2.5-flash avec v1beta selon la documentation officielle
         // Construire l'URL - utiliser la clé API intégrée ou stockée
         let urlString: String
-        let useOAuth: Bool
         
         // Vérifier si une clé API est stockée par l'utilisateur, sinon utiliser la clé intégrée
         let apiKeyToUse: String
@@ -363,20 +411,30 @@ class GeminiService: ObservableObject {
         }
         
         urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\(apiKeyToUse)"
-        useOAuth = false
         
         guard let url = URL(string: urlString) else {
             throw GeminiError.invalidURL
         }
         
+        // Construire les parts du message (texte + image si disponible)
+        var parts: [[String: Any]] = [
+            ["text": contextPrompt]
+        ]
+        
+        // Ajouter l'image si disponible
+        if let image = image, let base64Image = imageToBase64(image) {
+            parts.append([
+                "inline_data": [
+                    "mime_type": "image/jpeg",
+                    "data": base64Image
+                ]
+            ])
+        }
+        
         let requestBody: [String: Any] = [
             "contents": [
                 [
-                    "parts": [
-                        [
-                            "text": contextPrompt
-                        ]
-                    ]
+                    "parts": parts
                 ]
             ],
             "generationConfig": [

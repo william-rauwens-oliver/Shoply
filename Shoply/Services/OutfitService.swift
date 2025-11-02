@@ -56,9 +56,9 @@ class OutfitService: ObservableObject {
     }
     
     // MARK: - Filtrage et recherche
-    func getOutfitsFor(mood: Mood, weather: WeatherType) -> [Outfit] {
+    func getOutfitsFor(weather: WeatherType) -> [Outfit] {
         return outfits.filter { outfit in
-            outfit.suitableMoods.contains(mood) && outfit.suitableWeather.contains(weather)
+            outfit.suitableWeather.contains(weather)
         }
     }
     
@@ -80,25 +80,11 @@ class OutfitService: ObservableObject {
     func getStats() -> OutfitStats {
         let total = outfits.count
         let favorites = outfits.filter { $0.isFavorite }.count
-        let mostPopularMood = getMostPopularMood()
         
         return OutfitStats(
             totalOutfits: total,
-            favoritesCount: favorites,
-            mostPopularMood: mostPopularMood
+            favoritesCount: favorites
         )
-    }
-    
-    private func getMostPopularMood() -> Mood {
-        var moodCounts: [Mood: Int] = [:]
-        
-        for outfit in outfits {
-            for mood in outfit.suitableMoods {
-                moodCounts[mood, default: 0] += 1
-            }
-        }
-        
-        return moodCounts.max(by: { $0.value < $1.value })?.key ?? .energetic
     }
 }
 
@@ -106,7 +92,6 @@ class OutfitService: ObservableObject {
 struct OutfitStats {
     let totalOutfits: Int
     let favoritesCount: Int
-    let mostPopularMood: Mood
 }
 
 /// Factory pour créer les outfits par défaut
@@ -122,7 +107,6 @@ struct OutfitFactory {
                 bottom: "Jeans slim",
                 shoes: "Baskets blanches",
                 accessories: ["Montre connectée"],
-                suitableMoods: [.energetic, .creative],
                 suitableWeather: [.sunny, .warm],
                 imageName: "outfit_energetic_1",
                 comfortLevel: 5,
@@ -136,7 +120,6 @@ struct OutfitFactory {
                 bottom: "Pantalon de jogging ajusté",
                 shoes: "Baskets de running",
                 accessories: ["Casquette", "Sac à dos"],
-                suitableMoods: [.energetic, .relaxed],
                 suitableWeather: [.cloudy, .warm],
                 imageName: "outfit_energetic_2",
                 comfortLevel: 5,
@@ -151,7 +134,6 @@ struct OutfitFactory {
                 bottom: "Pantalon chino",
                 shoes: "Mocassins",
                 accessories: ["Écharpe légère"],
-                suitableMoods: [.calm, .relaxed],
                 suitableWeather: [.cloudy, .cold],
                 imageName: "outfit_calm_1",
                 comfortLevel: 4,
@@ -165,7 +147,6 @@ struct OutfitFactory {
                 bottom: "Pantalon large",
                 shoes: "Ballerines",
                 accessories: ["Collier discret"],
-                suitableMoods: [.calm, .professional],
                 suitableWeather: [.sunny, .warm],
                 imageName: "outfit_calm_2",
                 comfortLevel: 4,
@@ -180,7 +161,6 @@ struct OutfitFactory {
                 bottom: "Pantalon de costume",
                 shoes: "Escarpins",
                 accessories: ["Montre élégante", "Sac à main structuré"],
-                suitableMoods: [.confident, .professional],
                 suitableWeather: [.sunny, .cloudy],
                 imageName: "outfit_confident_1",
                 comfortLevel: 3,
@@ -194,7 +174,6 @@ struct OutfitFactory {
                 bottom: "Jupe crayon",
                 shoes: "Bottes",
                 accessories: ["Ceinture en cuir"],
-                suitableMoods: [.confident, .creative],
                 suitableWeather: [.cold, .cloudy],
                 imageName: "outfit_confident_2",
                 comfortLevel: 3,
@@ -209,7 +188,6 @@ struct OutfitFactory {
                 bottom: "Legging confortable",
                 shoes: "Chaussons",
                 accessories: ["Chaussettes douillettes"],
-                suitableMoods: [.relaxed, .calm],
                 suitableWeather: [.cold, .rainy],
                 imageName: "outfit_relaxed_1",
                 comfortLevel: 5,
@@ -223,7 +201,6 @@ struct OutfitFactory {
                 bottom: "Short en jean",
                 shoes: "Sandales",
                 accessories: ["Lunettes de soleil", "Chapeau de paille"],
-                suitableMoods: [.relaxed, .energetic],
                 suitableWeather: [.sunny, .warm],
                 imageName: "outfit_relaxed_2",
                 comfortLevel: 5,
@@ -238,7 +215,6 @@ struct OutfitFactory {
                 bottom: "Pantalon droit",
                 shoes: "Escarpins noirs",
                 accessories: ["Porte-documents", "Montre classique"],
-                suitableMoods: [.professional, .confident],
                 suitableWeather: [.cloudy, .cold],
                 imageName: "outfit_professional_1",
                 comfortLevel: 3,
@@ -253,7 +229,6 @@ struct OutfitFactory {
                 bottom: "Pantalon original",
                 shoes: "Chaussures design",
                 accessories: ["Bijoux originaux"],
-                suitableMoods: [.creative, .confident],
                 suitableWeather: [.sunny, .warm],
                 imageName: "outfit_creative_1",
                 comfortLevel: 4,

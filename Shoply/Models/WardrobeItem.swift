@@ -19,7 +19,8 @@ struct WardrobeItem: Identifiable, Codable {
     var brand: String?
     var season: [Season]
     var material: String?
-    var photoURL: String? // Chemin vers la photo
+    var photoURL: String? // Chemin vers la photo (déprécié, utiliser photoURLs)
+    var photoURLs: [String] // Chemins vers les photos (support multi-photos)
     var createdAt: Date
     var lastWorn: Date?
     var wearCount: Int
@@ -35,6 +36,7 @@ struct WardrobeItem: Identifiable, Codable {
         season: [Season] = [],
         material: String? = nil,
         photoURL: String? = nil,
+        photoURLs: [String] = [],
         createdAt: Date = Date(),
         lastWorn: Date? = nil,
         wearCount: Int = 0,
@@ -49,11 +51,81 @@ struct WardrobeItem: Identifiable, Codable {
         self.season = season
         self.material = material
         self.photoURL = photoURL
+        // Si photoURL existe mais photoURLs est vide, migrer vers photoURLs
+        if let photoURL = photoURL, photoURLs.isEmpty {
+            self.photoURLs = [photoURL]
+        } else {
+            self.photoURLs = photoURLs
+        }
+        // Mettre à jour photoURL pour compatibilité
+        if !self.photoURLs.isEmpty && photoURL == nil {
+            self.photoURL = self.photoURLs.first
+        }
         self.createdAt = createdAt
         self.lastWorn = lastWorn
         self.wearCount = wearCount
         self.isFavorite = isFavorite
         self.tags = tags
+    }
+    
+    // MARK: - Codable personnalisé pour compatibilité backward
+    enum CodingKeys: String, CodingKey {
+        case id, name, category, color, brand, season, material
+        case photoURL, photoURLs
+        case createdAt, lastWorn, wearCount, isFavorite, tags
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        category = try container.decode(ClothingCategory.self, forKey: .category)
+        color = try container.decode(String.self, forKey: .color)
+        brand = try container.decodeIfPresent(String.self, forKey: .brand)
+        season = try container.decode([Season].self, forKey: .season)
+        material = try container.decodeIfPresent(String.self, forKey: .material)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        lastWorn = try container.decodeIfPresent(Date.self, forKey: .lastWorn)
+        wearCount = try container.decode(Int.self, forKey: .wearCount)
+        isFavorite = try container.decode(Bool.self, forKey: .isFavorite)
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        
+        // Gérer photoURLs et photoURL pour compatibilité
+        if let photoURLs = try? container.decode([String].self, forKey: .photoURLs) {
+            self.photoURLs = photoURLs
+            self.photoURL = photoURLs.first
+        } else if let photoURL = try? container.decodeIfPresent(String.self, forKey: .photoURL), !photoURL.isEmpty {
+            self.photoURL = photoURL
+            self.photoURLs = [photoURL]
+        } else {
+            self.photoURL = nil
+            self.photoURLs = []
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(category, forKey: .category)
+        try container.encode(color, forKey: .color)
+        try container.encodeIfPresent(brand, forKey: .brand)
+        try container.encode(season, forKey: .season)
+        try container.encodeIfPresent(material, forKey: .material)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encodeIfPresent(lastWorn, forKey: .lastWorn)
+        try container.encode(wearCount, forKey: .wearCount)
+        try container.encode(isFavorite, forKey: .isFavorite)
+        try container.encode(tags, forKey: .tags)
+        
+        // Encoder photoURLs (priorité) et photoURL (compatibilité)
+        if !photoURLs.isEmpty {
+            try container.encode(photoURLs, forKey: .photoURLs)
+            try container.encodeIfPresent(photoURLs.first, forKey: .photoURL)
+        } else if let photoURL = photoURL {
+            try container.encode([photoURL], forKey: .photoURLs)
+            try container.encodeIfPresent(photoURL, forKey: .photoURL)
+        }
     }
 }
 

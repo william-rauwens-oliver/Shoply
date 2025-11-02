@@ -184,7 +184,6 @@ class DataManager: ObservableObject {
         // Préférences
         let prefs = getUserPreferences()
         data["preferences"] = [
-            "mood": prefs.mood ?? "",
             "weather": prefs.weather ?? ""
         ]
         
@@ -313,7 +312,7 @@ class DataManager: ObservableObject {
         
         let dateFormatter = ISO8601DateFormatter()
         let createdAt = (dict["createdAt"] as? String).flatMap { dateFormatter.date(from: $0) } ?? Date()
-        let lastWeatherUpdate = (dict["lastWeatherUpdate"] as? String).flatMap { dateFormatter.date(from: $0) }
+        _ = (dict["lastWeatherUpdate"] as? String).flatMap { dateFormatter.date(from: $0) } // Non utilisé actuellement
         
         var preferences = UserPreferences()
         if let prefsDict = dict["preferences"] as? [String: Any],

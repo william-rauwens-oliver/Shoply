@@ -107,11 +107,11 @@ struct AppleSignInScreen: View {
                                     .font(.system(size: 24))
                                     .foregroundColor(AppColors.buttonPrimary.opacity(0.8))
                                 
-                                Text(errorMessage)
+                            Text(errorMessage)
                                     .font(.system(size: 14, weight: .regular))
                                     .foregroundColor(AppColors.secondaryText)
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
                             }
                             .padding(.vertical, 12)
                             .padding(.horizontal, 16)
@@ -234,7 +234,7 @@ struct AppleSignInScreen: View {
                     // Si le profil local est complet, sauvegarder dans iCloud et aller à l'accueil
                     if !profile.firstName.isEmpty {
                         try await CloudKitService.shared.syncAllUserData()
-                        await MainActor.run {
+                    await MainActor.run {
                             isLoading = false
                         }
                         return
@@ -244,8 +244,8 @@ struct AppleSignInScreen: View {
                     if let email = appleSignInService.userEmail {
                         let newProfile = UserProfile(email: email)
                         dataManager.saveUserProfile(newProfile)
-                    }
                 }
+            }
             }
             
             // Si on arrive ici, le profil est incomplet ou n'existe pas
@@ -258,9 +258,9 @@ struct AppleSignInScreen: View {
                 isLoading = false
                 appleSignInService.errorMessage = "Erreur de synchronisation: \(error.localizedDescription)".localized
             }
-            
+                
             // En cas d'erreur, vérifier si un profil local existe
-            if let profile = dataManager.loadUserProfile(),
+                if let profile = dataManager.loadUserProfile(),
                !profile.firstName.isEmpty {
                 // Profil local complet, on peut continuer
             } else {
@@ -373,9 +373,9 @@ struct ProfileCreationScreen: View {
                             // Genre
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack(spacing: 4) {
-                                    Text("Genre".localized)
-                                        .font(.system(size: 16, weight: .medium))
-                                        .foregroundColor(AppColors.primaryText)
+                                Text("Genre".localized)
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(AppColors.primaryText)
                                     Text("(Optionnel)".localized)
                                         .font(.system(size: 14, weight: .regular))
                                         .foregroundColor(AppColors.secondaryText)

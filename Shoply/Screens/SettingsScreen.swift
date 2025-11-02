@@ -10,6 +10,7 @@ import AuthenticationServices
 import SafariServices
 import UIKit
 import UniformTypeIdentifiers
+import ObjectiveC
 
 /// Écran de paramètres complet
 struct SettingsScreen: View {
@@ -31,27 +32,28 @@ struct SettingsScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                // Fond opaque et simple
                 AppColors.background
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 28) {
-                        // En-tête épuré
-                        VStack(spacing: 4) {
-                            Text(LocalizedString.localized("Paramètres", for: settingsManager.selectedLanguage))
-                                .font(.system(size: 34, weight: .bold))
+                    VStack(spacing: 32) {
+                        // En-tête simple
+                        VStack(spacing: 6) {
+                            Text("Paramètres")
+                                .font(.system(size: 28, weight: .bold))
                                 .foregroundColor(AppColors.primaryText)
                         }
                         .padding(.top, 24)
                         .padding(.bottom, 8)
                         
                         // Section Apparence
-                        SettingsSection(title: "Apparence".localized) {
+                        SettingsSection(title: "Apparence") {
                             // Mode sombre
                             SettingRow(
                                 icon: "moon.fill",
-                                title: "Mode sombre".localized,
-                                subtitle: getColorSchemeDescription().localized
+                                title: "Mode sombre",
+                                subtitle: getColorSchemeDescription()
                             ) {
                                 ColorSchemePickerView(
                                     selectedScheme: Binding(
@@ -68,7 +70,7 @@ struct SettingsScreen: View {
                             // Langue
                             SettingRow(
                                 icon: "globe",
-                                title: "Langue".localized,
+                                title: "Langue",
                                 subtitle: settingsManager.selectedLanguage.displayName + " " + settingsManager.selectedLanguage.flag
                             ) {
                                 Button(action: {
@@ -84,12 +86,12 @@ struct SettingsScreen: View {
                         }
                         
                         // Section IA
-                        SettingsSection(title: "Intelligence Artificielle".localized) {
+                        SettingsSection(title: "Intelligence Artificielle") {
                             // Statut Gemini
                             SettingRow(
                                 icon: "checkmark.circle.fill",
-                                title: "Gemini activé".localized,
-                                subtitle: "Gemini est prêt à être utilisé".localized,
+                                title: "Gemini",
+                                subtitle: "Activé et prêt",
                                 iconColor: .green
                             ) {
                                 EmptyView()
@@ -105,7 +107,7 @@ struct SettingsScreen: View {
                                     .font(.system(size: 16))
                                     .foregroundColor(AppColors.buttonPrimary.opacity(0.8))
                                 
-                                Text("Gemini est intégré et prêt à être utilisé dans toute l'application.".localized)
+                                Text("Gemini est disponible pour créer vos tenues")
                                     .font(.system(size: 13, weight: .regular))
                                     .foregroundColor(AppColors.secondaryText)
                                     .lineSpacing(2)
@@ -117,11 +119,11 @@ struct SettingsScreen: View {
                         }
                         
                         // Section Données
-                        SettingsSection(title: "Données utilisateur".localized) {
+                        SettingsSection(title: "Mes données") {
                             SettingRow(
                                 icon: "square.and.arrow.up",
-                                title: "Exporter mes données".localized,
-                                subtitle: "Télécharger toutes vos données au format JSON".localized
+                                title: "Exporter",
+                                subtitle: "Télécharger toutes vos données"
                             ) {
                                 Button(action: {
                                     exportUserData()
@@ -140,8 +142,8 @@ struct SettingsScreen: View {
                             
                             SettingRow(
                                 icon: "square.and.arrow.down",
-                                title: "Importer mes données".localized,
-                                subtitle: "Restaurer vos données depuis un fichier JSON".localized
+                                title: "Importer",
+                                subtitle: "Restaurer vos données"
                             ) {
                                 Button(action: {
                                     importUserData()
@@ -160,8 +162,8 @@ struct SettingsScreen: View {
                             
                             SettingRow(
                                 icon: "trash.fill",
-                                title: "Supprimer toutes mes données".localized,
-                                subtitle: "Cette action est irréversible".localized,
+                                title: "Supprimer tout",
+                                subtitle: "Action irréversible",
                                 iconColor: .red
                             ) {
                                 Button(action: {
@@ -178,11 +180,11 @@ struct SettingsScreen: View {
                         
                         
                         // Section Informations
-                        SettingsSection(title: "À propos".localized) {
+                        SettingsSection(title: "À propos") {
                             SettingRow(
                                 icon: "info.circle.fill",
-                                title: "À propos de Shoply".localized,
-                                subtitle: "\(getAppVersion())".localized
+                                title: "Shoply",
+                                subtitle: "Version \(getAppVersion())"
                             ) {
                                 Button(action: {
                                     showingAbout = true
@@ -275,14 +277,14 @@ struct SettingsScreen: View {
     }
     
     private func importUserDataFromFile(url: URL) {
-        do {
+            do {
             let jsonData = try Data(contentsOf: url)
             try dataManager.importUserData(from: jsonData)
             alertMessage = "Données importées avec succès !".localized
-            showingAlert = true
-        } catch {
+                showingAlert = true
+            } catch {
             alertMessage = "Erreur lors de l'import: \(error.localizedDescription)".localized
-            showingAlert = true
+                showingAlert = true
         }
     }
     
@@ -290,41 +292,58 @@ struct SettingsScreen: View {
         let userData = dataManager.exportUserData()
         
         // Convertir en JSON
-        if let jsonData = try? JSONSerialization.data(withJSONObject: userData, options: .prettyPrinted),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: userData, options: .prettyPrinted) else {
+            alertMessage = "Erreur lors de la conversion de vos données en JSON."
+            showingAlert = true
+            return
+        }
+        
+        // Créer un nom de fichier avec date
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        let fileName = "shoply_export_\(formatter.string(from: Date())).json"
+        
             // Créer un fichier temporaire
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("shoply_export_\(Date().timeIntervalSince1970).json")
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+        
+        do {
+            try jsonData.write(to: tempURL)
             
-            do {
-                try jsonString.write(to: tempURL, atomically: true, encoding: .utf8)
-                
-                // Afficher dans une vue de partage
-                let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+            // Utiliser UIDocumentPickerViewController pour sauvegarder dans Fichiers
+            let documentPicker = UIDocumentPickerViewController(forExporting: [tempURL], asCopy: true)
+            let delegate = ExportDocumentPickerDelegate(
+                tempURL: tempURL,
+                onComplete: { success in
+                    if success {
+                        alertMessage = "Données exportées avec succès ! Vous pouvez maintenant sauvegarder le fichier dans l'app Fichiers."
+                    } else {
+                        alertMessage = "Export annulé."
+                    }
+                    showingAlert = true
+                }
+            )
+            // Garder une référence forte au delegate pour éviter la désallocation
+            objc_setAssociatedObject(documentPicker, AssociatedKeys.delegateKey, delegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            documentPicker.delegate = delegate
                 
                 if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                    let window = windowScene.windows.first,
                    let rootVC = window.rootViewController {
                     
                     // Pour iPad
-                    if let popover = activityVC.popoverPresentationController {
+                if let popover = documentPicker.popoverPresentationController {
                         popover.sourceView = window
                         popover.sourceRect = CGRect(x: window.bounds.midX, y: window.bounds.midY, width: 0, height: 0)
                         popover.permittedArrowDirections = []
                     }
                     
-                    rootVC.present(activityVC, animated: true)
-                    alertMessage = "Utilisez le menu de partage pour sauvegarder ou partager vos données."
-                    showingAlert = true
+                rootVC.present(documentPicker, animated: true)
                 } else {
-                    alertMessage = "Erreur lors de l'affichage du menu de partage."
+                alertMessage = "Erreur lors de l'affichage du sélecteur de fichiers."
                     showingAlert = true
                 }
             } catch {
                 alertMessage = "Erreur lors de l'export de vos données: \(error.localizedDescription)"
-                showingAlert = true
-            }
-        } else {
-            alertMessage = "Erreur lors de la conversion de vos données en JSON."
             showingAlert = true
         }
     }
@@ -444,20 +463,20 @@ struct ColorSchemePickerView: View {
                     .foregroundColor(AppColors.secondaryText)
             }
         }
-        .confirmationDialog("Choisir le thème".localized, isPresented: $showingPicker, titleVisibility: .visible) {
-            Button("Clair".localized) {
+            .confirmationDialog("Choisir le thème", isPresented: $showingPicker, titleVisibility: .visible) {
+            Button("Clair") {
                 selectedScheme = .light
             }
             
-            Button("Sombre".localized) {
+            Button("Sombre") {
                 selectedScheme = .dark
             }
             
-            Button("Système".localized) {
+            Button("Système") {
                 selectedScheme = nil
             }
             
-            Button("Annuler".localized, role: .cancel) { }
+            Button("Annuler", role: .cancel) { }
         }
     }
 }
@@ -497,7 +516,7 @@ struct LanguagePickerView: View {
                 }
                 .scrollContentBackground(.hidden)
             }
-            .navigationTitle("Sélectionner la langue".localized)
+            .navigationTitle("Langue")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -523,60 +542,143 @@ struct AboutView: View {
                 AppColors.background
                     .ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 32) {
+                        // En-tête avec logo et version
                         VStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                AppColors.buttonPrimary.opacity(0.8),
+                                                AppColors.buttonPrimary.opacity(0.6)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 100, height: 100)
+                                    .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
+                                
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 50, weight: .light))
+                                    .foregroundColor(AppColors.buttonPrimaryText)
+                            }
+                            
                             Text("Shoply")
                                 .font(.system(size: 36, weight: .bold))
                                 .foregroundColor(AppColors.primaryText)
                             
-                            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
-                                Text("Version \(version)")
-                                    .font(.system(size: 16, weight: .regular))
+                            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+                               let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+                                Text("Version \(version) (\(build))")
+                                    .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(AppColors.secondaryText)
                             }
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 40)
+                        .padding(.top, 20)
                         
-                        VStack(alignment: .leading, spacing: 16) {
+                        VStack(spacing: 24) {
+                            // Description
+                            VStack(alignment: .leading, spacing: 12) {
                             Text("Description")
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(AppColors.primaryText)
                             
-                            Text("Shoply est votre assistant personnel pour créer des tenues parfaites selon votre humeur, la météo et votre style. L'application utilise l'intelligence artificielle pour vous proposer des combinaisons d'outfits adaptées à vos préférences.")
-                                .font(.system(size: 16, weight: .regular))
+                                Text("Shoply est votre assistant personnel intelligent pour créer des tenues parfaites selon votre humeur, la météo et votre style personnel. L'application utilise l'intelligence artificielle avancée (Gemini) pour vous proposer des combinaisons d'outfits adaptées à vos préférences et à votre garde-robe.")
+                                    .font(.system(size: 15, weight: .regular))
                                 .foregroundColor(AppColors.secondaryText)
                                 .lineSpacing(4)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Fonctionnalités")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(AppColors.primaryText)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(20)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(AppColors.cardBackground)
+                            .roundedCorner(16)
+                            .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
                             
+                            // Fonctionnalités
                             VStack(alignment: .leading, spacing: 12) {
-                                FeatureRow(icon: "photo.fill", text: "Gestion de votre garde-robe")
-                                FeatureRow(icon: "sparkles", text: "Suggestions intelligentes d'outfits")
-                                FeatureRow(icon: "cloud.sun.fill", text: "Intégration météo")
+                                Text("Fonctionnalités principales")
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundColor(AppColors.primaryText)
+                                
+                                VStack(spacing: 10) {
+                                    FeatureRow(icon: "photo.fill", text: "Gestion complète de votre garde-robe")
+                                    FeatureRow(icon: "sparkles", text: "Suggestions intelligentes d'outfits avec IA")
+                                    FeatureRow(icon: "cloud.sun.fill", text: "Intégration météo en temps réel")
                                 FeatureRow(icon: "heart.fill", text: "Système de favoris")
-                                FeatureRow(icon: "calendar", text: "Historique et calendrier")
+                                    FeatureRow(icon: "calendar", text: "Historique et calendrier des outfits")
+                                    FeatureRow(icon: "message.fill", text: "Assistant IA conversationnel")
                             }
                         }
-                        
-                        VStack(alignment: .leading, spacing: 16) {
+                            .padding(20)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(AppColors.cardBackground)
+                            .roundedCorner(16)
+                            .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                            
+                            // Développement
+                            VStack(alignment: .leading, spacing: 12) {
                             Text("Développement")
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(AppColors.primaryText)
                             
-                            Text("Développé avec SwiftUI pour iOS et macOS")
-                                .font(.system(size: 16, weight: .regular))
+                                Text("Développé avec SwiftUI pour iOS et iPadOS, utilisant les dernières technologies d'intelligence artificielle pour offrir une expérience utilisateur exceptionnelle.")
+                                    .font(.system(size: 15, weight: .regular))
+                                    .foregroundColor(AppColors.secondaryText)
+                                    .lineSpacing(4)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(20)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(AppColors.cardBackground)
+                            .roundedCorner(16)
+                            .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                            
+                            // Contact développeur
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Contact")
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundColor(AppColors.primaryText)
+                                
+                                Button(action: {
+                                    if let url = URL(string: "https://urlr.me/5M3nYj") {
+                                        UIApplication.shared.open(url)
+                                    }
+                                }) {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "link.circle.fill")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(AppColors.buttonPrimary)
+                                        
+                                        Text("Me contacter sur LinkedIn")
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundColor(AppColors.primaryText)
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: "arrow.up.right")
+                                            .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(AppColors.secondaryText)
                         }
-                        
+                                    .padding(16)
+                                    .background(AppColors.buttonSecondary)
+                                    .roundedCorner(12)
+                                    .shadow(color: AppColors.shadow, radius: 6, x: 0, y: 3)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                            .padding(20)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(AppColors.cardBackground)
+                            .roundedCorner(16)
+                            .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                        }
+                        .padding(.horizontal, 24)
                         .padding(.bottom, 40)
                     }
-                    .padding(.horizontal, 24)
                 }
             }
             .navigationTitle("À propos")
@@ -586,6 +688,7 @@ struct AboutView: View {
                     Button("Fermer") {
                         dismiss()
                     }
+                    .foregroundColor(AppColors.buttonPrimary)
                 }
             }
         }
@@ -680,6 +783,36 @@ struct InstructionStep: View {
     }
 }
 
+// MARK: - Export Document Picker Delegate
+class ExportDocumentPickerDelegate: NSObject, UIDocumentPickerDelegate {
+    let tempURL: URL
+    let onComplete: (Bool) -> Void
+    
+    init(tempURL: URL, onComplete: @escaping (Bool) -> Void) {
+        self.tempURL = tempURL
+        self.onComplete = onComplete
+        super.init()
+    }
+    
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        // L'export est terminé avec succès
+        // Le fichier temporaire sera automatiquement copié à l'emplacement choisi par l'utilisateur
+        onComplete(true)
+        
+        // Nettoyer le fichier temporaire après un court délai
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            try? FileManager.default.removeItem(at: self.tempURL)
+        }
+    }
+    
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        onComplete(false)
+        
+        // Nettoyer le fichier temporaire
+        try? FileManager.default.removeItem(at: tempURL)
+    }
+}
+
 // MARK: - Document Picker
 struct DocumentPicker: UIViewControllerRepresentable {
     let allowedContentTypes: [UTType]
@@ -725,6 +858,13 @@ struct DocumentPicker: UIViewControllerRepresentable {
             // L'utilisateur a annulé
         }
     }
+}
+
+// Clé pour garder une référence au delegate
+private struct AssociatedKeys {
+    static var delegateKey: UnsafeRawPointer = {
+        return UnsafeRawPointer(bitPattern: "exportDelegate".hashValue)!
+    }()
 }
 
 #Preview {

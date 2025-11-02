@@ -10,6 +10,7 @@ import SwiftUI
 /// Écran des favoris - Affiche les outfits favoris depuis l'historique
 struct FavoritesScreen: View {
     @StateObject private var historyStore = OutfitHistoryStore()
+    @State private var showingDeleteAllAlert = false
     
     var favoriteOutfits: [HistoricalOutfit] {
         historyStore.outfits.filter { $0.isFavorite }
@@ -18,6 +19,7 @@ struct FavoritesScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                // Fond opaque simple
                 AppColors.background
                     .ignoresSafeArea()
                 
@@ -25,7 +27,7 @@ struct FavoritesScreen: View {
                     EmptyFavoritesView()
                 } else {
                     ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: 14) {
+                        LazyVStack(spacing: 20) {
                             ForEach(favoriteOutfits) { historicalOutfit in
                                 FavoriteOutfitCard(
                                     historicalOutfit: historicalOutfit,
@@ -35,13 +37,33 @@ struct FavoritesScreen: View {
                                 )
                             }
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 16)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 24)
                     }
                 }
             }
-            .navigationTitle("Favoris".localized)
+            .navigationTitle("Favoris")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                if !favoriteOutfits.isEmpty {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            showingDeleteAllAlert = true
+                        }) {
+                            Image(systemName: "trash")
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+            }
+            .alert("Supprimer tous les favoris ?", isPresented: $showingDeleteAllAlert) {
+                Button("Annuler", role: .cancel) { }
+                Button("Supprimer tout", role: .destructive) {
+                    historyStore.removeAllFavorites()
+                }
+            } message: {
+                Text("Cette action est irréversible")
+            }
         }
     }
 }
@@ -56,11 +78,11 @@ struct FavoriteOutfitCard: View {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(historicalOutfit.outfit.displayName)
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.playfairDisplayBold(size: 20))
                         .foregroundColor(AppColors.primaryText)
                     
                     Text(verbatim: "\(LocalizedString.localized("Porté le")) \(historicalOutfit.dateWorn.formatted(date: .long, time: .omitted))")
-                        .font(.system(size: 13, weight: .regular))
+                        .font(.system(size: 14, weight: .regular))
                         .foregroundColor(AppColors.secondaryText)
                 }
                 
@@ -74,27 +96,42 @@ struct FavoriteOutfitCard: View {
                         .background(Circle().fill(AppColors.buttonSecondary))
                 }
             }
-            .padding(20)
+            .padding(24)
             
-            Divider()
-                .background(AppColors.separator.opacity(0.5))
+            Rectangle()
+                .fill(AppColors.separator.opacity(0.6))
+                .frame(height: 0.5)
+                .padding(.horizontal, 24)
             
             // Items de l'outfit
-            VStack(spacing: 14) {
+            VStack(spacing: 16) {
                 ForEach(historicalOutfit.outfit.items) { item in
                     FavoriteOutfitItemRow(item: item)
                 }
             }
-            .padding(20)
+            .padding(24)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColors.cardBackground)
+        .background(
+            RoundedRectangle(cornerRadius: 22)
+                .fill(Material.regularMaterial)
         .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
+                    RoundedRectangle(cornerRadius: 22)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    AppColors.cardBorder.opacity(0.4),
+                                    AppColors.cardBorder.opacity(0.2)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
         }
-        .roundedCorner(18)
-        .shadow(color: AppColors.shadow.opacity(0.08), radius: 12, x: 0, y: 4)
+        )
+        .roundedCorner(22)
+        .shadow(color: AppColors.shadow.opacity(0.2), radius: 14, x: 0, y: 6)
     }
 }
 
@@ -139,27 +176,52 @@ struct FavoriteOutfitItemRow: View {
 
 struct EmptyFavoritesView: View {
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 32) {
             ZStack {
                 Circle()
-                    .fill(AppColors.buttonSecondary)
-                    .frame(width: 100, height: 100)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppColors.buttonSecondary,
+                                AppColors.buttonSecondary.opacity(0.7)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 120, height: 120)
+                    .overlay {
+                        Circle()
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        AppColors.cardBorder.opacity(0.3),
+                                        AppColors.cardBorder.opacity(0.15)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    }
                 
                 Image(systemName: "heart.slash")
-                    .font(.system(size: 40, weight: .light))
+                    .font(.system(size: 44, weight: .light))
                     .foregroundColor(AppColors.secondaryText)
             }
+            .shadow(color: AppColors.shadow.opacity(0.15), radius: 12, x: 0, y: 4)
             
-            VStack(spacing: 8) {
+            VStack(spacing: 16) {
                 Text("Aucun favori".localized)
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.playfairDisplayBold(size: 30))
                     .foregroundColor(AppColors.primaryText)
                 
-                Text("Ajoutez des outfits de l'historique à vos favoris".localized)
-                    .font(.system(size: 15, weight: .regular))
+                Text("Ajoutez vos tenues préférées depuis l'historique en appuyant sur le cœur".localized)
+                    .font(.system(size: 17, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 50)
+                    .padding(.horizontal, 40)
+                    .lineLimit(3)
             }
         }
     }

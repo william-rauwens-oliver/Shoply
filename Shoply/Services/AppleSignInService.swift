@@ -121,7 +121,7 @@ class AppleSignInService: NSObject, ObservableObject {
     // MARK: - Synchronisation iCloud
     
     func syncUserDataIfNeeded() async {
-        guard isAuthenticated, let identifier = userIdentifier else { return }
+        guard isAuthenticated, userIdentifier != nil else { return }
         
         isLoading = true
         
@@ -148,7 +148,7 @@ class AppleSignInService: NSObject, ObservableObject {
                 if let profile = dataManager.loadUserProfile(),
                    !profile.firstName.isEmpty {
                     // Profil local complet, sauvegarder dans iCloud
-                    try await saveToiCloud()
+                try await saveToiCloud()
                     await MainActor.run {
                         isLoading = false
                     }
@@ -294,9 +294,7 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
             print("   Code: \(nsError.code)")
             print("   Domain: \(nsError.domain)")
             print("   Description: \(error.localizedDescription)")
-            if let userInfo = nsError.userInfo as? [String: Any] {
-                print("   UserInfo: \(userInfo)")
-            }
+            print("   UserInfo: \(nsError.userInfo)")
             
             if let authError = error as? ASAuthorizationError {
                 print("   Type: ASAuthorizationError")
@@ -322,9 +320,10 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                     // Erreur 1000 - souvent due à une configuration manquante (compte gratuit)
                     self.errorMessage = "Apple Sign In nécessite un compte développeur payant. Vous pouvez continuer sans connexion Apple pour utiliser l'application.".localized
                     print("❌ Erreur inconnue - probablement compte gratuit")
-                @unknown default:
-                    self.errorMessage = "Erreur inconnue: \(error.localizedDescription). Code: \(nsError.code)".localized
-                    print("❌ Erreur inconnue: \(nsError.code)")
+                default:
+                    // Gérer tous les autres cas (notInteractive, credentialExport, credentialImport, matchedExcludedCredential, etc.)
+                    self.errorMessage = "Erreur d'authentification: \(error.localizedDescription)".localized
+                    print("❌ Erreur: \(authError.code)")
                 }
             } else {
                 // Erreur 1000 ou autres erreurs
@@ -353,7 +352,8 @@ extension AppleSignInService: ASAuthorizationControllerPresentationContextProvid
             .compactMap({ $0 as? UIWindowScene })
             .first else {
             // Fallback pour versions plus anciennes ou scénarios spéciaux
-            if let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first(where: { $0.isKeyWindow }) {
                 print("✅ Fenêtre clé trouvée (fallback)")
                 return window
             }

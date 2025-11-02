@@ -94,12 +94,23 @@ struct ShoplyApp: App {
                             appState.isReady = true
                             // Vérifier si on doit afficher le tutoriel au démarrage
                             checkTutorialNeeded()
+                            
+                            // Initialiser les notifications motivationnelles
+                            initializeMotivationNotifications()
+                            
                             // Synchronisation iCloud désactivée au démarrage pour éviter les crashes
                             // La synchronisation peut être faite manuellement depuis SettingsScreen
                             // checkAndSyncWithiCloud()
                         }
                         .sheet(isPresented: $showingTutorial) {
                             TutorialScreen(isPresented: $showingTutorial)
+                        }
+                        .onOpenURL { url in
+                            // Gérer les deep links depuis le widget
+                            // Le ContentView gère déjà cela, mais on peut aussi le gérer ici
+                            if url.scheme == "shoply" && url.host == "chat" {
+                                // Notification pour ouvrir le chat (sera géré par ContentView)
+                            }
                         }
                 }
             }
@@ -129,6 +140,31 @@ struct ShoplyApp: App {
         #if !WIDGET_EXTENSION
         // Synchronisation automatique désactivée
         #endif
+    }
+    
+    private func initializeMotivationNotifications() {
+        let notificationService = MotivationNotificationService.shared
+        
+        // Vérifier l'autorisation et demander si nécessaire
+        Task {
+            if !notificationService.isAuthorized {
+                _ = await notificationService.requestAuthorization()
+            }
+            
+            // Enregistrer l'heure actuelle si c'est le matin (pour détecter l'heure de réveil)
+            let calendar = Calendar.current
+            let hour = calendar.component(.hour, from: Date())
+            
+            // Toujours enregistrer l'heure si c'est le matin
+            if hour >= 5 && hour < 11 {
+                notificationService.recordWakeUpTime()
+            }
+            
+            // Programmer les notifications si elles sont activées
+            if notificationService.isEnabled && notificationService.isAuthorized {
+                await notificationService.scheduleDailyNotifications()
+            }
+        }
     }
 }
 

@@ -26,7 +26,7 @@ class WeatherService: NSObject, ObservableObject {
     @Published var weatherStatusMessage: String = ""
     
     private let locationManager = CLLocationManager()
-    private var location: CLLocation?
+    private(set) var location: CLLocation? // Rendre accessible en lecture seule
     private var locationRequestCompletion: ((Bool) -> Void)?
     private let geocoder = CLGeocoder()
     

@@ -9,6 +9,24 @@ import Foundation
 import AuthenticationServices
 import Combine
 
+/// Erreurs OAuth
+enum OAuthError: LocalizedError {
+    case authenticationFailed
+    case tokenExchangeFailed
+    case invalidResponse
+    
+    var errorDescription: String? {
+        switch self {
+        case .authenticationFailed:
+            return "L'authentification OAuth a échoué.".localized
+        case .tokenExchangeFailed:
+            return "L'échange du code d'autorisation contre un token a échoué.".localized
+        case .invalidResponse:
+            return "La réponse du serveur OAuth est invalide.".localized
+        }
+    }
+}
+
 /// Service d'authentification OAuth pour Google Gemini
 class GeminiOAuthService: ObservableObject {
     static let shared = GeminiOAuthService()
@@ -91,8 +109,8 @@ class GeminiOAuthService: ObservableObject {
                 
                 // Vérifier s'il y a une erreur dans le callback
                 if let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
-                   let error = components.queryItems?.first(where: { $0.name == "error" })?.value {
-                    let errorDescription = components.queryItems?.first(where: { $0.name == "error_description" })?.value ?? ""
+                   let queryItems = components.queryItems,
+                   queryItems.contains(where: { $0.name == "error" }) {
                     continuation.resume(throwing: OAuthError.authenticationFailed)
                     return
                 }

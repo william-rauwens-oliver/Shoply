@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 import NaturalLanguage
 
 /// Shoply AI - Intelligence artificielle locale avec traitement du langage naturel
@@ -65,35 +66,48 @@ class IntelligentLocalAI {
         userProfile: UserProfile,
         currentWeather: WeatherData?,
         wardrobeItems: [WardrobeItem],
-        conversationHistory: [ChatMessage] = []
+        conversationHistory: [ChatMessage] = [],
+        image: UIImage? = nil
     ) -> String {
         // Analyser la question
         let analysis = analyzeQuestion(question)
+        
+        // Si une image est fournie, ajouter une note dans la réponse
+        var imageNote = ""
+        if image != nil {
+            imageNote = " (Note: L'utilisateur a partagé une image avec cette question. Analysez l'image pour fournir des conseils précis.)"
+        }
+        
+        let questionWithImage = question + imageNote
         
         // Générer une réponse contextuelle basée sur l'analyse
         switch analysis.intent {
         case .greeting:
             return generateGreetingResponse(userProfile: userProfile)
         case .advice:
-            return generateAdviceResponse(question: question, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
+            return generateAdviceResponse(question: questionWithImage, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
         case .comparison:
-            return generateComparisonResponse(question: question, analysis: analysis, userProfile: userProfile, wardrobeItems: wardrobeItems)
+            return generateComparisonResponse(question: questionWithImage, analysis: analysis, userProfile: userProfile, wardrobeItems: wardrobeItems)
         case .recommendation:
-            return generateRecommendationResponse(question: question, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
+            return generateRecommendationResponse(question: questionWithImage, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
         case .outfitSuggestion:
-            return generateOutfitSuggestionResponse(question: question, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
+            return generateOutfitSuggestionResponse(question: questionWithImage, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
         case .weather:
-            return generateWeatherAdviceResponse(question: question, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
+            return generateWeatherAdviceResponse(question: questionWithImage, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
         case .colorMatching:
-            return generateColorAdviceResponse(question: question, analysis: analysis, userProfile: userProfile, wardrobeItems: wardrobeItems)
+            return generateColorAdviceResponse(question: questionWithImage, analysis: analysis, userProfile: userProfile, wardrobeItems: wardrobeItems)
         case .style:
-            return generateStyleAdviceResponse(question: question, analysis: analysis, userProfile: userProfile, wardrobeItems: wardrobeItems)
+            return generateStyleAdviceResponse(question: questionWithImage, analysis: analysis, userProfile: userProfile, wardrobeItems: wardrobeItems)
         case .explanation:
-            return generateExplanationResponse(question: question, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
+            return generateExplanationResponse(question: questionWithImage, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
         case .general:
-            return generateGeneralResponse(question: question, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
+            let response = generateGeneralResponse(question: questionWithImage, analysis: analysis, userProfile: userProfile, currentWeather: currentWeather, wardrobeItems: wardrobeItems)
+            if image != nil {
+                return response + "\n\n📸 J'ai reçu votre image. Pour une analyse plus précise de l'image, je recommande d'utiliser Gemini qui peut analyser les images en détail."
+            }
+            return response
         case .material:
-            return generateMaterialAdviceResponse(question: question, analysis: analysis, userProfile: userProfile, wardrobeItems: wardrobeItems)
+            return generateMaterialAdviceResponse(question: questionWithImage, analysis: analysis, userProfile: userProfile, wardrobeItems: wardrobeItems)
         }
     }
     

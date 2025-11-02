@@ -65,7 +65,7 @@ struct FloatingChatButton: View {
             .frame(width: 56, height: 56)
         }
         .sheet(isPresented: $showingChat) {
-            ChatAIScreen(conversationId: nil, initialMessages: [], initialAIMode: .advancedAI)
+            ChatAIScreen(conversationId: nil, initialMessages: [], initialAIMode: .gemini)
         }
         .sheet(isPresented: $showingConversations) {
             ChatConversationsScreen()

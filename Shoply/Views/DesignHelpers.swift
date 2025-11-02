@@ -33,10 +33,10 @@ struct AppColors {
     static let buttonSecondary = Color(light: Color.gray.opacity(0.08), dark: Color(white: 0.15))
     static let buttonSecondaryText = Color(light: .black, dark: .white)
     
-    // Accents et ombres - Renforcées pour meilleure visibilité en mode clair
+    // Accents et ombres - Ultra-opaques pour meilleure visibilité
     static let accent = Color(light: Color.gray.opacity(0.25), dark: Color.gray.opacity(0.4))
-    static let shadow = Color(light: Color.black.opacity(0.2), dark: Color.black.opacity(0.5))
-    static let hoverShadow = Color(light: Color.black.opacity(0.3), dark: Color.black.opacity(0.7))
+    static let shadow = Color(light: Color.black.opacity(0.5), dark: Color.black.opacity(0.6))
+    static let hoverShadow = Color(light: Color.black.opacity(0.6), dark: Color.black.opacity(0.8))
 }
 
 // Extension pour créer des couleurs adaptatives

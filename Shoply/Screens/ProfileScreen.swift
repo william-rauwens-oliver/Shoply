@@ -15,11 +15,47 @@ struct ProfileScreen: View {
     @State private var isEditing = false
     @State private var editedFirstName = ""
     @State private var editedEmail = ""
-    @State private var editedAge = 18
+    @State private var editedDateOfBirth: Date = {
+        // Date par défaut : il y a 18 ans
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        var components = DateComponents()
+        components.year = currentYear - 18
+        components.month = 1
+        components.day = 1
+        return calendar.date(from: components) ?? Date()
+    }()
     @State private var editedGender: Gender = .notSpecified
     @State private var showingSaveAlert = false
     @State private var alertMessage = ""
     @FocusState private var isEmailFocused: Bool
+    
+    // Propriétés calculées pour les limites de date
+    private var minimumDate: Date {
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        var components = DateComponents()
+        components.year = currentYear - 15 // Maximum 15 ans
+        components.month = 12
+        components.day = 31
+        return calendar.date(from: components) ?? Date()
+    }
+    
+    private var maximumDate: Date {
+        let calendar = Calendar.current
+        var components = DateComponents()
+        components.year = 1920 // Minimum 1920
+        components.month = 1
+        components.day = 1
+        return calendar.date(from: components) ?? Date()
+    }
+    
+    // Calculer l'âge à partir de la date de naissance
+    private var calculatedEditedAge: Int {
+        let calendar = Calendar.current
+        let ageComponents = calendar.dateComponents([.year], from: editedDateOfBirth, to: Date())
+        return ageComponents.year ?? 0
+    }
     
     init() {
         // Charger le profil initial ou créer un profil par défaut
@@ -33,36 +69,47 @@ struct ProfileScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                // Fond opaque simple
                 AppColors.background
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 28) {
-                        // Avatar moderne
+                    VStack(spacing: 32) {
+                        // Avatar moderne avec opacité
                         ZStack {
                             Circle()
                                 .fill(
                                     LinearGradient(
                                         colors: [
-                                            AppColors.buttonSecondary,
-                                            AppColors.buttonSecondary.opacity(0.6)
+                                            AppColors.buttonPrimary.opacity(0.12),
+                                            AppColors.buttonPrimary.opacity(0.06)
                                         ],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
                                 )
-                                .frame(width: 110, height: 110)
+                                .frame(width: 120, height: 120)
                                 .overlay {
                                     Circle()
-                                        .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 1)
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [
+                                                    AppColors.cardBorder.opacity(0.4),
+                                                    AppColors.cardBorder.opacity(0.2)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1.5
+                                        )
                                 }
                             
                             Image(systemName: "person.fill")
-                                .font(.system(size: 50, weight: .light))
-                                .foregroundColor(AppColors.primaryText.opacity(0.8))
+                                .font(.system(size: 52, weight: .light))
+                                .foregroundColor(AppColors.primaryText.opacity(0.9))
                         }
-                        .padding(.top, 32)
-                        .shadow(color: AppColors.shadow.opacity(0.1), radius: 8, x: 0, y: 4)
+                        .padding(.top, 40)
+                        .shadow(color: AppColors.shadow.opacity(0.2), radius: 16, x: 0, y: 6)
                         
                         // Informations du profil
                         if isEditing {
@@ -74,16 +121,30 @@ struct ProfileScreen: View {
                                         .foregroundColor(AppColors.primaryText)
                                     
                                     TextField("Votre prénom".localized, text: $editedFirstName)
-                                        .font(.system(size: 16))
-                                        .padding(.horizontal, 18)
-                                        .padding(.vertical, 14)
-                                        .background(AppColors.cardBackground)
-                                        .overlay {
-                                            RoundedRectangle(cornerRadius: 16)
-                                                .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
-                                        }
-                                        .roundedCorner(16)
-                                        .shadow(color: AppColors.shadow, radius: 6, x: 0, y: 3)
+                                        .font(.system(size: 17))
+                                        .foregroundColor(AppColors.primaryText)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 16)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 18)
+                                                .fill(Material.regularMaterial)
+                                                .overlay {
+                                                    RoundedRectangle(cornerRadius: 18)
+                                                        .stroke(
+                                                            LinearGradient(
+                                                                colors: [
+                                                                    AppColors.cardBorder.opacity(0.4),
+                                                                    AppColors.cardBorder.opacity(0.2)
+                                                                ],
+                                                                startPoint: .topLeading,
+                                                                endPoint: .bottomTrailing
+                                                            ),
+                                                            lineWidth: 1
+                                                        )
+                                                }
+                                        )
+                                        .roundedCorner(18)
+                                        .shadow(color: AppColors.shadow.opacity(0.15), radius: 10, x: 0, y: 4)
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 10) {
@@ -92,34 +153,67 @@ struct ProfileScreen: View {
                                         .foregroundColor(AppColors.primaryText)
                                     
                                     TextField("votre.email@exemple.com".localized, text: $editedEmail)
-                                        .font(.system(size: 16))
+                                        .font(.system(size: 17))
+                                        .foregroundColor(AppColors.primaryText)
                                         .keyboardType(.emailAddress)
                                         .textInputAutocapitalization(.never)
                                         .autocorrectionDisabled(true)
                                         .focused($isEmailFocused)
-                                        .padding(.horizontal, 18)
-                                        .padding(.vertical, 14)
-                                        .background(AppColors.cardBackground)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 16)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 18)
+                                                .fill(Material.regularMaterial)
                                         .overlay {
-                                            RoundedRectangle(cornerRadius: 16)
-                                                .stroke(isEmailFocused ? AppColors.buttonPrimary : AppColors.cardBorder.opacity(0.3), lineWidth: isEmailFocused ? 2 : 0.5)
+                                                    RoundedRectangle(cornerRadius: 18)
+                                                        .stroke(
+                                                            isEmailFocused
+                                                                ? LinearGradient(
+                                                                    colors: [
+                                                                        AppColors.buttonPrimary.opacity(0.6),
+                                                                        AppColors.buttonPrimary.opacity(0.3)
+                                                                    ],
+                                                                    startPoint: .topLeading,
+                                                                    endPoint: .bottomTrailing
+                                                                )
+                                                                : LinearGradient(
+                                                                    colors: [
+                                                                        AppColors.cardBorder.opacity(0.4),
+                                                                        AppColors.cardBorder.opacity(0.2)
+                                                                    ],
+                                                                    startPoint: .topLeading,
+                                                                    endPoint: .bottomTrailing
+                                                                ),
+                                                            lineWidth: isEmailFocused ? 2 : 1
+                                                        )
                                         }
-                                        .roundedCorner(16)
-                                        .shadow(color: AppColors.shadow, radius: 6, x: 0, y: 3)
+                                        )
+                                        .roundedCorner(18)
+                                        .shadow(color: AppColors.shadow.opacity(isEmailFocused ? 0.2 : 0.15), radius: isEmailFocused ? 12 : 10, x: 0, y: isEmailFocused ? 5 : 4)
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 10) {
-                                    Text("Âge".localized)
+                                    Text("Date de naissance".localized)
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(AppColors.primaryText)
                                     
-                                    Picker("Âge".localized, selection: $editedAge) {
-                                        ForEach(10..<100) { age in
-                                            Text("\(age) \("ans".localized)").tag(age)
+                                    VStack(spacing: 8) {
+                                        DatePicker(
+                                            "",
+                                            selection: $editedDateOfBirth,
+                                            in: maximumDate...minimumDate,
+                                            displayedComponents: .date
+                                        )
+                                        .datePickerStyle(.wheel)
+                                        .labelsHidden()
+                                        .frame(height: 140)
+                                        
+                                        if calculatedEditedAge > 0 {
+                                            Text("Vous avez \(calculatedEditedAge) ans".localized)
+                                                .font(.system(size: 14, weight: .medium))
+                                                .foregroundColor(calculatedEditedAge >= 15 ? .green : .red)
                                         }
                                     }
-                                    .pickerStyle(.wheel)
-                                    .frame(height: 140)
                                     .background(AppColors.cardBackground)
                                     .overlay {
                                         RoundedRectangle(cornerRadius: 16)
@@ -223,7 +317,7 @@ struct ProfileScreen: View {
                     }
                 }
             }
-            .navigationTitle("Profil".localized)
+            .navigationTitle("Profil")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -268,7 +362,19 @@ struct ProfileScreen: View {
             profile = loadedProfile
             editedFirstName = profile.firstName
             editedEmail = profile.email ?? ""
-            editedAge = profile.age
+            // Utiliser dateOfBirth si disponible, sinon calculer à partir de l'âge
+            if let dateOfBirth = profile.dateOfBirth {
+                editedDateOfBirth = dateOfBirth
+            } else if profile.age > 0 {
+                // Calculer une date approximative à partir de l'âge
+                let calendar = Calendar.current
+                let currentYear = calendar.component(.year, from: Date())
+                var components = DateComponents()
+                components.year = currentYear - profile.age
+                components.month = 1
+                components.day = 1
+                editedDateOfBirth = calendar.date(from: components) ?? editedDateOfBirth
+            }
             editedGender = profile.gender
         }
     }
@@ -276,7 +382,19 @@ struct ProfileScreen: View {
     private func startEditing() {
         editedFirstName = profile.firstName
         editedEmail = profile.email ?? ""
-        editedAge = profile.age
+        // Utiliser dateOfBirth si disponible, sinon calculer à partir de l'âge
+        if let dateOfBirth = profile.dateOfBirth {
+            editedDateOfBirth = dateOfBirth
+        } else if profile.age > 0 {
+            // Calculer une date approximative à partir de l'âge
+            let calendar = Calendar.current
+            let currentYear = calendar.component(.year, from: Date())
+            var components = DateComponents()
+            components.year = currentYear - profile.age
+            components.month = 1
+            components.day = 1
+            editedDateOfBirth = calendar.date(from: components) ?? editedDateOfBirth
+        }
         editedGender = profile.gender
         isEditing = true
     }
@@ -312,12 +430,19 @@ struct ProfileScreen: View {
             return
         }
         
+        // Vérifier que l'âge minimum est respecté (15 ans)
+        if calculatedEditedAge < 15 {
+            alertMessage = "Vous devez avoir au minimum 15 ans.".localized
+            showingSaveAlert = true
+            return
+        }
+        
         // Vérifier s'il y a eu des modifications réelles
         let firstNameChanged = editedFirstName.trimmingCharacters(in: .whitespaces) != profile.firstName
         let emailChanged = trimmedEmail != (profile.email ?? "")
-        let ageChanged = editedAge != profile.age
+        let dateOfBirthChanged = editedDateOfBirth != (profile.dateOfBirth ?? Date())
         let genderChanged = editedGender != profile.gender
-        let hasChanges = firstNameChanged || emailChanged || ageChanged || genderChanged
+        let hasChanges = firstNameChanged || emailChanged || dateOfBirthChanged || genderChanged
         
         // Si aucune modification, ne rien faire et sortir du mode édition
         if !hasChanges {
@@ -331,7 +456,7 @@ struct ProfileScreen: View {
         
         profile.firstName = editedFirstName.trimmingCharacters(in: .whitespaces)
         profile.email = trimmedEmail.isEmpty ? nil : trimmedEmail
-        profile.age = editedAge
+        profile.dateOfBirth = editedDateOfBirth
         profile.gender = editedGender
         
         dataManager.saveUserProfile(profile)

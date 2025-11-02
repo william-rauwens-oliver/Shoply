@@ -21,7 +21,6 @@ struct PreviewHelpers {
             bottom: "Jeans slim",
             shoes: "Baskets blanches",
             accessories: ["Montre connectée"],
-            suitableMoods: [.energetic, .creative],
             suitableWeather: [.sunny, .warm],
             imageName: "outfit_energetic_1",
             comfortLevel: 5,

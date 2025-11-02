@@ -11,8 +11,8 @@ import SwiftUI
 struct SmartOutfitSelectionScreen: View {
     @StateObject private var weatherService = WeatherService.shared
     @StateObject private var wardrobeService = WardrobeService()
-    @StateObject private var openAIService = OpenAIService.shared
     @StateObject private var geminiService = GeminiService.shared
+    @StateObject private var appleIntelligenceWrapper = AppleIntelligenceServiceWrapper.shared
     @StateObject private var settingsManager = AppSettingsManager.shared
     @State private var isGenerating = false
     @State private var generatedOutfits: [MatchedOutfit] = []
@@ -21,10 +21,39 @@ struct SmartOutfitSelectionScreen: View {
     @State private var generationProgress: Double = 0.0
     @State private var useAdvancedAI: Bool = true // Par défaut, utiliser l'IA avancée si disponible
     @State private var showingArticleError = false
+    @State private var selectedStyle: OutfitType? = nil
+    @State private var customStylePrompt: String = ""
+    @State private var showingCustomStyleInput = false
+    @State private var userSpecificRequest: String = ""
+    @State private var showingUserRequestInput = false
     
     private var isAdvancedAIAvailable: Bool {
-        // Utiliser Gemini uniquement
+        // Vérifier si Apple Intelligence est disponible (priorité)
+        if #available(iOS 18.0, *) {
+            if appleIntelligenceWrapper.isEnabled {
+                return true
+            }
+        }
+        // Sinon utiliser Gemini
         return geminiService.isEnabled
+    }
+    
+    private var selectedAIService: AIServiceType {
+        if #available(iOS 18.0, *) {
+            if appleIntelligenceWrapper.isEnabled && useAdvancedAI {
+                return .appleIntelligence
+            }
+        }
+        if geminiService.isEnabled && useAdvancedAI {
+            return .gemini
+        }
+        return .local
+    }
+    
+    enum AIServiceType {
+        case appleIntelligence
+        case gemini
+        case local
     }
     
     private var userProfile: UserProfile {
@@ -34,6 +63,7 @@ struct SmartOutfitSelectionScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                // Fond opaque simple
                 AppColors.background
                     .ignoresSafeArea()
                 
@@ -64,6 +94,21 @@ struct SmartOutfitSelectionScreen: View {
                             // En-tête moderne avec animation
                             ModernHeaderView(userProfile: userProfile)
                                 .padding(.top, 20)
+                                .slideIn()
+                            
+                            // Sélection de style vestimentaire
+                            StyleSelectionCard(
+                                selectedStyle: $selectedStyle,
+                                customStylePrompt: $customStylePrompt,
+                                showingCustomInput: $showingCustomStyleInput
+                            )
+                            .slideIn()
+                            
+                            // Demande spécifique de l'utilisateur
+                            UserRequestCard(
+                                userRequest: $userSpecificRequest,
+                                showingInput: $showingUserRequestInput
+                            )
                                 .slideIn()
                             
                             // Carte météo moderne
@@ -122,8 +167,10 @@ struct SmartOutfitSelectionScreen: View {
                             ModernGenerateButton(
                                 isEnabled: canGenerate,
                                 action: {
-                                    // Vérifier qu'on a assez d'articles avant de générer
-                                    if wardrobeService.items.count < 2 {
+                                    // Vérifier les conditions avant de générer
+                                    if selectedStyle == nil {
+                                        showingArticleError = true
+                                    } else if !hasEnoughItems() {
                                         showingArticleError = true
                                     } else {
                                     Task {
@@ -151,27 +198,50 @@ struct SmartOutfitSelectionScreen: View {
                 // Par défaut, utiliser l'IA avancée si disponible
                 useAdvancedAI = isAdvancedAIAvailable
             }
-            .alert("Articles insuffisants", isPresented: $showingArticleError) {
+            .alert("Articles insuffisants".localized, isPresented: $showingArticleError) {
                 Button("OK", role: .cancel) { }
             } message: {
-                Text("Vous devez avoir au moins 2 articles dans votre garde-robe avec leurs photos pour générer des outfits. Ajoutez des vêtements depuis la section \"Ma Garde-robe\".".localized)
+                Group {
+                    if selectedStyle == nil {
+                        Text("Veuillez sélectionner un style vestimentaire avant de générer des outfits.".localized)
+                    } else {
+                        let tops = wardrobeService.items.filter { $0.category == .top }.count
+                        let bottoms = wardrobeService.items.filter { $0.category == .bottom }.count
+                        let messageText = "Vous devez avoir au moins 3 hauts et 3 bas différents dans votre garde-robe pour générer des outfits.".localized + "\n\n" + String(format: "Actuellement : %d haut(s), %d bas".localized, tops, bottoms)
+                        Text(messageText)
+                    }
+                }
             }
         }
     }
     
     private var canGenerate: Bool {
+        // Vérifier qu'un style est sélectionné (obligatoire)
+        guard selectedStyle != nil else {
+            return false
+        }
+        
         // Vérifier la météo
         guard weatherService.morningWeather != nil &&
               weatherService.afternoonWeather != nil else {
             return false
         }
         
-        // Vérifier qu'on a assez d'articles (minimum 2)
-        if wardrobeService.items.count < 2 {
+        // Vérifier qu'on a au moins 3 hauts et 3 bas différents
+        let tops = wardrobeService.items.filter { $0.category == .top }
+        let bottoms = wardrobeService.items.filter { $0.category == .bottom }
+        
+        guard tops.count >= 3, bottoms.count >= 3 else {
             return false
         }
         
         return true
+    }
+    
+    private func hasEnoughItems() -> Bool {
+        let tops = wardrobeService.items.filter { $0.category == .top }
+        let bottoms = wardrobeService.items.filter { $0.category == .bottom }
+        return tops.count >= 3 && bottoms.count >= 3
     }
     
     private func setupWeatherService() {
@@ -188,10 +258,21 @@ struct SmartOutfitSelectionScreen: View {
     }
     
     private func startOutfitGeneration() async {
-        // Vérifier qu'on a minimum 2 articles
-        guard wardrobeService.items.count >= 2 else {
+        // Vérifier qu'on a au moins 3 hauts et 3 bas
+        guard hasEnoughItems() else {
             await MainActor.run {
-                weatherError = "Vous devez avoir au moins 2 articles dans votre garde-robe pour générer des outfits."
+                let tops = wardrobeService.items.filter { $0.category == .top }.count
+                let bottoms = wardrobeService.items.filter { $0.category == .bottom }.count
+                weatherError = String(format: "Pas assez d'articles. Vous devez avoir au moins 3 hauts et 3 bas différents. Actuellement : %d haut(s), %d bas".localized, tops, bottoms)
+                isGenerating = false
+            }
+            return
+        }
+        
+        // Vérifier que le style est sélectionné
+        guard selectedStyle != nil else {
+            await MainActor.run {
+                weatherError = "Veuillez sélectionner un style vestimentaire avant de générer des outfits.".localized
                 isGenerating = false
             }
             return
@@ -235,11 +316,17 @@ struct SmartOutfitSelectionScreen: View {
             generationProgress = 0.2
         }
         
+        // Préparer le style vestimentaire pour l'algorithme
+        var profileWithStyle = userProfile
+        if let style = selectedStyle {
+            profileWithStyle.preferences.preferredStyle = style
+        }
+        
         // Utiliser OutfitMatchingAlgorithm avec choix de l'utilisateur
         let algorithm = OutfitMatchingAlgorithm(
             wardrobeService: wardrobeService,
             weatherService: weatherService,
-            userProfile: userProfile
+            userProfile: profileWithStyle
         )
         
         await MainActor.run {
@@ -250,16 +337,20 @@ struct SmartOutfitSelectionScreen: View {
         // La progression sera mise à jour pendant la génération
         let outfits: [MatchedOutfit]
         
+        // Préparer la demande spécifique de l'utilisateur
+        let userRequest = userSpecificRequest.trimmingCharacters(in: .whitespaces)
+        let finalUserRequest = !userRequest.isEmpty ? userRequest : nil
+        
         if useAdvancedAI && isAdvancedAIAvailable {
             // Utiliser l'IA avancée sélectionnée (ChatGPT ou Gemini)
-            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: false) { progress in
+            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: false, userRequest: finalUserRequest) { progress in
             await MainActor.run {
                 self.generationProgress = 0.3 + (progress * 0.6)
                 }
             }
         } else {
             // Utiliser l'algorithme local uniquement
-            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: true) { progress in
+            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: true, userRequest: finalUserRequest) { progress in
                 await MainActor.run {
                     self.generationProgress = 0.3 + (progress * 0.6)
                 }
@@ -920,16 +1011,172 @@ struct ModernOutfitItemRow: View {
     }
 }
 
+// MARK: - Sélection de style vestimentaire
+
+struct StyleSelectionCard: View {
+    @Binding var selectedStyle: OutfitType?
+    @Binding var customStylePrompt: String
+    @Binding var showingCustomInput: Bool
+    
+    private let availableStyles: [OutfitType] = [.casual, .business, .smartCasual, .formal, .weekend]
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Style vestimentaire".localized)
+                        .font(.playfairDisplayBold(size: 18))
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    Text("Choisissez le style d'outfit que vous souhaitez".localized)
+                        .font(.system(size: 13))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+            }
+            
+            // Boutons de sélection de style
+            VStack(spacing: 12) {
+                ForEach(availableStyles, id: \.self) { style in
+                    Button(action: {
+                        selectedStyle = style
+                        showingCustomInput = false
+                        customStylePrompt = ""
+                    }) {
+                        HStack {
+                            Image(systemName: getStyleIcon(style))
+                                .font(.system(size: 18))
+                                .foregroundColor(selectedStyle == style ? AppColors.buttonPrimaryText : AppColors.primaryText)
+                            
+                            Text(style.rawValue)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(selectedStyle == style ? AppColors.buttonPrimaryText : AppColors.primaryText)
+                            
+                            Spacer()
+                            
+                            if selectedStyle == style {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(AppColors.buttonPrimaryText)
+                            }
+                        }
+                        .padding()
+                        .background(selectedStyle == style ? AppColors.buttonPrimary : AppColors.buttonSecondary)
+                        .roundedCorner(12)
+                        .shadow(color: AppColors.shadow, radius: selectedStyle == style ? 8 : 4, x: 0, y: selectedStyle == style ? 4 : 2)
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .cleanCard(cornerRadius: 16)
+        .padding(.horizontal, 24)
+    }
+    
+    private func getStyleIcon(_ style: OutfitType) -> String {
+        switch style {
+        case .casual:
+            return "tshirt.fill"
+        case .business:
+            return "briefcase.fill"
+        case .smartCasual:
+            return "shirt.fill"
+        case .formal:
+            return "person.suit.cloth.fill"
+        case .weekend:
+            return "sun.max.fill"
+        }
+    }
+}
+
+// MARK: - Carte de demande spécifique utilisateur
+
+struct UserRequestCard: View {
+    @Binding var userRequest: String
+    @Binding var showingInput: Bool
+    @FocusState private var isTextFieldFocused: Bool
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Demande spécifique".localized)
+                        .font(.playfairDisplayBold(size: 18))
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    Text("Dites-moi quel vêtement vous voulez (ex: je veux mon short rouge)".localized)
+                        .font(.system(size: 13))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+                
+                Button(action: {
+                    showingInput.toggle()
+                    if !showingInput {
+                        userRequest = ""
+                    } else {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            isTextFieldFocused = true
+                        }
+                    }
+                }) {
+                    Image(systemName: showingInput ? "xmark.circle.fill" : "plus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(showingInput ? .red : AppColors.buttonPrimary)
+                }
+            }
+            
+            if showingInput {
+                TextField("Ex: je veux mon short rouge, mon t-shirt bleu...".localized, text: $userRequest, axis: .vertical)
+                    .focused($isTextFieldFocused)
+                    .font(.system(size: 15))
+                    .foregroundColor(AppColors.primaryText)
+                    .padding()
+                    .background(AppColors.buttonSecondary)
+                    .roundedCorner(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isTextFieldFocused ? AppColors.buttonPrimary : AppColors.cardBorder.opacity(0.3), lineWidth: isTextFieldFocused ? 2 : 1)
+                    )
+                    .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                    .lineLimit(2...4)
+            }
+        }
+        .padding(20)
+        .cleanCard(cornerRadius: 16)
+        .padding(.horizontal, 24)
+    }
+}
+
 // MARK: - Sélecteur d'algorithme
 
 struct AlgorithmSelectionCard: View {
     @Binding var useAdvancedAI: Bool
     let isAdvancedAIAvailable: Bool
-    // Utiliser Gemini uniquement
+    
+    // Détecter le service IA disponible
+    @StateObject private var appleIntelligenceWrapper = AppleIntelligenceServiceWrapper.shared
+    @StateObject private var geminiService = GeminiService.shared
+    
+    // Computed properties pour déterminer le service IA
+    private var providerDisplayName: String {
+        if #available(iOS 18.0, *) {
+            if appleIntelligenceWrapper.isEnabled {
+                return "Apple Intelligence"
+            }
+        }
+        return "Gemini"
+    }
+    
+    private var isAppleIntelligence: Bool {
+        if #available(iOS 18.0, *) {
+            return appleIntelligenceWrapper.isEnabled
+        }
+        return false
+    }
     
     var body: some View {
-        let providerDisplayName = "Gemini"
-        
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -950,16 +1197,16 @@ struct AlgorithmSelectionCard: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
-                            Image(systemName: "brain.head.profile")
+                            Image(systemName: isAppleIntelligence ? "applelogo" : "brain.head.profile")
                                 .font(.system(size: 18))
-                                .foregroundColor(useAdvancedAI ? .purple : AppColors.secondaryText)
+                                .foregroundColor(useAdvancedAI ? (isAppleIntelligence ? .blue : .purple) : AppColors.secondaryText)
                             
                             Text("\(providerDisplayName) ".localized + "(IA avancée)".localized)
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(AppColors.primaryText)
                         }
                         
-                        Text("Plus puissant • Plus de chances de trouver • Données envoyées à".localized + " \(providerDisplayName)")
+                        Text(isAppleIntelligence ? "Plus puissant • Données restent sur votre appareil • Privé et sécurisé".localized : "Plus puissant • Plus de chances de trouver • Données envoyées à".localized + " \(providerDisplayName)")
                             .font(.system(size: 12))
                             .foregroundColor(AppColors.secondaryText)
                             .fixedSize(horizontal: false, vertical: true)
@@ -976,7 +1223,7 @@ struct AlgorithmSelectionCard: View {
                 .padding()
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(useAdvancedAI && isAdvancedAIAvailable ? Color.purple.opacity(0.1) : AppColors.buttonSecondary)
+                        .fill(useAdvancedAI && isAdvancedAIAvailable ? (isAppleIntelligence ? Color.blue.opacity(0.1) : Color.purple.opacity(0.1)) : AppColors.buttonSecondary)
                 )
                 
                 HStack {
