@@ -9,41 +9,43 @@ import Foundation
 import CoreData
 import SwiftUI
 import Combine
+#if !WIDGET_EXTENSION
+import ObjectiveC
+#endif
 
 /// Gestionnaire de données - Couche d'accès aux données (DAL)
 /// Implémente la persistance des données avec Core Data
 class DataManager: ObservableObject {
     static let shared = DataManager()
     
+    // MARK: - État de l'onboarding
+    @Published var onboardingCompleted: Bool = false
+    
     // MARK: - Core Data Stack
     // Core Data est optionnel - on utilise UserDefaults pour éviter les blocages
     lazy var persistentContainer: NSPersistentContainer? = {
         // Essayer de charger Core Data de manière asynchrone et non-bloquante
         // Si ça échoue, l'app continuera sans Core Data
-        let container: NSPersistentContainer
-        do {
-            container = NSPersistentContainer(name: "ShoplyDataModel")
-            container.loadPersistentStores { description, error in
-                if let error = error {
-                    print("⚠️ Erreur de chargement Core Data: \(error.localizedDescription)")
-                    // L'app continuera sans Core Data
-                }
+        let container = NSPersistentContainer(name: "ShoplyDataModel")
+        container.loadPersistentStores { description, error in
+            if let error = error {
+                print("⚠️ Erreur de chargement Core Data: \(error.localizedDescription)")
+                // L'app continuera sans Core Data
             }
-            container.viewContext.automaticallyMergesChangesFromParent = true
-            return container
-        } catch {
-            print("⚠️ Impossible de créer le container Core Data: \(error)")
-            return nil
         }
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        return container
     }()
     
     var viewContext: NSManagedObjectContext? {
         return persistentContainer?.viewContext
     }
     
-    // MARK: - Initialisation
+            // MARK: - Initialisation
     private init() {
         // Initialisation privée pour le singleton
+        // Charger l'état initial de l'onboarding
+        self.onboardingCompleted = hasCompletedOnboarding()
     }
     
     // Initialisation asynchrone pour éviter les blocages au démarrage
@@ -74,6 +76,10 @@ class DataManager: ObservableObject {
         if !favorites.contains(outfitId) {
             favorites.append(outfitId)
             saveFavoriteUUIDs(favorites)
+            // Synchroniser avec Apple Watch
+            #if !WIDGET_EXTENSION
+            syncToWatch()
+            #endif
         }
     }
     
@@ -81,6 +87,10 @@ class DataManager: ObservableObject {
         var favorites = getFavoriteUUIDs()
         favorites.removeAll { $0 == outfitId }
         saveFavoriteUUIDs(favorites)
+        // Synchroniser avec Apple Watch
+        #if !WIDGET_EXTENSION
+        syncToWatch()
+        #endif
     }
     
     func isFavorite(outfitId: UUID) -> Bool {
@@ -123,6 +133,14 @@ class DataManager: ObservableObject {
     func saveUserProfile(_ profile: UserProfile) {
         if let encoded = try? JSONEncoder().encode(profile) {
             UserDefaults.standard.set(encoded, forKey: "userProfile")
+            // Notifier que l'onboarding est terminé
+            DispatchQueue.main.async {
+                self.onboardingCompleted = true
+                self.objectWillChange.send()
+            }
+            // Synchroniser avec iCloud
+            // La synchronisation est gérée manuellement depuis SettingsScreen
+            // pour éviter les erreurs de compilation dans le widget extension
         }
     }
     
@@ -135,7 +153,14 @@ class DataManager: ObservableObject {
     }
     
     func hasCompletedOnboarding() -> Bool {
-        return loadUserProfile() != nil && !loadUserProfile()!.firstName.isEmpty
+        let completed = loadUserProfile() != nil && !loadUserProfile()!.firstName.isEmpty
+        // Synchroniser avec la propriété published
+        if completed != onboardingCompleted {
+            DispatchQueue.main.async {
+                self.onboardingCompleted = completed
+            }
+        }
+        return completed
     }
     
     // MARK: - Gestion de la garde-robe

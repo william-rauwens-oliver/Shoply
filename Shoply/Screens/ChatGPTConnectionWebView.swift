@@ -16,7 +16,7 @@ struct ChatGPTConnectionWebView: View {
     
     var body: some View {
         ZStack {
-            Color.white
+            AppColors.background
                 .ignoresSafeArea()
             
             ChatGPTWebViewRepresentable(onKeyFound: { key in

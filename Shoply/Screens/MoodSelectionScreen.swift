@@ -21,7 +21,7 @@ struct MoodSelectionScreen: View {
         NavigationStack {
             ZStack {
                 // Gradient de fond adaptatif
-                adaptiveGradient()
+                AppColors.background
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
@@ -30,11 +30,11 @@ struct MoodSelectionScreen: View {
                         VStack(spacing: 10) {
                             Text(greeting)
                                 .font(.playfairDisplayRegular(size: 32))
-                                .foregroundColor(.primary)
+                                .foregroundColor(AppColors.primaryText)
                             
                             Text("Comment vous sentez-vous ce matin ?")
                                 .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(AppColors.secondaryText)
                         }
                         .padding(.top, 20)
                         
@@ -45,7 +45,7 @@ struct MoodSelectionScreen: View {
                         VStack(alignment: .leading, spacing: 20) {
                             Text("Choisissez votre humeur")
                                 .font(.playfairDisplayBold(size: 24))
-                                .foregroundColor(.primary)
+                                .foregroundColor(AppColors.primaryText)
                                 .padding(.horizontal)
                             
                             LazyVGrid(columns: [
@@ -80,21 +80,11 @@ struct MoodSelectionScreen: View {
                                         .font(.system(size: 18, weight: .semibold))
                                     Image(systemName: "arrow.right")
                                 }
-                                .foregroundColor(.white)
+                                .foregroundColor(AppColors.buttonPrimaryText)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [
-                                            mood.color,
-                                            mood.color.opacity(0.8)
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
+                                .background(AppColors.buttonPrimary)
                                 .cornerRadius(16)
-                                .shadow(color: mood.color.opacity(0.3), radius: 10, x: 0, y: 5)
                             }
                             .padding(.horizontal)
                             .padding(.top, 10)
@@ -142,43 +132,34 @@ struct MoodCard: View {
             VStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    mood.color.opacity(0.2),
-                                    mood.backgroundColor.opacity(0.3)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .fill(AppColors.buttonSecondary)
                         .frame(width: 70, height: 70)
                     
                     Image(systemName: mood.icon)
                         .font(.system(size: 32))
-                        .foregroundColor(mood.color)
+                        .foregroundColor(AppColors.primaryText)
                 }
                 
                 Text(mood.rawValue)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .foregroundColor(AppColors.primaryText)
             }
             .frame(height: 140)
             .frame(maxWidth: .infinity)
             .padding()
-            .adaptiveCard(cornerRadius: 20)
+            .cleanCard(cornerRadius: 20)
             .overlay(
                 RoundedRectangle(cornerRadius: 20)
                     .stroke(
-                        isSelected ? mood.color : Color.clear,
+                        isSelected ? AppColors.buttonPrimary : Color.clear,
                         lineWidth: 3
                     )
             )
             .background(
-                isSelected ? mood.backgroundColor.opacity(0.3) : Color.clear
+                isSelected ? AppColors.buttonSecondary : Color.clear
             )
             .shadow(
-                color: isSelected ? mood.color.opacity(0.3) : Color.black.opacity(0.1),
+                color: isSelected ? AppColors.shadow : AppColors.shadow,
                 radius: isSelected ? 10 : 5,
                 x: 0,
                 y: isSelected ? 5 : 2
@@ -202,7 +183,7 @@ struct WeatherSection: View {
         VStack(alignment: .leading, spacing: 15) {
             Text("Météo du jour")
                 .font(.playfairDisplayBold(size: 22))
-                .foregroundColor(.primary)
+                .foregroundColor(AppColors.primaryText)
                 .padding(.horizontal)
             
             ScrollView(.horizontal, showsIndicators: false) {
@@ -238,12 +219,12 @@ struct WeatherChip: View {
                 Text(weather.rawValue)
                     .font(.system(size: 14, weight: .medium))
             }
-            .foregroundColor(isSelected ? .white : .primary)
+            .foregroundColor(isSelected ? AppColors.buttonPrimaryText : AppColors.primaryText)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .background(
                 Capsule()
-                    .fill(isSelected ? weather.color : Color.gray.opacity(0.2))
+                    .fill(isSelected ? AppColors.buttonPrimary : AppColors.buttonSecondary)
             )
         }
         .buttonStyle(PlainButtonStyle())

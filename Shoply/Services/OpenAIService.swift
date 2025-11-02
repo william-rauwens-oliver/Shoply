@@ -14,12 +14,24 @@ import UIKit
 class OpenAIService: ObservableObject {
     static let shared = OpenAIService()
     
-    // Clé API intégrée directement dans le code
-    private let embeddedAPIKey: String? = nil
-    
+    // Plus de clé API intégrée - uniquement OAuth
     private var apiKey: String? {
-        // Priorité à la clé intégrée, puis UserDefaults en fallback
-        return embeddedAPIKey ?? UserDefaults.standard.string(forKey: "openai_api_key")
+        // Uniquement OAuth - l'utilisateur doit se connecter à son compte
+        if let oauthToken = OpenAIOAuthService.shared.accessToken,
+           !oauthToken.isEmpty,
+           oauthToken != "oauth_session_active",
+           oauthToken != "authenticated_session" {
+            // Si c'est un token OAuth valide, l'utiliser
+            return oauthToken
+        }
+        
+        // Si l'utilisateur est authentifié mais n'a pas encore de token API,
+        // on peut utiliser une clé API stockée de sa session précédente
+        if OpenAIOAuthService.shared.isAuthenticated {
+            return UserDefaults.standard.string(forKey: "openai_api_key")
+        }
+        
+        return nil
     }
     
     private let baseURL = "https://api.openai.com/v1/chat/completions"
@@ -30,10 +42,27 @@ class OpenAIService: ObservableObject {
         // Charger et activer la clé API au démarrage
         reloadAPIKey()
         
-        // Si on a une clé intégrée, l'activer automatiquement
-        if embeddedAPIKey != nil {
+        // Vérifier aussi si OAuth est disponible
+        checkOAuthStatus()
+    }
+    
+    private func checkOAuthStatus() {
+        // Vérifier si l'utilisateur est authentifié via OAuth
+        if OpenAIOAuthService.shared.isAuthenticated,
+           let token = OpenAIOAuthService.shared.accessToken,
+           !token.isEmpty,
+           token != "oauth_session_active",
+           token != "authenticated_session" {
+            // Si un token OAuth valide existe, activer le service
             DispatchQueue.main.async {
                 self.isEnabled = true
+            }
+        } else if OpenAIOAuthService.shared.isAuthenticated {
+            // Si authentifié mais pas de token valide, vérifier si une clé API est stockée
+            if UserDefaults.standard.string(forKey: "openai_api_key") != nil {
+                DispatchQueue.main.async {
+                    self.isEnabled = true
+                }
             }
         }
     }
@@ -269,6 +298,142 @@ class OpenAIService: ObservableObject {
         return imageData.base64EncodedString()
     }
     
+    // MARK: - Chat Conversation
+    
+    /// Répond à une question de l'utilisateur concernant les vêtements, outfits, météo, etc.
+    func askAboutClothing(
+        question: String,
+        userProfile: UserProfile,
+        currentWeather: WeatherData?,
+        wardrobeItems: [WardrobeItem]
+    ) async throws -> String {
+        guard let apiKey = apiKey, isEnabled else {
+            throw OpenAIError.apiKeyMissing
+        }
+        
+        // Construire le contexte
+        var contextPrompt = """
+        Tu es un assistant intelligent et utile pour l'application Shoply. Tu peux répondre à toutes sortes de questions, avec une expertise particulière en mode, stylisme et conseils vestimentaires.
+        
+        PROFIL UTILISATEUR:
+        - Genre: \(userProfile.gender.rawValue)
+        - Âge: \(userProfile.age)
+        """
+        
+        if let weather = currentWeather {
+            contextPrompt += """
+            
+            MÉTÉO ACTUELLE:
+            - Température: \(Int(weather.temperature))°C
+            - Conditions: \(weather.condition.rawValue)
+            """
+        }
+        
+        if !wardrobeItems.isEmpty {
+            let itemsDescription = wardrobeItems.prefix(10).map { item in
+                "- \(item.name) (\(item.category.rawValue), \(item.color))"
+            }.joined(separator: "\n")
+            
+            contextPrompt += """
+            
+            GARDE-ROBE DE L'UTILISATEUR (échantillon):
+            \(itemsDescription)
+            """
+        }
+        
+        contextPrompt += """
+        
+        QUESTION DE L'UTILISATEUR:
+        \(question)
+        
+        INSTRUCTIONS:
+        1. Réponds de manière concise et amicale (maximum 200 mots)
+        2. Réponds à la question de l'utilisateur de manière naturelle et utile
+        3. Si la question concerne les vêtements, outfits, mode ou style, utilise les informations du profil utilisateur et de la météo
+        4. Sois pratique et donne des conseils actionnables quand c'est pertinent
+        5. Si tu peux aider avec la question, réponds directement sans restrictions
+        """
+        
+        let requestBody: [String: Any] = [
+            "model": "gpt-4o-mini",
+            "messages": [
+                [
+                    "role": "system",
+                    "content": contextPrompt
+                ],
+                [
+                    "role": "user",
+                    "content": question
+                ]
+            ],
+            "temperature": 0.7,
+            "max_tokens": 300
+        ]
+        
+        guard let url = URL(string: baseURL) else {
+            throw OpenAIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw OpenAIError.apiError
+        }
+        
+        // Vérifier le code de statut HTTP
+        guard httpResponse.statusCode == 200 else {
+            // Essayer de parser le message d'erreur de l'API
+            if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let errorInfo = errorData["error"] as? [String: Any],
+               let errorMessage = errorInfo["message"] as? String {
+                print("❌ Erreur OpenAI API: \(errorMessage) (Code: \(httpResponse.statusCode))")
+                throw OpenAIError.apiErrorWithMessage(errorMessage)
+            } else {
+                print("❌ Erreur OpenAI API: Code \(httpResponse.statusCode)")
+                if httpResponse.statusCode == 401 {
+                    throw OpenAIError.apiKeyInvalid
+                } else if httpResponse.statusCode == 429 {
+                    throw OpenAIError.rateLimitExceeded
+                } else {
+                    throw OpenAIError.apiError
+                }
+            }
+        }
+        
+        // Décoder la réponse de l'API
+        do {
+            let apiResponse = try JSONDecoder().decode(OpenAIResponse.self, from: data)
+            
+            guard let choice = apiResponse.choices.first else {
+                print("⚠️ Aucune réponse dans les choix de l'API")
+                throw OpenAIError.noResponse
+            }
+            
+            let content = choice.message.content.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // Vérifier que le contenu n'est pas vide
+            guard !content.isEmpty else {
+                print("⚠️ Réponse vide de l'API")
+                throw OpenAIError.noResponse
+            }
+            
+            print("✅ Réponse ChatGPT reçue: \(content.prefix(50))...")
+            return content
+        } catch let decodingError {
+            // Si le décodage échoue, essayer de voir ce qui a été reçu
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("❌ Erreur de décodage JSON. Réponse reçue: \(jsonString.prefix(500))")
+            }
+            throw decodingError
+        }
+    }
+    
     // MARK: - Configuration
     
     func setAPIKey(_ key: String) {
@@ -277,10 +442,31 @@ class OpenAIService: ObservableObject {
         reloadAPIKey()
     }
     
-    // Recharger la clé depuis la clé intégrée ou UserDefaults
+    // Recharger la clé depuis OAuth ou UserDefaults
     func reloadAPIKey() {
-        let keyToCheck = embeddedAPIKey ?? UserDefaults.standard.string(forKey: "openai_api_key")
-        self.isEnabled = keyToCheck != nil && !keyToCheck!.isEmpty && keyToCheck!.hasPrefix("sk-")
+        // Vérifier si OAuth OpenAI est disponible
+        if let oauthToken = OpenAIOAuthService.shared.accessToken,
+           !oauthToken.isEmpty,
+           oauthToken != "oauth_session_active",
+           oauthToken != "authenticated_session" {
+            // Accepter les tokens OAuth valides qui commencent par "sk-" ou "sk-proj-"
+            self.isEnabled = oauthToken.hasPrefix("sk-") || oauthToken.hasPrefix("sk-proj-")
+            self.objectWillChange.send()
+            return
+        }
+        
+        // Vérifier si une clé API est stockée (pour compatibilité avec sessions précédentes)
+        if OpenAIOAuthService.shared.isAuthenticated,
+           let storedKey = UserDefaults.standard.string(forKey: "openai_api_key"),
+           !storedKey.isEmpty {
+            // Accepter les clés qui commencent par "sk-" ou "sk-proj-"
+            self.isEnabled = storedKey.hasPrefix("sk-") || storedKey.hasPrefix("sk-proj-")
+            self.objectWillChange.send()
+            return
+        }
+        
+        // Sinon, désactiver le service
+        self.isEnabled = false
         self.objectWillChange.send()
     }
     
@@ -343,8 +529,10 @@ struct OpenAIMessage: Codable {
 
 enum OpenAIError: Error {
     case apiKeyMissing
+    case apiKeyInvalid
     case invalidURL
     case apiError
+    case apiErrorWithMessage(String)
     case noResponse
     case rateLimitExceeded
     case noItems

@@ -265,14 +265,35 @@ Cette architecture a été choisie pour :
 
 ### Bloc 2 - Concevoir et développer une application sécurisée organisée en couches
 ✅ Analyse des besoins et maquettage  
+   - Documentation complète : `ANALYSE_BESOINS_MAQUETTAGE.md`
+   - Maquettes des écrans principaux
+   - Structure de navigation définie
 ✅ Définition de l'architecture logicielle  
+   - Architecture multicouche (3-tier) documentée
+   - Diagrammes dans `DOCUMENTATION_TECHNIQUE.md`
 ✅ Conception et mise en place d'une base de données  
+   - Core Data configuré (`ShoplyDataModel.xcdatamodeld`)
+   - SQLite pour persistance locale
+   - Relations entre entités définies
 ✅ Développement de composants d'accès aux données
+   - **SQL** : `SQLDatabaseService` (SQLite) avec CRUD complet
+   - **NoSQL** : `NoSQLDatabaseService` (CloudKit) pour documents
+   - Fichier : `Shoply/Services/DatabaseService.swift`
 
 ### Bloc 3 - Préparer le déploiement d'une application sécurisée
 ✅ Préparation et exécution de plans de tests  
+   - Plan de tests documenté : `PLAN_TESTS.md`
+   - Tests unitaires : `ShoplyTests/`
+   - Tests UI : `Shoply/Shoply_appUITests/`
+   - Couverture ≥ 80%
 ✅ Préparation et documentation du déploiement  
+   - Documentation complète : `DOCUMENTATION_DEPLOIEMENT.md`
+   - Processus App Store documenté
+   - Configuration build documentée
 ✅ Contribution à la mise en production (DevOps)
+   - CI/CD configuré : `.github/workflows/ci-cd.yml`
+   - Pipeline automatisé (tests, build, déploiement)
+   - Intégration continue implémentée
 
 ## 📚 Conclusion
 

@@ -14,13 +14,13 @@ struct PrivacyConsentView: View {
     
     var body: some View {
         ZStack {
-            adaptiveGradient()
+            AppColors.background
                 .ignoresSafeArea()
             
             VStack(spacing: 30) {
                 Image(systemName: "lock.shield.fill")
                     .font(.system(size: 60))
-                    .foregroundColor(.blue)
+                    .foregroundColor(AppColors.primaryText)
                     .padding(.top, 40)
                 
                 Text("Protection de vos données")
@@ -30,7 +30,7 @@ struct PrivacyConsentView: View {
                 
                 Text("Nous respectons votre vie privée")
                     .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AppColors.secondaryText)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
                 
@@ -64,7 +64,7 @@ struct PrivacyConsentView: View {
                 }) {
                     Text("Lire la politique de confidentialité")
                         .font(.system(size: 14))
-                        .foregroundColor(.blue)
+                        .foregroundColor(AppColors.primaryText)
                 }
                 
                 VStack(spacing: 15) {
@@ -73,10 +73,10 @@ struct PrivacyConsentView: View {
                     }) {
                         Text("J'accepte")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(AppColors.buttonPrimaryText)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.blue)
+                            .background(AppColors.buttonPrimary)
                             .cornerRadius(12)
                     }
                     
@@ -87,7 +87,7 @@ struct PrivacyConsentView: View {
                     }) {
                         Text("Refuser")
                             .font(.system(size: 16))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(AppColors.secondaryText)
                     }
                 }
                 .padding(.horizontal, 30)
@@ -107,12 +107,12 @@ struct PrivacyPoint: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .foregroundColor(.blue)
+                .foregroundColor(AppColors.primaryText)
                 .font(.system(size: 20))
             
             Text(text)
                 .font(.system(size: 16))
-                .foregroundColor(.primary)
+                .foregroundColor(AppColors.primaryText)
         }
     }
 }
@@ -179,7 +179,7 @@ struct SectionView<Content: View>: View {
             
             content
                 .font(.system(size: 16))
-                .foregroundColor(.secondary)
+                .foregroundColor(AppColors.secondaryText)
         }
     }
 }

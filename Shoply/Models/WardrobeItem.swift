@@ -73,7 +73,7 @@ enum ClothingCategory: String, Codable, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .top: return "tshirt.fill"
-        case .bottom: return "pants.fill"
+        case .bottom: return "rectangle.fill" // Icône pour les bas/pantalons
         case .shoes: return "shoe.fill"
         case .outerwear: return "wind"
         case .accessory: return "sparkles"

@@ -7,14 +7,29 @@
 
 import SwiftUI
 
-/// Écran de sélection intelligente d'outfit avec météo automatique
+/// Écran de sélection intelligente d'outfit avec météo automatique - Design moderne
 struct SmartOutfitSelectionScreen: View {
     @StateObject private var weatherService = WeatherService.shared
     @StateObject private var wardrobeService = WardrobeService()
+    @StateObject private var openAIService = OpenAIService.shared
+    @StateObject private var geminiService = GeminiService.shared
+    @StateObject private var settingsManager = AppSettingsManager.shared
     @State private var isGenerating = false
     @State private var generatedOutfits: [MatchedOutfit] = []
     @State private var showingResults = false
     @State private var weatherError: String?
+    @State private var generationProgress: Double = 0.0
+    @State private var useAdvancedAI: Bool = true // Par défaut, utiliser l'IA avancée si disponible
+    @State private var showingArticleError = false
+    
+    private var isAdvancedAIAvailable: Bool {
+        switch settingsManager.aiProvider {
+        case .chatGPT:
+            return openAIService.isEnabled
+        case .gemini:
+            return geminiService.isEnabled
+        }
+    }
     
     private var userProfile: UserProfile {
         DataManager.shared.loadUserProfile() ?? UserProfile()
@@ -23,79 +38,107 @@ struct SmartOutfitSelectionScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.white
+                AppColors.background
                     .ignoresSafeArea()
                 
                 if isGenerating {
-                    LoadingView(message: "Génération en cours...")
+                    ModernLoadingView(
+                        message: "Analyse de votre garde-robe...".localized,
+                        progress: generationProgress,
+                        wardrobeService: wardrobeService
+                    )
                 } else if showingResults && !generatedOutfits.isEmpty {
-                    OutfitResultsView(outfits: generatedOutfits)
+                    // Page de résultats - Afficher les outfits générés
+                    ModernOutfitResultsView(
+                        outfits: generatedOutfits,
+                        onRegenerate: {
+                            Task {
+                                await startOutfitGeneration()
+                            }
+                        },
+                        onBack: {
+                            // Retourner à la page de génération
+                            showingResults = false
+                            generatedOutfits = []
+                        }
+                    )
                 } else {
                     ScrollView {
-                        VStack(spacing: 40) {
-                            // En-tête épuré
-                            VStack(spacing: 8) {
-                                if !userProfile.firstName.isEmpty {
-                                    Text(userProfile.firstName)
-                                        .font(.system(size: 32, weight: .light))
-                                        .foregroundColor(.black)
-                                }
-                                
-                                Text("Sélection intelligente")
-                                    .font(.system(size: 16, weight: .regular))
-                                    .foregroundColor(.gray)
-                                    .padding(.top, 4)
-                            }
-                            .padding(.top, 60)
+                        VStack(spacing: 32) {
+                            // En-tête moderne avec animation
+                            ModernHeaderView(userProfile: userProfile)
+                                .padding(.top, 20)
+                                .slideIn()
                             
-                            // Météo épurée - Toujours observer le service
+                            // Carte météo moderne
                             if let morning = weatherService.morningWeather,
                                let afternoon = weatherService.afternoonWeather {
-                                WeatherSummaryView(
+                                VStack(spacing: 16) {
+                                    // Message de succès météo
+                                    if weatherService.weatherFetchedSuccessfully {
+                                        HStack {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundColor(.green)
+                                            Text(weatherService.weatherStatusMessage)
+                                                .font(.system(size: 14, weight: .medium))
+                                                .foregroundColor(.green)
+                                        }
+                                        .padding()
+                                        .background(AppColors.buttonSecondary)
+                                        .cornerRadius(12)
+                                    }
+                                    
+                                ModernWeatherCard(
                                     morning: morning,
                                     afternoon: afternoon,
                                     cityName: weatherService.cityName.isEmpty ? nil : weatherService.cityName
                                 )
+                                }
+                                .slideIn()
                             } else if weatherService.isLoading {
                                 VStack(spacing: 12) {
                                     ProgressView()
-                                        .tint(.black)
-                                    Text("Récupération de la météo...")
-                                        .font(.system(size: 14, weight: .regular))
-                                        .foregroundColor(.gray)
+                                    Text(weatherService.weatherStatusMessage)
+                                        .font(.system(size: 14))
+                                        .foregroundColor(AppColors.secondaryText)
                                 }
-                                .padding(.vertical, 20)
+                                .padding()
+                                .cleanCard(cornerRadius: 16)
+                                    .slideIn()
                             } else if let error = weatherError {
-                                WeatherErrorView(error: error) {
+                                ModernErrorCard(error: error) {
                                     Task {
                                         await startOutfitGeneration()
                                     }
                                 }
                             }
                             
-                            // Stats minimales
-                            WardrobeStatsCard(wardrobeService: wardrobeService)
+                            // Sélecteur d'algorithme (IA locale vs IA avancée)
+                            AlgorithmSelectionCard(
+                                useAdvancedAI: $useAdvancedAI,
+                                isAdvancedAIAvailable: isAdvancedAIAvailable,
+                                aiProvider: settingsManager.aiProvider
+                            )
+                            .slideIn()
                             
-                            Spacer(minLength: 40)
+                            Spacer(minLength: 20)
                             
-                            // Bouton épuré
-                            Button(action: {
-                                Task {
-                                    await startOutfitGeneration()
+                            // Bouton principal moderne avec animation
+                            ModernGenerateButton(
+                                isEnabled: canGenerate,
+                                action: {
+                                    // Vérifier qu'on a assez d'articles avant de générer
+                                    if wardrobeService.items.count < 2 {
+                                        showingArticleError = true
+                                    } else {
+                                    Task {
+                                        await startOutfitGeneration()
+                                        }
+                                    }
                                 }
-                            }) {
-                                Text("Générer")
-                                    .font(.system(size: 17, weight: .medium))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 16)
-                                    .background(Color.black)
-                                    .cornerRadius(0)
-                            }
+                            )
                             .padding(.horizontal, 24)
                             .padding(.bottom, 40)
-                            .disabled(wardrobeService.items.isEmpty || weatherService.morningWeather == nil)
-                            .opacity(wardrobeService.items.isEmpty || weatherService.morningWeather == nil ? 0.5 : 1.0)
                         }
                     }
                 }
@@ -103,28 +146,81 @@ struct SmartOutfitSelectionScreen: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("")
+                    Text("Sélection intelligente".localized)
+                        .font(.playfairDisplayBold(size: 20))
+                        .foregroundColor(AppColors.primaryText)
                 }
             }
             .onAppear {
-                // Vérifier et demander la permission de localisation
-                if !weatherService.hasLocation {
-                    weatherService.startLocationUpdates()
-                } else {
-                    // Si on a déjà la localisation, récupérer la météo
-                    Task {
-                        await weatherService.fetchWeatherForToday()
-                    }
-                }
+                setupWeatherService()
+                // Par défaut, utiliser l'IA avancée si disponible
+                useAdvancedAI = isAdvancedAIAvailable
+            }
+            .alert("Articles insuffisants", isPresented: $showingArticleError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Vous devez avoir au moins 2 articles dans votre garde-robe avec leurs photos pour générer des outfits. Ajoutez des vêtements depuis la section \"Ma Garde-robe\".".localized)
+            }
+        }
+    }
+    
+    private var canGenerate: Bool {
+        // Vérifier la météo
+        guard weatherService.morningWeather != nil &&
+              weatherService.afternoonWeather != nil else {
+            return false
+        }
+        
+        // Vérifier qu'on a assez d'articles (minimum 2)
+        if wardrobeService.items.count < 2 {
+            return false
+        }
+        
+        return true
+    }
+    
+    private func setupWeatherService() {
+        if !weatherService.hasLocation {
+            Task {
+                _ = await weatherService.startLocationUpdates()
+                await weatherService.fetchWeatherForToday()
+            }
+        } else {
+            Task {
+                await weatherService.fetchWeatherForToday()
             }
         }
     }
     
     private func startOutfitGeneration() async {
-        isGenerating = true
-        weatherError = nil
+        // Vérifier qu'on a minimum 2 articles
+        guard wardrobeService.items.count >= 2 else {
+            await MainActor.run {
+                weatherError = "Vous devez avoir au moins 2 articles dans votre garde-robe pour générer des outfits."
+                isGenerating = false
+            }
+            return
+        }
         
-        // Vérifier que la météo est disponible
+        await MainActor.run {
+            isGenerating = true
+            showingResults = false
+            weatherError = nil
+            generationProgress = 0.0
+        }
+        
+        // Étape 1: S'assurer que la météo est récupérée (10%)
+        if weatherService.morningWeather == nil || weatherService.afternoonWeather == nil {
+            // Essayer de récupérer la météo
+            await weatherService.fetchWeatherForToday()
+            
+            // Attendre un peu pour que la météo soit chargée
+            var attempts = 0
+            while (weatherService.morningWeather == nil || weatherService.afternoonWeather == nil) && attempts < 10 {
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 secondes
+                attempts += 1
+            }
+            
         guard weatherService.morningWeather != nil,
               weatherService.afternoonWeather != nil else {
             await MainActor.run {
@@ -132,199 +228,232 @@ struct SmartOutfitSelectionScreen: View {
                 isGenerating = false
             }
             return
-        }
-        
-        // Vérifier qu'il y a des items avec photos
-        let itemsWithPhotos = wardrobeService.items.filter { $0.photoURL != nil && !($0.photoURL?.isEmpty ?? true) }
-        guard !itemsWithPhotos.isEmpty else {
-            await MainActor.run {
-                weatherError = "Ajoutez des photos de vos vêtements dans votre garde-robe pour générer des outfits."
-                isGenerating = false
             }
-            return
         }
         
-        // Générer les outfits
+        await MainActor.run {
+            generationProgress = 0.1
+        }
+        
+        // Étape 2: Préparer les données pour ChatGPT (20%)
+        await MainActor.run {
+            generationProgress = 0.2
+        }
+        
+        // Utiliser OutfitMatchingAlgorithm avec choix de l'utilisateur
         let algorithm = OutfitMatchingAlgorithm(
             wardrobeService: wardrobeService,
             weatherService: weatherService,
             userProfile: userProfile
         )
         
-        let outfits = await algorithm.generateOutfits()
+        await MainActor.run {
+            generationProgress = 0.3
+        }
+        
+        // Étape 3: Générer selon le choix de l'utilisateur (50-90%)
+        // La progression sera mise à jour pendant la génération
+        let outfits: [MatchedOutfit]
+        
+        if useAdvancedAI && isAdvancedAIAvailable {
+            // Utiliser l'IA avancée sélectionnée (ChatGPT ou Gemini)
+            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: false) { progress in
+            await MainActor.run {
+                self.generationProgress = 0.3 + (progress * 0.6)
+                }
+            }
+        } else {
+            // Utiliser l'algorithme local uniquement
+            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: true) { progress in
+                await MainActor.run {
+                    self.generationProgress = 0.3 + (progress * 0.6)
+                }
+            }
+        }
         
         await MainActor.run {
+            generationProgress = 1.0
+            
             if outfits.isEmpty {
-                weatherError = "Aucun outfit trouvé. Assurez-vous d'avoir des vêtements adaptés à la météo actuelle."
+                weatherError = "Aucun outfit trouvé. Assurez-vous d'avoir au moins un haut et un bas dans votre garde-robe."
+                isGenerating = false
+                showingResults = false
             } else {
                 generatedOutfits = outfits
                 showingResults = true
+                isGenerating = false
             }
-            isGenerating = false
         }
     }
 }
 
-// MARK: - Résumé météo épuré
-struct WeatherSummaryView: View {
+// MARK: - Header moderne
+
+struct ModernHeaderView: View {
+    let userProfile: UserProfile
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 48))
+                .foregroundColor(AppColors.primaryText)
+            
+            if !userProfile.firstName.isEmpty {
+                Text("Bonjour \(userProfile.firstName)")
+                    .font(.playfairDisplayBold(size: 32))
+                    .foregroundColor(AppColors.primaryText)
+            } else {
+                Text("Sélection intelligente".localized)
+                    .font(.playfairDisplayBold(size: 32))
+                    .foregroundColor(AppColors.primaryText)
+            }
+            
+            Text("Laissez l'IA choisir vos meilleurs outfits".localized)
+                .font(.system(size: 16, weight: .regular))
+                .foregroundColor(AppColors.secondaryText)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+        }
+    }
+}
+
+// MARK: - Carte météo moderne
+
+struct ModernWeatherCard: View {
     let morning: WeatherData
     let afternoon: WeatherData
     let cityName: String?
     
     var body: some View {
-        VStack(spacing: 24) {
-            // Ville
+        VStack(spacing: 20) {
             if let cityName = cityName, !cityName.isEmpty {
-                Text(cityName)
-                    .font(.system(size: 18, weight: .light))
-                    .foregroundColor(.black)
+                HStack {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 14))
+                    Text(cityName)
+                        .font(.system(size: 18, weight: .semibold))
+                }
+                .foregroundColor(AppColors.primaryText)
             }
             
-            // Températures épurées
-            HStack(spacing: 0) {
-                WeatherPeriodCard(
+            HStack(spacing: 24) {
+                WeatherPeriodView(
                     period: "Matin",
-                    weather: morning
+                    icon: "sunrise.fill",
+                    temperature: Int(morning.temperature),
+                    condition: morning.condition.rawValue
                 )
                 
                 Divider()
                     .frame(height: 60)
-                    .padding(.horizontal, 20)
+                    .background(AppColors.separator)
                 
-                WeatherPeriodCard(
+                WeatherPeriodView(
                     period: "Après-midi",
-                    weather: afternoon
+                    icon: "sun.max.fill",
+                    temperature: Int(afternoon.temperature),
+                    condition: afternoon.condition.rawValue
                 )
             }
         }
+        .padding(24)
+        .cleanCard(cornerRadius: 20)
         .padding(.horizontal, 24)
     }
 }
 
-struct WeatherPeriodCard: View {
+struct WeatherPeriodView: View {
     let period: String
-    let weather: WeatherData
+    let icon: String
+    let temperature: Int
+    let condition: String
     
     var body: some View {
-        VStack(spacing: 4) {
-            Text(period)
-                .font(.system(size: 13, weight: .regular))
-                .foregroundColor(.gray)
-                .textCase(.uppercase)
-                .tracking(0.5)
+        VStack(spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                Text(period)
+                    .font(.system(size: 13, weight: .medium))
+                    .textCase(.uppercase)
+                    .tracking(1)
+            }
+            .foregroundColor(AppColors.secondaryText)
             
-            Text("\(Int(weather.temperature))°")
-                .font(.system(size: 36, weight: .light))
-                .foregroundColor(.black)
+            Text("\(temperature)°")
+                .font(.system(size: 42, weight: .light))
+                .foregroundColor(AppColors.primaryText)
             
-            Text(weather.condition.rawValue)
+            Text(condition)
                 .font(.system(size: 12, weight: .regular))
-                .foregroundColor(.gray)
+                .foregroundColor(AppColors.secondaryText)
         }
         .frame(maxWidth: .infinity)
     }
 }
 
-// MARK: - Chargement météo
-struct WeatherLoadingView: View {
-    let cityName: String?
-    
-    var body: some View {
-        VStack(spacing: 15) {
-            if let cityName = cityName, !cityName.isEmpty {
-                HStack {
-                    Image(systemName: "location.fill")
-                        .foregroundColor(.blue)
-                    Text(cityName)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                }
-            }
-            
-            ProgressView()
-            
-            Text(cityName != nil ? "Récupération de la météo..." : "Localisation en cours...")
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-        }
-        .padding()
-        .adaptiveCard(cornerRadius: 20)
-        .padding(.horizontal)
-    }
-}
+// MARK: - Stats moderne
 
-// MARK: - Erreur épurée
-struct WeatherErrorView: View {
-    let error: String
-    let retry: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            Text(error)
-                .font(.system(size: 14, weight: .regular))
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-            
-            Button(action: retry) {
-                Text("Réessayer")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(.black)
-                    .underline()
-            }
-        }
-        .padding(.horizontal, 24)
-    }
-}
-
-// MARK: - Stats épurées
-struct WardrobeStatsCard: View {
+struct ModernWardrobeStatsCard: View {
     @ObservedObject var wardrobeService: WardrobeService
     
     var body: some View {
         let stats = wardrobeService.getWardrobeStats()
         
         HStack(spacing: 0) {
-            StatItem(
+            ModernStatItem(
+                icon: "tshirt.fill",
                 value: "\(stats.totalItems)",
                 label: "Articles"
             )
             
             Divider()
-                .frame(height: 40)
+                .frame(height: 50)
+                .background(AppColors.separator)
                 .padding(.horizontal, 20)
             
-            StatItem(
+            ModernStatItem(
+                icon: "photo.fill",
                 value: "\(stats.totalPhotos)",
                 label: "Photos"
             )
             
             Divider()
-                .frame(height: 40)
+                .frame(height: 50)
+                .background(AppColors.separator)
                 .padding(.horizontal, 20)
             
-            StatItem(
+            ModernStatItem(
+                icon: "heart.fill",
                 value: "\(stats.favoriteItems)",
                 label: "Favoris"
             )
         }
+        .padding(.vertical, 20)
+        .padding(.horizontal, 24)
+        .cleanCard(cornerRadius: 20)
         .padding(.horizontal, 24)
     }
 }
 
-struct StatItem: View {
+struct ModernStatItem: View {
+    let icon: String
     let value: String
     let label: String
     
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundColor(AppColors.primaryText)
+            
             Text(value)
-                .font(.system(size: 28, weight: .light))
-                .foregroundColor(.black)
+                .font(.playfairDisplayBold(size: 32))
+                .foregroundColor(AppColors.primaryText)
             
             Text(label)
-                .font(.system(size: 11, weight: .regular))
-                .foregroundColor(.gray)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(AppColors.secondaryText)
                 .textCase(.uppercase)
                 .tracking(0.5)
         }
@@ -332,108 +461,583 @@ struct StatItem: View {
     }
 }
 
-// MARK: - Vue de chargement épurée
-struct LoadingView: View {
+// MARK: - Bouton moderne
+
+struct ModernGenerateButton: View {
+    let isEnabled: Bool
+    let action: () -> Void
+    @State private var isPressed = false
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 18, weight: .semibold))
+                
+                Text("Générer mes outfits".localized)
+                    .font(.system(size: 18, weight: .semibold))
+            }
+            .foregroundColor(isEnabled ? AppColors.buttonPrimaryText : AppColors.secondaryText)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 18)
+            .background(isEnabled ? AppColors.buttonPrimary : AppColors.buttonSecondary)
+            .cornerRadius(16)
+            .shadow(
+                color: isEnabled ? AppColors.shadow : Color.clear,
+                radius: isEnabled ? 12 : 0,
+                x: 0,
+                y: isEnabled ? 4 : 0
+            )
+        }
+        .disabled(!isEnabled)
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+    }
+}
+
+// MARK: - Loading moderne
+
+struct ModernLoadingView: View {
+    let message: String
+    let progress: Double
+    @ObservedObject var wardrobeService: WardrobeService
+    @State private var currentStep = 0
+    
+    @StateObject private var settingsManager = AppSettingsManager.shared
+    
+    private var aiSteps: [(message: String, threshold: Double)] {
+        let providerName = settingsManager.aiProvider == .chatGPT ? "ChatGPT" : "Gemini"
+        return [
+            ("Préparation de vos vêtements...", 0.1),
+            ("Chargement de \(wardrobeService.items.count) article(s)...", 0.2),
+            ("Envoi des photos à \(providerName)...", 0.4),
+            ("Envoi à \(providerName)...", 0.5),
+            ("\(providerName) réfléchit...", 0.7),
+            ("\(providerName) sélectionne vos vêtements...", 0.85),
+            ("Création des meilleurs outfits...", 0.95),
+            ("Finalisation...", 1.0)
+        ]
+    }
+    
+    var body: some View {
+        VStack(spacing: 32) {
+            ZStack {
+                Circle()
+                    .stroke(AppColors.buttonSecondary, lineWidth: 8)
+                    .frame(width: 120, height: 120)
+                
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(AppColors.buttonPrimary, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                    .frame(width: 120, height: 120)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.linear(duration: 0.3), value: progress)
+                
+                VStack(spacing: 4) {
+                    let isAIActive = (settingsManager.aiProvider == .chatGPT && OpenAIService.shared.isEnabled) ||
+                                     (settingsManager.aiProvider == .gemini && GeminiService.shared.isEnabled)
+                    if isAIActive && progress > 0.5 && progress < 0.9 {
+                        // Animation de réflexion pendant que l'IA pense
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 32))
+                            .foregroundColor(AppColors.buttonPrimary)
+                            .symbolEffect(.pulse, options: .repeating)
+                    } else {
+                    Text("\(Int(progress * 100))%")
+                        .font(.playfairDisplayBold(size: 24))
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 20))
+                        .foregroundColor(AppColors.secondaryText)
+                    }
+                }
+            }
+            
+            VStack(spacing: 16) {
+            Text(message)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(AppColors.primaryText)
+            
+            let isAIActive = (settingsManager.aiProvider == .chatGPT && OpenAIService.shared.isEnabled) ||
+                             (settingsManager.aiProvider == .gemini && GeminiService.shared.isEnabled)
+            if isAIActive {
+                    VStack(spacing: 12) {
+                        ForEach(Array(aiSteps.enumerated()), id: \.offset) { index, step in
+                            if progress >= step.threshold - 0.15 { // Afficher les étapes proches
+                                HStack(spacing: 8) {
+                                    if progress >= step.threshold {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(.green)
+                                            .font(.system(size: 14))
+                                            .transition(.scale.combined(with: .opacity))
+                                    } else if progress >= step.threshold - 0.1 {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                            .tint(AppColors.buttonPrimary)
+                                    } else {
+                                        Circle()
+                                            .fill(AppColors.buttonSecondary)
+                                            .frame(width: 14, height: 14)
+                                    }
+                                    
+                                    Text(step.message)
+                                        .font(.system(size: 14, weight: .regular))
+                                        .foregroundColor(progress >= step.threshold ? .green : AppColors.secondaryText)
+                                }
+                                .animation(.easeInOut(duration: 0.3), value: progress)
+                            }
+                        }
+                    }
+                        .padding(.horizontal, 40)
+            } else {
+                Text("Analyse des couleurs, matières et styles...")
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+                }
+            }
+        }
+        .onChange(of: progress) { oldValue, newValue in
+            // Animer les changements de progression
+            withAnimation(.easeInOut(duration: 0.3)) {
+                currentStep = Int(newValue * 10)
+            }
+        }
+    }
+}
+
+struct ModernLoadingCard: View {
     let message: String
     
     var body: some View {
-        VStack(spacing: 24) {
+        HStack(spacing: 16) {
             ProgressView()
-                .tint(.black)
+                .tint(AppColors.primaryText)
             
             Text(message)
-                .font(.system(size: 14, weight: .regular))
-                .foregroundColor(.gray)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(AppColors.primaryText)
         }
+        .padding(20)
+        .cleanCard(cornerRadius: 16)
+        .padding(.horizontal, 24)
     }
 }
 
-// MARK: - Résultats épurés
-struct OutfitResultsView: View {
-    let outfits: [MatchedOutfit]
+// MARK: - Erreur moderne
+
+struct ModernErrorCard: View {
+    let error: String
+    let retry: () -> Void
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 32) {
-                Text("Suggestions")
-                    .font(.system(size: 24, weight: .light))
-                    .foregroundColor(.black)
+        VStack(spacing: 20) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 32))
+                .foregroundColor(AppColors.secondaryText)
+            
+            Text(error)
+                .font(.system(size: 15, weight: .regular))
+                .foregroundColor(AppColors.secondaryText)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+            
+            Button(action: retry) {
+                HStack {
+                    Image(systemName: "arrow.clockwise")
+                    Text("Réessayer")
+                }
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(AppColors.buttonPrimaryText)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(AppColors.buttonPrimary)
+                .cornerRadius(12)
+            }
+        }
+        .padding(24)
+        .cleanCard(cornerRadius: 20)
+        .padding(.horizontal, 24)
+    }
+}
+
+// MARK: - Résultats modernes
+
+struct ModernOutfitResultsView: View {
+    let outfits: [MatchedOutfit]
+    let onRegenerate: () -> Void
+    let onBack: (() -> Void)?
+    
+    var body: some View {
+        ZStack {
+            AppColors.background
+                .ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header avec bouton retour
+                    HStack {
+                        if let onBack = onBack {
+                            Button(action: onBack) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "chevron.left")
+                                    Text("Retour".localized)
+                                }
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(AppColors.primaryText)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text("\(outfits.count) " + "outfits générés".localized)
+                                .font(.playfairDisplayBold(size: 28))
+                                .foregroundColor(AppColors.primaryText)
+                            
+                            Text("Sélectionnés pour vous".localized)
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundColor(AppColors.secondaryText)
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: onRegenerate) {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 18))
+                                .foregroundColor(AppColors.primaryText)
+                                .padding(12)
+                                .background(AppColors.buttonSecondary)
+                                .clipShape(Circle())
+                        }
+                    }
+                    .padding(.horizontal, 24)
                     .padding(.top, 20)
                 
+                // Liste des outfits
                 ForEach(Array(outfits.enumerated()), id: \.element.id) { index, outfit in
-                    MatchedOutfitCard(outfit: outfit, index: index + 1)
+                    ModernOutfitCard(outfit: outfit, rank: index + 1)
+                        .padding(.horizontal, 24)
+                        .slideIn()
+                }
+                
+                    Spacer(minLength: 40)
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 40)
         }
     }
 }
 
-// MARK: - Carte outfit épurée
-struct MatchedOutfitCard: View {
+struct ModernOutfitCard: View {
     let outfit: MatchedOutfit
-    let index: Int
+    let rank: Int
+    @StateObject private var historyStore = OutfitHistoryStore()
+    @StateObject private var settingsManager = AppSettingsManager.shared
+    @State private var showingAddedConfirmation = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Numéro
-            Text("\(index)")
-                .font(.system(size: 14, weight: .regular))
-                .foregroundColor(.gray)
-                .textCase(.uppercase)
-                .tracking(1)
+        VStack(spacing: 0) {
+            // Header de la carte avec badge ChatGPT
+            VStack(spacing: 12) {
+            HStack {
+                // Rank badge
+                ZStack {
+                    Circle()
+                        .fill(AppColors.buttonPrimary)
+                        .frame(width: 32, height: 32)
+                    
+                    Text("\(rank)")
+                        .font(.playfairDisplayBold(size: 16))
+                        .foregroundColor(AppColors.buttonPrimaryText)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                    Text("Score: \(Int(outfit.score))%")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(AppColors.primaryText)
+                            
+                            if outfit.reason.contains("ChatGPT") || outfit.reason.contains("Gemini") || outfit.reason.contains("Suggestion") {
+                                Image(systemName: "brain.head.profile")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.purple)
+                            }
+                        }
+                    
+                    Text(outfit.reason)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(AppColors.secondaryText)
+                            .lineLimit(2)
+                }
+                
+                Spacer()
+                
+                // Score bar
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Rectangle()
+                            .fill(AppColors.buttonSecondary)
+                            .frame(height: 4)
+                        
+                        Rectangle()
+                            .fill(AppColors.buttonPrimary)
+                            .frame(width: geometry.size.width * CGFloat(outfit.score / 100), height: 4)
+                    }
+                    .cornerRadius(2)
+                }
+                .frame(width: 60, height: 4)
+                }
+                
+                // Badge "IA a sélectionné"
+                let providerName = settingsManager.aiProvider == .chatGPT ? "ChatGPT" : "Gemini"
+                if outfit.reason.contains("ChatGPT") || outfit.reason.contains("Gemini") || outfit.reason.contains("Suggestion") {
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 12))
+                        Text("\(providerName) " + "a sélectionné ces vêtements pour vous".localized)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.purple)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.purple.opacity(0.1))
+                    .cornerRadius(8)
+                }
+            }
+            .padding(20)
             
-            // Items
-            VStack(alignment: .leading, spacing: 12) {
+            Divider()
+                .background(AppColors.separator)
+            
+            // Items avec indication claire des vêtements sélectionnés
+            VStack(spacing: 0) {
+                let providerName = settingsManager.aiProvider == .chatGPT ? "ChatGPT" : "Gemini"
+                Text("Vêtements sélectionnés par".localized + " \(providerName):")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(AppColors.secondaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
+                
                 ForEach(outfit.items, id: \.id) { item in
-                    OutfitItemRow(item: item)
+                    ModernOutfitItemRow(item: item)
+                    
+                    if item.id != outfit.items.last?.id {
+                        Divider()
+                            .background(AppColors.separator)
+                            .padding(.leading, 84)
+                    }
                 }
             }
             
-            // Trait de séparation fin
-            Divider()
-                .padding(.top, 4)
+            // Bouton pour ajouter à l'historique
+            Button(action: {
+                historyStore.addOutfit(outfit)
+                showingAddedConfirmation = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    showingAddedConfirmation = false
+                }
+            }) {
+                HStack {
+                    if showingAddedConfirmation {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Ajouté à l'historique".localized)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.green)
+                    } else {
+                        Image(systemName: "clock.fill")
+                        Text("J'ai porté cet outfit".localized)
+                            .font(.system(size: 14, weight: .semibold))
+                    }
+                }
+                .foregroundColor(showingAddedConfirmation ? .green : AppColors.buttonPrimaryText)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(showingAddedConfirmation ? AppColors.buttonSecondary : AppColors.buttonPrimary)
+                .cornerRadius(10)
+            }
+            .padding()
         }
-        .padding(.vertical, 20)
+        .cleanCard(cornerRadius: 20)
     }
 }
 
-struct OutfitItemRow: View {
+struct ModernOutfitItemRow: View {
     let item: WardrobeItem
     
     var body: some View {
         HStack(spacing: 16) {
-            // Photo minimaliste
+            // Photo
             if let photoURL = item.photoURL,
                let image = PhotoManager.shared.loadPhoto(at: photoURL) {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 48, height: 48)
-                    .clipped()
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.15))
-                    .frame(width: 48, height: 48)
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(AppColors.buttonSecondary)
+                    .frame(width: 60, height: 60)
+                    .overlay(
+                        Image(systemName: item.category.icon)
+                            .foregroundColor(AppColors.secondaryText)
+                    )
             }
             
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.name)
-                    .font(.system(size: 15, weight: .regular))
-                    .foregroundColor(.black)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text(item.name)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    if item.isFavorite {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(AppColors.primaryText)
+                    }
+                }
                 
-                Text(item.category.rawValue.lowercased())
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(.gray)
+                HStack(spacing: 12) {
+                    Label(item.category.rawValue, systemImage: item.category.icon)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(AppColors.secondaryText)
+                    
+                    Text("•")
+                        .foregroundColor(AppColors.secondaryText)
+                    
+                    Text(item.color)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(AppColors.secondaryText)
+                }
             }
             
             Spacer()
         }
+        .padding(20)
+    }
+}
+
+// MARK: - Sélecteur d'algorithme
+
+struct AlgorithmSelectionCard: View {
+    @Binding var useAdvancedAI: Bool
+    let isAdvancedAIAvailable: Bool
+    let aiProvider: AppSettingsManager.AIProvider
+    
+    var body: some View {
+        let providerDisplayName = aiProvider == .chatGPT ? "ChatGPT" : "Google Gemini"
+        
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Méthode de génération".localized)
+                        .font(.playfairDisplayBold(size: 18))
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    Text("Choisissez comment générer vos outfits".localized)
+                        .font(.system(size: 13))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+            }
+            
+            // Toggle principal
+            VStack(spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "brain.head.profile")
+                                .font(.system(size: 18))
+                                .foregroundColor(useAdvancedAI ? .purple : AppColors.secondaryText)
+                            
+                            Text("\(providerDisplayName) ".localized + "(IA avancée)".localized)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(AppColors.primaryText)
+                        }
+                        
+                        Text("Plus puissant • Plus de chances de trouver • Données envoyées à".localized + " \(providerDisplayName)")
+                            .font(.system(size: 12))
+                            .foregroundColor(AppColors.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: Binding(
+                        get: { useAdvancedAI && isAdvancedAIAvailable },
+                        set: { useAdvancedAI = $0 && isAdvancedAIAvailable }
+                    ))
+                    .disabled(!isAdvancedAIAvailable)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(useAdvancedAI && isAdvancedAIAvailable ? Color.purple.opacity(0.1) : AppColors.buttonSecondary)
+                )
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "cpu")
+                                .font(.system(size: 18))
+                                .foregroundColor(!useAdvancedAI ? AppColors.buttonPrimary : AppColors.secondaryText)
+                            
+                            Text("Mon algorithme (local)".localized)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(AppColors.primaryText)
+                        }
+                        
+                        Text("Moins puissant • Données restent sur votre appareil".localized)
+                            .font(.system(size: 12))
+                            .foregroundColor(AppColors.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: Binding(
+                        get: { !useAdvancedAI },
+                        set: { useAdvancedAI = !$0 }
+                    ))
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(!useAdvancedAI ? AppColors.buttonSecondary : Color.clear)
+                )
+            }
+            
+            // Avertissement si l'IA avancée n'est pas disponible
+            if !isAdvancedAIAvailable {
+                HStack(spacing: 8) {
+                    Image(systemName: "info.circle.fill")
+                        .foregroundColor(AppColors.secondaryText)
+                    Text("\(providerDisplayName) " + "n'est pas configuré. Utilisation de l'algorithme local.".localized)
+                        .font(.system(size: 12))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(8)
+            }
+        }
+        .padding(20)
+        .cleanCard(cornerRadius: 16)
     }
 }
 
 #Preview {
     SmartOutfitSelectionScreen()
 }
-

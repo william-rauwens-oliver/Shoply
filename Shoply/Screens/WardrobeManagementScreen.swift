@@ -26,7 +26,7 @@ struct WardrobeManagementScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                adaptiveGradient()
+                AppColors.background
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
@@ -48,9 +48,11 @@ struct WardrobeManagementScreen: View {
                         ], spacing: 15) {
                             ForEach(filteredItems) { item in
                                 WardrobeItemCard(item: item, wardrobeService: wardrobeService)
+                                    .id("card-\(item.id)-\(item.photoURL ?? "nophoto")")
                             }
                         }
                         .padding()
+                        .id(wardrobeService.items.count) // Force le rafraîchissement quand la liste change
                         
                         if filteredItems.isEmpty {
                             EmptyWardrobeView(category: selectedCategory)
@@ -59,7 +61,7 @@ struct WardrobeManagementScreen: View {
                     }
                 }
             }
-            .navigationTitle("Ma Garde-robe")
+            .navigationTitle("Ma Garde-robe".localized)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -68,7 +70,7 @@ struct WardrobeManagementScreen: View {
                     }) {
                         Image(systemName: "plus.circle.fill")
                             .font(.title2)
-                            .foregroundColor(.pink)
+                            .foregroundColor(AppColors.primaryText)
                     }
                 }
             }
@@ -86,14 +88,15 @@ struct SearchBar: View {
     var body: some View {
         HStack {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.gray)
+                .foregroundColor(AppColors.secondaryText)
             
-            TextField("Rechercher...", text: $text)
+            TextField("Rechercher...".localized, text: $text)
                 .font(.system(size: 16))
+                .foregroundColor(AppColors.primaryText)
         }
         .padding()
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(12)
+        .background(AppColors.buttonSecondary)
+        .roundedCorner(20)
     }
 }
 
@@ -111,16 +114,16 @@ struct CategoryPicker: View {
                         VStack(spacing: 8) {
                             Image(systemName: category.icon)
                                 .font(.system(size: 24))
-                                .foregroundColor(selectedCategory == category ? .white : .primary)
+                                .foregroundColor(selectedCategory == category ? AppColors.buttonPrimaryText : AppColors.primaryText)
                             
                             Text(category.rawValue)
                                 .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(selectedCategory == category ? .white : .primary)
+                                .foregroundColor(selectedCategory == category ? AppColors.buttonPrimaryText : AppColors.primaryText)
                         }
                         .frame(width: 80, height: 80)
                         .background(
-                            RoundedRectangle(cornerRadius: 15)
-                                .fill(selectedCategory == category ? Color.pink : Color.gray.opacity(0.2))
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(selectedCategory == category ? AppColors.buttonPrimary : AppColors.buttonSecondary)
                         )
                     }
                 }
@@ -141,14 +144,38 @@ struct WardrobeItemCard: View {
         }) {
             VStack(alignment: .leading, spacing: 8) {
                 // Photo ou placeholder
-                ZStack {
-                    if let photoURL = item.photoURL,
-                       let image = PhotoManager.shared.loadPhoto(at: photoURL) {
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
+                Group {
+                    if let photoURL = item.photoURL, !photoURL.isEmpty {
+                        if let image = PhotoManager.shared.loadPhoto(at: photoURL) {
+                            Image(uiImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(height: 150)
+                                .clipped()
+                                .id("photo-\(item.id)-\(photoURL)") // Force le rafraîchissement
+                        } else {
+                            // Si le chemin existe mais l'image ne charge pas
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.gray.opacity(0.3), Color.gray.opacity(0.1)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(height: 150)
+                                .overlay(
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "exclamationmark.triangle")
+                                            .foregroundColor(AppColors.secondaryText)
+                                        Text("Photo introuvable")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(AppColors.secondaryText)
+                                    }
+                                )
+                        }
                     } else {
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 20)
                             .fill(
                                 LinearGradient(
                                     colors: [Color.gray.opacity(0.3), Color.gray.opacity(0.1)],
@@ -156,23 +183,26 @@ struct WardrobeItemCard: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                        
-                        Image(systemName: item.category.icon)
-                            .font(.system(size: 40))
-                            .foregroundColor(.gray)
+                            .frame(height: 150)
+                            .overlay(
+                                Image(systemName: item.category.icon)
+                                    .font(.system(size: 40))
+                                    .foregroundColor(AppColors.secondaryText)
+                            )
                     }
                 }
                 .frame(height: 150)
-                .cornerRadius(12)
+                .roundedCorner(20)
                 .overlay(
                     VStack {
                         HStack {
                             Spacer()
                             if item.isFavorite {
                                 Image(systemName: "heart.fill")
-                                    .foregroundColor(.pink)
+                                    .foregroundColor(.red)
+                                    .font(.system(size: 16))
                                     .padding(8)
-                                    .background(Circle().fill(Color.white))
+                                    .background(Circle().fill(Color.white.opacity(0.9)))
                             }
                         }
                         Spacer()
@@ -209,12 +239,12 @@ struct EmptyWardrobeView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
             
-            Text("Aucun \(category.rawValue.lowercased()) dans votre garde-robe")
+            Text("Aucun {category} dans votre garde-robe".localized.replacingOccurrences(of: "{category}", with: category.rawValue.lowercased()))
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             
-            Text("Appuyez sur + pour ajouter vos premiers vêtements")
+            Text("Appuyez sur + pour ajouter vos premiers vêtements".localized)
                 .font(.system(size: 14))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -279,13 +309,13 @@ struct AddWardrobeItemView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(height: 150)
-                                    .cornerRadius(8)
+                                    .roundedCorner(20)
                             } else {
                                 HStack {
                                     Image(systemName: "photo")
                                     Text("Ajouter une photo")
                                 }
-                                .foregroundColor(.blue)
+                                .foregroundColor(AppColors.primaryText)
                             }
                         }
                     }
@@ -322,25 +352,29 @@ struct AddWardrobeItemView: View {
     private func saveItem() {
         isSaving = true
         
-        let item = WardrobeItem(
-            name: name,
-            category: selectedCategory,
-            color: color,
-            brand: brand.isEmpty ? nil : brand,
-            season: Array(selectedSeasons),
-            material: material.isEmpty ? nil : material
-        )
-        
         Task {
-            // Sauvegarder la photo si disponible
+            // Créer l'item d'abord
+            var item = WardrobeItem(
+                name: name,
+                category: selectedCategory,
+                color: color,
+                brand: brand.isEmpty ? nil : brand,
+                season: Array(selectedSeasons),
+                material: material.isEmpty ? nil : material
+            )
+            
+            // Sauvegarder la photo AVANT d'ajouter l'item si disponible
             if let photoImage = photoImage {
                 do {
-                    _ = try await wardrobeService.savePhoto(photoImage, for: item)
+                    // Sauvegarder la photo et mettre à jour le photoURL de l'item
+                    let photoPath = try await PhotoManager.shared.savePhoto(photoImage, itemId: item.id)
+                    item.photoURL = photoPath
                 } catch {
-                    print("Erreur lors de la sauvegarde de la photo: \(error)")
+                    print("Erreur lors de la sauvegarde de la photo: \(error.localizedDescription)")
                 }
             }
             
+            // Ajouter l'item avec le photoURL mis à jour
             await MainActor.run {
                 wardrobeService.addItem(item)
                 isSaving = false
@@ -361,33 +395,51 @@ struct WardrobeItemDetailView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Photo
+                    // Photo - Affichage plus grand et meilleur
                     if let photoURL = item.photoURL,
                        let image = PhotoManager.shared.loadPhoto(at: photoURL) {
                         Image(uiImage: image)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(maxHeight: 400)
-                            .cornerRadius(20)
-                            .padding()
+                            .frame(maxWidth: .infinity, maxHeight: 500)
+                            .roundedCorner(20)
+                            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                            .padding(.horizontal)
+                            .padding(.top)
+                            .id("detail-photo-\(item.id)-\(photoURL)") // Force le rafraîchissement
+                    } else {
+                        // Afficher un placeholder si pas de photo
+                        VStack(spacing: 16) {
+                            Image(systemName: item.category.icon)
+                                .font(.system(size: 80))
+                                .foregroundColor(AppColors.secondaryText)
+                            
+                            Text("Aucune photo")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(AppColors.secondaryText)
+                        }
+                        .frame(height: 300)
+                        .frame(maxWidth: .infinity)
+                        .background(AppColors.buttonSecondary)
+                        .roundedCorner(20)
+                        .padding(.horizontal)
                     }
                     
                     // Informations
                     VStack(alignment: .leading, spacing: 15) {
-                        DetailRow(label: "Nom", value: item.name)
-                        DetailRow(label: "Catégorie", value: item.category.rawValue)
-                        DetailRow(label: "Couleur", value: item.color)
+                        DetailRow(label: "Nom".localized, value: item.name)
+                        DetailRow(label: "Catégorie".localized, value: item.category.rawValue)
+                        DetailRow(label: "Couleur".localized, value: item.color)
                         if let brand = item.brand {
-                            DetailRow(label: "Marque", value: brand)
+                            DetailRow(label: "Marque".localized, value: brand)
                         }
                         if let material = item.material {
-                            DetailRow(label: "Matière", value: material)
+                            DetailRow(label: "Matière".localized, value: material)
                         }
-                        DetailRow(label: "Saisons", value: item.season.map { $0.rawValue }.joined(separator: ", "))
-                        DetailRow(label: "Porté", value: "\(item.wearCount) fois")
+                        DetailRow(label: "Saisons".localized, value: item.season.map { $0.rawValue }.joined(separator: ", "))
                     }
                     .padding()
-                    .adaptiveCard(cornerRadius: 20)
+                    .cleanCard(cornerRadius: 20)
                     .padding(.horizontal)
                 }
             }
@@ -399,18 +451,18 @@ struct WardrobeItemDetailView: View {
                         showingDeleteAlert = true
                     }) {
                         Image(systemName: "trash")
-                            .foregroundColor(.red)
+                            .foregroundColor(AppColors.primaryText)
                     }
                 }
             }
-            .alert("Supprimer", isPresented: $showingDeleteAlert) {
-                Button("Annuler", role: .cancel) { }
-                Button("Supprimer", role: .destructive) {
+            .alert("Supprimer".localized, isPresented: $showingDeleteAlert) {
+                Button("Annuler".localized, role: .cancel) { }
+                Button("Supprimer".localized, role: .destructive) {
                     wardrobeService.deleteItem(item)
                     dismiss()
                 }
             } message: {
-                Text("Êtes-vous sûr de vouloir supprimer cet article de votre garde-robe ?")
+                Text("Êtes-vous sûr de vouloir supprimer cet article de votre garde-robe ?".localized)
             }
         }
     }
@@ -424,13 +476,13 @@ struct DetailRow: View {
         HStack {
             Text(label)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.secondary)
+                .foregroundColor(AppColors.secondaryText)
             
             Spacer()
             
             Text(value)
                 .font(.system(size: 16))
-                .foregroundColor(.primary)
+                .foregroundColor(AppColors.primaryText)
         }
     }
 }

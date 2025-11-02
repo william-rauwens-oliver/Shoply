@@ -6,94 +6,207 @@
 //
 
 import SwiftUI
+import UIKit
 
-// Helper pour le design liquid glass (iOS 26)
-@available(iOS 26.0, *)
-struct LiquidGlassModifier: ViewModifier {
-    let cornerRadius: CGFloat
-    let intensity: Double
+// Palette de couleurs noir et blanc épurée et moderne
+// Supporte le mode sombre avec ColorScheme
+struct AppColors {
+    // Utilise Color.primary et Color.secondary qui s'adaptent automatiquement au mode sombre
+    // Pour une compatibilité maximale, on utilise les couleurs adaptatives du système
     
-    func body(content: Content) -> some View {
-        content
-            .background(
-                .ultraThinMaterial,
-                in: RoundedRectangle(cornerRadius: cornerRadius)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                .white.opacity(0.6),
-                                .white.opacity(0.1)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-            )
-            .shadow(color: .black.opacity(0.1), radius: 20, x: 0, y: 10)
+    // Fond - Utilise les couleurs adaptatives
+    static let background = Color(light: .white, dark: .black)
+    
+    // Textes - Utilise les couleurs adaptatives
+    static let primaryText = Color(light: .black, dark: .white)
+    static let secondaryText = Color(light: Color.gray.opacity(0.7), dark: Color.gray.opacity(0.6))
+    static let tertiaryText = Color(light: Color.gray.opacity(0.5), dark: Color.gray.opacity(0.4))
+    
+    // Cartes
+    static let cardBackground = Color(light: .white, dark: Color(white: 0.1))
+    static let cardBorder = Color(light: Color.gray.opacity(0.15), dark: Color.gray.opacity(0.3))
+    static let separator = Color(light: Color.gray.opacity(0.12), dark: Color.gray.opacity(0.2))
+    
+    // Boutons
+    static let buttonPrimary = Color(light: .black, dark: .white)
+    static let buttonPrimaryText = Color(light: .white, dark: .black)
+    static let buttonSecondary = Color(light: Color.gray.opacity(0.08), dark: Color(white: 0.15))
+    static let buttonSecondaryText = Color(light: .black, dark: .white)
+    
+    // Accents et ombres
+    static let accent = Color(light: Color.gray.opacity(0.25), dark: Color.gray.opacity(0.4))
+    static let shadow = Color(light: Color.black.opacity(0.08), dark: Color.black.opacity(0.5))
+    static let hoverShadow = Color(light: Color.black.opacity(0.12), dark: Color.black.opacity(0.7))
+}
+
+// Extension pour créer des couleurs adaptatives
+extension Color {
+    static func dynamicColor(light: UIColor, dark: UIColor) -> Color {
+        return Color(UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+            case .dark:
+                return dark
+            default:
+                return light
+            }
+        })
+    }
+    
+    init(light: Color, dark: Color) {
+        let lightUIColor = UIColor(light)
+        let darkUIColor = UIColor(dark)
+        self = Color.dynamicColor(light: lightUIColor, dark: darkUIColor)
     }
 }
 
-// Helper pour le design iOS 18
-struct ClassicCardModifier: ViewModifier {
+// Modificateur Liquid Glass avec coins arrondis iOS
+struct LiquidGlassCardModifier: ViewModifier {
     let cornerRadius: CGFloat
+    @State private var isHovered = false
+    @Environment(\.colorScheme) var colorScheme
     
     func body(content: Content) -> some View {
         content
-            .background(
+            .background {
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(Color.white)
-                    .shadow(color: Color.black.opacity(0.1), radius: 15, x: 0, y: 5)
-            )
+                    .fill(
+                        // Effet liquid glass avec blur
+                        Material.regularMaterial
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        AppColors.cardBorder.opacity(0.3),
+                                        AppColors.cardBorder.opacity(0.1)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 0.5
+                            )
+                    )
+                    .shadow(
+                        color: isHovered ? AppColors.hoverShadow.opacity(0.3) : AppColors.shadow.opacity(0.2),
+                        radius: isHovered ? 16 : 12,
+                        x: 0,
+                        y: isHovered ? 6 : 4
+                    )
+            }
+            .animation(.easeInOut(duration: 0.3), value: isHovered)
+            .onHover { hovering in
+                isHovered = hovering
+            }
+    }
+}
+
+// Modificateur de carte épurée avec animations modernes (pour compatibilité)
+struct CleanCardModifier: ViewModifier {
+    let cornerRadius: CGFloat
+    @State private var isHovered = false
+    
+    func body(content: Content) -> some View {
+        content
+            .background {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(
+                        Material.regularMaterial
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        AppColors.cardBorder.opacity(0.3),
+                                        AppColors.cardBorder.opacity(0.1)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 0.5
+                            )
+                    )
+                    .shadow(
+                        color: isHovered ? AppColors.hoverShadow.opacity(0.3) : AppColors.shadow.opacity(0.2),
+                        radius: isHovered ? 16 : 12,
+                        x: 0,
+                        y: isHovered ? 6 : 4
+                    )
+            }
+            .animation(.easeInOut(duration: 0.3), value: isHovered)
+    }
+}
+
+// Modificateur avec animation de glissement
+struct SlideInModifier: ViewModifier {
+    @State private var isVisible = false
+    
+    func body(content: Content) -> some View {
+        content
+            .opacity(isVisible ? 1 : 0)
+            .offset(y: isVisible ? 0 : 20)
+            .onAppear {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                    isVisible = true
+                }
+            }
+    }
+}
+
+// Modificateur de pulsation pour les éléments interactifs
+struct PulseModifier: ViewModifier {
+    @State private var isPulsing = false
+    
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(isPulsing ? 1.05 : 1.0)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+                    isPulsing = true
+                }
+            }
     }
 }
 
 // View extension pour faciliter l'utilisation
 extension View {
     @ViewBuilder
-    func adaptiveCard(cornerRadius: CGFloat = 20) -> some View {
-        if #available(iOS 26.0, *) {
-            self.modifier(LiquidGlassModifier(cornerRadius: cornerRadius, intensity: 0.8))
-        } else {
-            self.modifier(ClassicCardModifier(cornerRadius: cornerRadius))
-        }
+    func cleanCard(cornerRadius: CGFloat = 24) -> some View {
+        self.modifier(LiquidGlassCardModifier(cornerRadius: cornerRadius))
+    }
+    
+    @ViewBuilder
+    func liquidGlass(cornerRadius: CGFloat = 24) -> some View {
+        self.modifier(LiquidGlassCardModifier(cornerRadius: cornerRadius))
+    }
+    
+    @ViewBuilder
+    func slideIn() -> some View {
+        self.modifier(SlideInModifier())
+    }
+    
+    @ViewBuilder
+    func pulse() -> some View {
+        self.modifier(PulseModifier())
+    }
+    
+    // Extension pour coins arrondis iOS par défaut
+    @ViewBuilder
+    func roundedCorner(_ radius: CGFloat = 24) -> some View {
+        self.clipShape(RoundedRectangle(cornerRadius: radius))
     }
 }
 
-// Gradient moderne selon la version iOS
+// Fond blanc épuré
 @ViewBuilder
-func adaptiveGradient() -> some View {
-    if #available(iOS 26.0, *) {
-        // Design liquid glass avec gradients plus subtils
-        LinearGradient(
-            colors: [
-                Color(red: 0.99, green: 0.98, blue: 1.0).opacity(0.95),
-                Color(red: 0.97, green: 0.98, blue: 1.0).opacity(0.9)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    } else {
-        // Design classique iOS 18
-        LinearGradient(
-            colors: [
-                Color(red: 0.98, green: 0.97, blue: 0.99),
-                Color(red: 0.95, green: 0.97, blue: 1.0)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
+func cleanBackground() -> some View {
+    AppColors.background
 }
 
-// Extension Font pour les polices PlayfairDisplay sans conflit de poids
-// Le vrai nom de la police est "Playfair Display Bold" (avec espaces)
+// Extension Font pour les polices PlayfairDisplay
 extension Font {
     static func playfairDisplayBold(size: CGFloat) -> Font {
-        // Utiliser le vrai nom de la police avec espaces pour éviter les erreurs
         return .custom("Playfair Display Bold", size: size)
     }
     
@@ -101,4 +214,3 @@ extension Font {
         return .custom("Playfair Display Regular", size: size)
     }
 }
-

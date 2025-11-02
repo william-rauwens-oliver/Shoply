@@ -25,6 +25,12 @@ class OutfitMatchingAlgorithm: ObservableObject {
     
     /// Génère 5 outfits optimaux en utilisant ChatGPT si activé, sinon l'algorithme intelligent local
     func generateOutfits() async -> [MatchedOutfit] {
+        return await generateOutfitsWithProgress { _ in }
+    }
+    
+    /// Génère avec progression pour l'UI
+    /// - Parameter forceLocal: Si true, force l'utilisation de l'algorithme local même si ChatGPT est disponible
+    func generateOutfitsWithProgress(forceLocal: Bool = false, progressCallback: @escaping (Double) async -> Void) async -> [MatchedOutfit] {
         guard let morningWeather = weatherService.morningWeather,
               let afternoonWeather = weatherService.afternoonWeather else {
             return []
@@ -40,38 +46,61 @@ class OutfitMatchingAlgorithm: ObservableObject {
             afternoon: afternoonWeather.condition
         )
         
-        // Utiliser TOUS les items (avec ou sans photos) pour ChatGPT
-        // ChatGPT peut travailler avec juste les descriptions même sans photos
-        let itemsWithPhotos = wardrobeService.items.filter { $0.photoURL != nil && !($0.photoURL?.isEmpty ?? true) }
+        // Utiliser le fournisseur IA sélectionné s'il est activé et non forcé en local
+        let selectedProvider = AppSettingsManager.shared.aiProvider
+        let isAIServiceEnabled = (selectedProvider == .chatGPT && OpenAIService.shared.isEnabled) ||
+                                 (selectedProvider == .gemini && GeminiService.shared.isEnabled)
         
-        // Essayer ChatGPT d'abord s'il est activé (même avec 2 articles), sinon fallback local
-        if OpenAIService.shared.isEnabled && !wardrobeService.items.isEmpty {
+        if !forceLocal && isAIServiceEnabled && wardrobeService.items.count >= 2 {
+            await progressCallback(0.2) // 20% - Préparation
+            
             do {
-                // Générer avec ChatGPT en utilisant TOUS les items (pas seulement ceux avec photos)
-                // ChatGPT peut créer des outfits même avec peu d'articles
-                let suggestions = try await OpenAIService.shared.generateOutfitSuggestions(
-                    wardrobeItems: wardrobeService.items, // Utiliser TOUS les items
-                    weather: WeatherData(
-                        temperature: avgTemperature,
-                        condition: dominantCondition,
-                        humidity: 50,
-                        windSpeed: 0
-                    ),
-                    userProfile: userProfile
-                )
+                // Générer avec le service IA sélectionné (ChatGPT ou Gemini)
+                let suggestions: [String]
                 
-                // Convertir les suggestions ChatGPT en MatchedOutfit
+                if selectedProvider == .chatGPT && OpenAIService.shared.isEnabled {
+                    suggestions = try await OpenAIService.shared.generateOutfitSuggestions(
+                        wardrobeItems: wardrobeService.items,
+                        weather: WeatherData(
+                            temperature: avgTemperature,
+                            condition: dominantCondition,
+                            humidity: 50,
+                            windSpeed: 0
+                        ),
+                        userProfile: userProfile,
+                        progressCallback: progressCallback
+                    )
+                } else if selectedProvider == .gemini && GeminiService.shared.isEnabled {
+                    suggestions = try await GeminiService.shared.generateOutfitSuggestions(
+                        wardrobeItems: wardrobeService.items,
+                        weather: WeatherData(
+                            temperature: avgTemperature,
+                            condition: dominantCondition,
+                            humidity: 50,
+                            windSpeed: 0
+                        ),
+                        userProfile: userProfile,
+                        progressCallback: progressCallback
+                    )
+                } else {
+                    // Fallback si le service sélectionné n'est pas disponible
+                    throw NSError(domain: "OutfitMatching", code: 1, userInfo: [NSLocalizedDescriptionKey: "Service IA non disponible"])
+                }
+                
+                await progressCallback(0.8) // 80% - Suggestions reçues
+                
+                // Convertir les suggestions IA en MatchedOutfit
                 var outfits: [MatchedOutfit] = []
                 
                 for suggestion in suggestions.prefix(5) {
                     // Utiliser TOUS les items pour le parsing
-                    if let outfit = parseChatGPTSuggestion(suggestion, from: wardrobeService.items) {
+                    if let outfit = parseAISuggestion(suggestion, from: wardrobeService.items) {
                         outfits.append(outfit)
                     }
                 }
                 
-                // Si on n'a pas assez d'outfits, compléter avec l'algorithme local
-                if outfits.count < 5 {
+                // Si on n'a pas assez d'outfits ou si l'IA n'a rien trouvé, compléter avec l'algorithme local
+                if outfits.isEmpty || outfits.count < 3 {
                     let localAlgorithm = IntelligentOutfitMatchingAlgorithm(
                         wardrobeService: wardrobeService,
                         weatherService: weatherService,
@@ -79,6 +108,14 @@ class OutfitMatchingAlgorithm: ObservableObject {
                     )
                     let localOutfits = await localAlgorithm.generateOutfits()
                     outfits.append(contentsOf: localOutfits)
+                }
+                
+                // Si toujours rien, créer un outfit basique avec haut + bas
+                if outfits.isEmpty {
+                    let basicOutfit = createBasicOutfit(from: wardrobeService.items)
+                    if let basicOutfit = basicOutfit {
+                        outfits.append(basicOutfit)
+                    }
                 }
                 
                 // Éliminer les doublons et retourner les 5 meilleurs
@@ -96,29 +133,88 @@ class OutfitMatchingAlgorithm: ObservableObject {
                 return uniqueOutfits.sorted { $0.score > $1.score }
                 
             } catch {
-                print("⚠️ Erreur ChatGPT: \(error), utilisation de l'algorithme local")
+                let providerName = selectedProvider == .chatGPT ? "ChatGPT" : "Gemini"
+                print("⚠️ Erreur \(providerName): \(error), utilisation de l'algorithme local")
+                await progressCallback(0.3) // 30% - Erreur, fallback local
                 // Fallback sur l'algorithme local
                 let intelligentAlgorithm = IntelligentOutfitMatchingAlgorithm(
                     wardrobeService: wardrobeService,
                     weatherService: weatherService,
                     userProfile: userProfile
                 )
-                return await intelligentAlgorithm.generateOutfits()
+                await progressCallback(0.8) // 80% - Génération locale
+                var outfits = await intelligentAlgorithm.generateOutfits()
+                
+                // Si toujours rien, créer un outfit basique avec haut + bas
+                if outfits.isEmpty {
+                    let basicOutfit = createBasicOutfit(from: wardrobeService.items)
+                    if let basicOutfit = basicOutfit {
+                        outfits.append(basicOutfit)
+                    }
+                }
+                
+                await progressCallback(1.0) // 100% - Terminé
+                return outfits
             }
         } else {
             // Utiliser l'algorithme local intelligent
+            await progressCallback(0.3) // 30% - Utilisation algorithme local
             let intelligentAlgorithm = IntelligentOutfitMatchingAlgorithm(
                 wardrobeService: wardrobeService,
                 weatherService: weatherService,
                 userProfile: userProfile
             )
-            return await intelligentAlgorithm.generateOutfits()
+            await progressCallback(0.7) // 70% - Génération locale
+                var outfits = await intelligentAlgorithm.generateOutfits()
+                
+                // Si toujours rien, créer un outfit basique avec haut + bas
+                if outfits.isEmpty {
+                    let basicOutfit = createBasicOutfit(from: wardrobeService.items)
+                    if let basicOutfit = basicOutfit {
+                        outfits.append(basicOutfit)
+                    }
+                }
+                
+            await progressCallback(1.0) // 100% - Terminé
+            return outfits
         }
     }
+        
+        // MARK: - Création d'outfit basique (fallback)
+        
+        private func createBasicOutfit(from items: [WardrobeItem]) -> MatchedOutfit? {
+            // Chercher un haut
+            guard let top = items.first(where: { $0.category == .top || $0.category == .outerwear }) else {
+                return nil
+            }
+            
+            // Chercher un bas
+            guard let bottom = items.first(where: { $0.category == .bottom }) else {
+                return nil
+            }
+            
+            var selectedItems = [top, bottom]
+            
+            // Ajouter des chaussures si disponibles (optionnel)
+            if let shoes = items.first(where: { $0.category == .shoes }) {
+                selectedItems.append(shoes)
+            }
+            
+            let avgTemp = ((weatherService.morningWeather?.temperature ?? 20.0) + (weatherService.afternoonWeather?.temperature ?? 20.0)) / 2
+            let condition = weatherService.morningWeather?.condition ?? WeatherCondition.sunny
+            
+            return MatchedOutfit(
+                items: selectedItems,
+                score: 70.0,
+                temperature: avgTemp,
+                weatherCondition: condition,
+                reason: "Outfit basique créé avec les vêtements disponibles"
+            )
+        }
     
-    // MARK: - Parsing ChatGPT
+    // MARK: - Parsing IA
     
-    private func parseChatGPTSuggestion(_ suggestion: String, from items: [WardrobeItem]) -> MatchedOutfit? {
+    private func parseAISuggestion(_ suggestion: String, from items: [WardrobeItem]) -> MatchedOutfit? {
         var selectedItems: [WardrobeItem] = []
         let lowerSuggestion = suggestion.lowercased()
         
@@ -188,12 +284,13 @@ class OutfitMatchingAlgorithm: ObservableObject {
         let avgTemp = ((weatherService.morningWeather?.temperature ?? 20.0) + (weatherService.afternoonWeather?.temperature ?? 20.0)) / 2
         let condition = weatherService.morningWeather?.condition ?? WeatherCondition.sunny
         
+        let providerName = AppSettingsManager.shared.aiProvider == .chatGPT ? "ChatGPT" : "Gemini"
         return MatchedOutfit(
             items: selectedItems,
-            score: 90.0, // Score élevé pour les suggestions ChatGPT
+            score: 90.0, // Score élevé pour les suggestions IA
             temperature: avgTemp,
             weatherCondition: condition,
-            reason: "Suggestion ChatGPT: \(suggestion)"
+            reason: "Suggestion \(providerName): \(suggestion)"
         )
     }
     
@@ -227,13 +324,22 @@ class OutfitMatchingAlgorithm: ObservableObject {
 }
 
 /// Outfit généré par l'algorithme
-struct MatchedOutfit: Identifiable {
-    let id = UUID()
+struct MatchedOutfit: Identifiable, Codable {
+    let id: UUID
     let items: [WardrobeItem]
     let score: Double // 0-100
     let temperature: Double
     let weatherCondition: WeatherCondition
     let reason: String
+    
+    init(id: UUID = UUID(), items: [WardrobeItem], score: Double, temperature: Double, weatherCondition: WeatherCondition, reason: String) {
+        self.id = id
+        self.items = items
+        self.score = score
+        self.temperature = temperature
+        self.weatherCondition = weatherCondition
+        self.reason = reason
+    }
     
     var displayName: String {
         let top = items.first(where: { $0.category == .top || $0.category == .outerwear })?.name ?? "Haut"

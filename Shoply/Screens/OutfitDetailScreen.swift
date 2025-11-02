@@ -18,86 +18,74 @@ struct OutfitDetailScreen: View {
         NavigationStack {
             ZStack {
                 // Fond gradient adaptatif
-                ZStack {
-                    adaptiveGradient()
-                    mood.backgroundColor.opacity(0.3)
-                }
-                .ignoresSafeArea()
+                AppColors.background
+                    .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 25) {
                         // Image principale
                         ZStack {
                             RoundedRectangle(cornerRadius: 25)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            mood.color.opacity(0.3),
-                                            mood.backgroundColor.opacity(0.5)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
+                                .fill(AppColors.buttonSecondary)
                                 .frame(height: 350)
                             
                             VStack(spacing: 15) {
                                 Image(systemName: "tshirt.fill")
                                     .font(.system(size: 100))
-                                    .foregroundColor(mood.color.opacity(0.7))
+                                    .foregroundColor(AppColors.primaryText)
                                 
                                 Text(outfit.name)
                                     .font(.playfairDisplayBold(size: 32))
-                                    .foregroundColor(.primary)
+                                    .foregroundColor(AppColors.primaryText)
                                 
                                 Text(outfit.type.rawValue)
                                     .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(AppColors.secondaryText)
                             }
                         }
                         .padding(.horizontal)
                         
                         // Description
                         VStack(alignment: .leading, spacing: 15) {
-                            Text("À propos de cet outfit")
+                            Text("À propos de cet outfit".localized)
                                 .font(.playfairDisplayBold(size: 22))
-                                .foregroundColor(.primary)
+                                .foregroundColor(AppColors.primaryText)
                             
                             Text(outfit.description)
                                 .font(.system(size: 16))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(AppColors.secondaryText)
                                 .lineSpacing(4)
                         }
                         .padding(.horizontal)
                         
                         // Composants de l'outfit
                         VStack(alignment: .leading, spacing: 20) {
-                            Text("Composition")
+                            Text("Composition".localized)
                                 .font(.playfairDisplayBold(size: 22))
-                                .foregroundColor(.primary)
+                                .foregroundColor(AppColors.primaryText)
                             
-                            OutfitComponentRow(icon: "tshirt.fill", title: "Haut", value: outfit.top)
-                            OutfitComponentRow(icon: "figure.walk", title: "Bas", value: outfit.bottom)
-                            OutfitComponentRow(icon: "shoe.fill", title: "Chaussures", value: outfit.shoes)
+                            OutfitComponentRow(icon: "tshirt.fill", title: "Haut".localized, value: outfit.top)
+                            OutfitComponentRow(icon: "figure.walk", title: "Bas".localized, value: outfit.bottom)
+                            OutfitComponentRow(icon: "shoe.fill", title: "Chaussures".localized, value: outfit.shoes)
                             
                             if !outfit.accessories.isEmpty {
                                 VStack(alignment: .leading, spacing: 10) {
                                     HStack {
                                         Image(systemName: "sparkles")
-                                            .foregroundColor(mood.color)
-                                        Text("Accessoires")
+                                            .foregroundColor(AppColors.primaryText)
+                                        Text("Accessoires".localized)
                                             .font(.system(size: 18, weight: .semibold))
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(AppColors.primaryText)
                                     }
                                     
                                     ForEach(outfit.accessories, id: \.self) { accessory in
                                         HStack {
                                             Circle()
-                                                .fill(mood.color.opacity(0.3))
+                                                .fill(AppColors.primaryText.opacity(0.3))
                                                 .frame(width: 8, height: 8)
                                             Text(accessory)
                                                 .font(.system(size: 16))
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(AppColors.secondaryText)
                                         }
                                     }
                                 }
@@ -107,21 +95,21 @@ struct OutfitDetailScreen: View {
                         
                         // Statistiques
                         VStack(alignment: .leading, spacing: 20) {
-                            Text("Caractéristiques")
+                            Text("Caractéristiques".localized)
                                 .font(.playfairDisplayBold(size: 22))
-                                .foregroundColor(.primary)
+                                .foregroundColor(AppColors.primaryText)
                             
                             StatCard(
                                 title: "Confort",
                                 level: outfit.comfortLevel,
-                                color: .pink,
+                                color: AppColors.primaryText,
                                 icon: "heart.fill"
                             )
                             
                             StatCard(
                                 title: "Style",
                                 level: outfit.styleLevel,
-                                color: .yellow,
+                                color: AppColors.primaryText,
                                 icon: "sparkles"
                             )
                         }
@@ -131,7 +119,7 @@ struct OutfitDetailScreen: View {
                         VStack(alignment: .leading, spacing: 15) {
                             Text("Parfait pour")
                                 .font(.playfairDisplayBold(size: 22))
-                                .foregroundColor(.primary)
+                                .foregroundColor(AppColors.primaryText)
                             
                             HStack(spacing: 15) {
                                 ForEach(outfit.suitableMoods) { suitableMood in
@@ -156,18 +144,11 @@ struct OutfitDetailScreen: View {
                                 Text("J'adopte cet outfit !")
                                     .font(.system(size: 18, weight: .semibold))
                             }
-                            .foregroundColor(.white)
+                            .foregroundColor(AppColors.buttonPrimaryText)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(
-                                LinearGradient(
-                                    colors: [mood.color, mood.color.opacity(0.8)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .background(AppColors.buttonPrimary)
                             .cornerRadius(16)
-                            .shadow(color: mood.color.opacity(0.3), radius: 10, x: 0, y: 5)
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 30)
@@ -180,7 +161,7 @@ struct OutfitDetailScreen: View {
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 24))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(AppColors.secondaryText)
                     }
                 }
                 
@@ -192,7 +173,7 @@ struct OutfitDetailScreen: View {
                     }) {
                         Image(systemName: isFavorite ? "heart.fill" : "heart")
                             .font(.system(size: 24))
-                            .foregroundColor(isFavorite ? .pink : .secondary)
+                            .foregroundColor(isFavorite ? AppColors.primaryText : AppColors.secondaryText)
                     }
                 }
             }
@@ -210,16 +191,16 @@ struct OutfitComponentRow: View {
         HStack(spacing: 15) {
             Image(systemName: icon)
                 .font(.system(size: 20))
-                .foregroundColor(.primary)
+                .foregroundColor(AppColors.primaryText)
                 .frame(width: 30)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AppColors.secondaryText)
                 Text(value)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .foregroundColor(AppColors.primaryText)
             }
             
             Spacer()
@@ -227,7 +208,7 @@ struct OutfitComponentRow: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 15)
-                .fill(Color.gray.opacity(0.1))
+                .fill(AppColors.buttonSecondary)
         )
     }
 }
@@ -246,13 +227,13 @@ struct StatCard: View {
                     .foregroundColor(color)
                 Text(title)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .foregroundColor(AppColors.primaryText)
             }
             
             HStack(spacing: 8) {
                 ForEach(0..<5) { index in
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(index < level ? color : Color.gray.opacity(0.2))
+                        .fill(index < level ? AppColors.buttonPrimary : AppColors.buttonSecondary)
                         .frame(height: 8)
                 }
             }
@@ -260,7 +241,7 @@ struct StatCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 15)
-                .fill(Color.white.opacity(0.7))
+                .fill(AppColors.buttonSecondary)
         )
     }
 }
@@ -276,12 +257,12 @@ struct MoodBadge: View {
             Text(mood.rawValue)
                 .font(.system(size: 12, weight: .medium))
         }
-        .foregroundColor(.white)
+        .foregroundColor(AppColors.buttonPrimaryText)
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(
             Capsule()
-                .fill(mood.color)
+                .fill(AppColors.buttonPrimary)
         )
     }
 }
@@ -297,12 +278,12 @@ struct WeatherBadge: View {
             Text(weather.rawValue)
                 .font(.system(size: 12, weight: .medium))
         }
-        .foregroundColor(.white)
+        .foregroundColor(AppColors.buttonPrimaryText)
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(
             Capsule()
-                .fill(weather.color)
+                .fill(AppColors.buttonPrimary)
         )
     }
 }

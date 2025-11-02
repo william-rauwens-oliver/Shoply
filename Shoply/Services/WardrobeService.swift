@@ -28,12 +28,16 @@ class WardrobeService: ObservableObject {
     func addItem(_ item: WardrobeItem) {
         items.append(item)
         saveItems()
+        // Forcer la mise à jour de la vue
+        objectWillChange.send()
     }
     
     func updateItem(_ item: WardrobeItem) {
         if let index = items.firstIndex(where: { $0.id == item.id }) {
             items[index] = item
             saveItems()
+            // Forcer la mise à jour de la vue
+            objectWillChange.send()
         }
     }
     

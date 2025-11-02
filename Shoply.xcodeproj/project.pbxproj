@@ -6,7 +6,20 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		701505DC2EB75DFB006919EB /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 701505DB2EB75DFB006919EB /* WidgetKit.framework */; };
+		701505DE2EB75DFB006919EB /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 701505DD2EB75DFB006919EB /* SwiftUI.framework */; };
+		701505EF2EB75DFC006919EB /* ShoplyWidgetExtensionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 701505D92EB75DFB006919EB /* ShoplyWidgetExtensionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
+		701505ED2EB75DFC006919EB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 704CA02E2EB6662F0038DF51 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 701505D82EB75DFB006919EB;
+			remoteInfo = ShoplyWidgetExtensionExtension;
+		};
 		704CA0442EB666300038DF51 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 704CA02E2EB6662F0038DF51 /* Project object */;
@@ -23,7 +36,24 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		701505F42EB75DFC006919EB /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				701505EF2EB75DFC006919EB /* ShoplyWidgetExtensionExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		701505D92EB75DFB006919EB /* ShoplyWidgetExtensionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShoplyWidgetExtensionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		701505DB2EB75DFB006919EB /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		701505DD2EB75DFB006919EB /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		704CA0362EB6662F0038DF51 /* Shoply.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shoply.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		704CA0432EB666300038DF51 /* ShoplyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShoplyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		704CA04D2EB666300038DF51 /* ShoplyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShoplyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -36,6 +66,25 @@
 				ShoplyTests.swift,
 			);
 			target = 704CA0422EB666300038DF51 /* ShoplyTests */;
+		};
+		701505F32EB75DFC006919EB /* Exceptions for "ShoplyWidgetExtension" folder in "ShoplyWidgetExtensionExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 701505D82EB75DFB006919EB /* ShoplyWidgetExtensionExtension */;
+		};
+		701505FC2EB75EE9006919EB /* Exceptions for "Shoply" folder in "ShoplyWidgetExtensionExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/Data/AppSettingsManager.swift,
+				Core/Data/DataManager.swift,
+				Models/Outfit.swift,
+				Models/UserProfile.swift,
+				Models/WardrobeItem.swift,
+				Utils/Localization.swift,
+			);
+			target = 701505D82EB75DFB006919EB /* ShoplyWidgetExtensionExtension */;
 		};
 		704CA06E2EB6668A0038DF51 /* Exceptions for "Shoply" folder in "Shoply" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -55,11 +104,20 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		701505DF2EB75DFB006919EB /* ShoplyWidgetExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				701505F32EB75DFC006919EB /* Exceptions for "ShoplyWidgetExtension" folder in "ShoplyWidgetExtensionExtension" target */,
+			);
+			path = ShoplyWidgetExtension;
+			sourceTree = "<group>";
+		};
 		704CA0382EB6662F0038DF51 /* Shoply */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				704CA06E2EB6668A0038DF51 /* Exceptions for "Shoply" folder in "Shoply" target */,
 				704CA06F2EB6668A0038DF51 /* Exceptions for "Shoply" folder in "ShoplyUITests" target */,
+				701505FC2EB75EE9006919EB /* Exceptions for "Shoply" folder in "ShoplyWidgetExtensionExtension" target */,
 			);
 			path = Shoply;
 			sourceTree = "<group>";
@@ -75,6 +133,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		701505D62EB75DFB006919EB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				701505DE2EB75DFB006919EB /* SwiftUI.framework in Frameworks */,
+				701505DC2EB75DFB006919EB /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		704CA0332EB6662F0038DF51 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -99,11 +166,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		701505DA2EB75DFB006919EB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				701505DB2EB75DFB006919EB /* WidgetKit.framework */,
+				701505DD2EB75DFB006919EB /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		704CA02D2EB6662F0038DF51 = {
 			isa = PBXGroup;
 			children = (
 				704CA0382EB6662F0038DF51 /* Shoply */,
 				704CA0462EB666300038DF51 /* ShoplyTests */,
+				701505DF2EB75DFB006919EB /* ShoplyWidgetExtension */,
+				701505DA2EB75DFB006919EB /* Frameworks */,
 				704CA0372EB6662F0038DF51 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -114,6 +192,7 @@
 				704CA0362EB6662F0038DF51 /* Shoply.app */,
 				704CA0432EB666300038DF51 /* ShoplyTests.xctest */,
 				704CA04D2EB666300038DF51 /* ShoplyUITests.xctest */,
+				701505D92EB75DFB006919EB /* ShoplyWidgetExtensionExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -121,6 +200,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		701505D82EB75DFB006919EB /* ShoplyWidgetExtensionExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 701505F02EB75DFC006919EB /* Build configuration list for PBXNativeTarget "ShoplyWidgetExtensionExtension" */;
+			buildPhases = (
+				701505D52EB75DFB006919EB /* Sources */,
+				701505D62EB75DFB006919EB /* Frameworks */,
+				701505D72EB75DFB006919EB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				701505DF2EB75DFB006919EB /* ShoplyWidgetExtension */,
+			);
+			name = ShoplyWidgetExtensionExtension;
+			packageProductDependencies = (
+			);
+			productName = ShoplyWidgetExtensionExtension;
+			productReference = 701505D92EB75DFB006919EB /* ShoplyWidgetExtensionExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		704CA0352EB6662F0038DF51 /* Shoply */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 704CA0572EB666300038DF51 /* Build configuration list for PBXNativeTarget "Shoply" */;
@@ -128,10 +229,12 @@
 				704CA0322EB6662F0038DF51 /* Sources */,
 				704CA0332EB6662F0038DF51 /* Frameworks */,
 				704CA0342EB6662F0038DF51 /* Resources */,
+				701505F42EB75DFC006919EB /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				701505EE2EB75DFC006919EB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				704CA0382EB6662F0038DF51 /* Shoply */,
@@ -196,6 +299,9 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					701505D82EB75DFB006919EB = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
 					704CA0352EB6662F0038DF51 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
@@ -226,11 +332,19 @@
 				704CA0352EB6662F0038DF51 /* Shoply */,
 				704CA0422EB666300038DF51 /* ShoplyTests */,
 				704CA04C2EB666300038DF51 /* ShoplyUITests */,
+				701505D82EB75DFB006919EB /* ShoplyWidgetExtensionExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		701505D72EB75DFB006919EB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		704CA0342EB6662F0038DF51 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -255,6 +369,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		701505D52EB75DFB006919EB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		704CA0322EB6662F0038DF51 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -279,6 +400,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		701505EE2EB75DFC006919EB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 701505D82EB75DFB006919EB /* ShoplyWidgetExtensionExtension */;
+			targetProxy = 701505ED2EB75DFC006919EB /* PBXContainerItemProxy */;
+		};
 		704CA0452EB666300038DF51 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 704CA0352EB6662F0038DF51 /* Shoply */;
@@ -292,6 +418,71 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		701505F12EB75DFC006919EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 72ZJDNJNQ6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShoplyWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ShoplyWidgetExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = William.Shoply.ShoplyWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		701505F22EB75DFC006919EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 72ZJDNJNQ6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShoplyWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ShoplyWidgetExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = William.Shoply.ShoplyWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		704CA0552EB666300038DF51 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -413,6 +604,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 72ZJDNJNQ6;
@@ -421,6 +613,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Shoply nécessite l'accès à la caméra pour prendre des photos de vos vêtements et créer votre garde-robe personnalisée.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Shoply utilise votre position pour récupérer automatiquement la météo locale et vous suggérer les meilleurs outfits pour la journée.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Shoply nécessite l'autorisation pour sauvegarder les photos de vos vêtements dans votre bibliothèque.";
@@ -435,8 +628,8 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
@@ -446,13 +639,14 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
@@ -462,6 +656,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 72ZJDNJNQ6;
@@ -470,6 +665,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Shoply nécessite l'accès à la caméra pour prendre des photos de vos vêtements et créer votre garde-robe personnalisée.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Shoply utilise votre position pour récupérer automatiquement la météo locale et vous suggérer les meilleurs outfits pour la journée.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Shoply nécessite l'autorisation pour sauvegarder les photos de vos vêtements dans votre bibliothèque.";
@@ -484,8 +680,8 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
@@ -495,13 +691,14 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
@@ -611,6 +808,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		701505F02EB75DFC006919EB /* Build configuration list for PBXNativeTarget "ShoplyWidgetExtensionExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				701505F12EB75DFC006919EB /* Debug */,
+				701505F22EB75DFC006919EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		704CA0312EB6662F0038DF51 /* Build configuration list for PBXProject "Shoply" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

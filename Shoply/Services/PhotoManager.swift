@@ -36,19 +36,49 @@ class PhotoManager {
         let filename = "\(itemId.uuidString).jpg"
         let fileURL = documentsURL.appendingPathComponent(filename)
         
-        try imageData.write(to: fileURL)
+        // S'assurer que le répertoire existe
+        try? FileManager.default.createDirectory(at: documentsURL, withIntermediateDirectories: true, attributes: nil)
         
+        // Sauvegarder l'image
+        try imageData.write(to: fileURL, options: .atomic)
+        
+        // Vérifier que le fichier a bien été créé
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            throw PhotoError.cannotSaveFile
+        }
+        
+        // Retourner le chemin absolu
         return fileURL.path
     }
     
     // MARK: - Chargement de photos
     
     func loadPhoto(at path: String) -> UIImage? {
-        let url = URL(fileURLWithPath: path)
-        guard let imageData = try? Data(contentsOf: url) else {
+        // Essayer avec le chemin absolu d'abord
+        var url: URL
+        
+        // Si le chemin est absolu, l'utiliser directement
+        if path.hasPrefix("/") {
+            url = URL(fileURLWithPath: path)
+        } else {
+            // Sinon, chercher dans le dossier des photos
+            url = documentsURL.appendingPathComponent(path)
+        }
+        
+        // Vérifier que le fichier existe
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            print("⚠️ Photo non trouvée à: \(url.path)")
             return nil
         }
-        return UIImage(data: imageData)
+        
+        // Charger l'image
+        guard let imageData = try? Data(contentsOf: url),
+              let image = UIImage(data: imageData) else {
+            print("⚠️ Impossible de charger l'image depuis: \(url.path)")
+            return nil
+        }
+        
+        return image
     }
     
     // MARK: - Suppression de photos
