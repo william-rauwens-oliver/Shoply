@@ -96,8 +96,8 @@ struct OutfitHistoryScreen: View {
                 if historyStore.outfits.isEmpty {
                     EmptyHistoryView()
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
+                    ScrollView(showsIndicators: false) {
+                        LazyVStack(spacing: 14) {
                             ForEach(historyStore.outfits) { historicalOutfit in
                                 HistoricalOutfitCard(
                                     historicalOutfit: historicalOutfit,
@@ -107,7 +107,8 @@ struct OutfitHistoryScreen: View {
                                 )
                             }
                         }
-                        .padding()
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
                     }
                 }
             }
@@ -123,15 +124,15 @@ struct HistoricalOutfitCard: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header avec date et favori
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
+            // Header épuré
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(historicalOutfit.outfit.displayName)
-                        .font(.playfairDisplayBold(size: 18))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(AppColors.primaryText)
                     
                     Text(historicalOutfit.dateWorn, style: .date)
-                        .font(.system(size: 14))
+                        .font(.system(size: 13, weight: .regular))
                         .foregroundColor(AppColors.secondaryText)
                 }
                 
@@ -139,26 +140,33 @@ struct HistoricalOutfitCard: View {
                 
                 Button(action: onToggleFavorite) {
                     Image(systemName: historicalOutfit.isFavorite ? "heart.fill" : "heart")
-                        .font(.title3)
+                        .font(.system(size: 20, weight: .medium))
                         .foregroundColor(historicalOutfit.isFavorite ? .red : AppColors.secondaryText)
-                        .padding(8)
+                        .frame(width: 36, height: 36)
                         .background(Circle().fill(AppColors.buttonSecondary))
                 }
             }
-            .padding()
+            .padding(20)
             
             Divider()
-                .background(AppColors.separator)
+                .background(AppColors.separator.opacity(0.5))
             
             // Items de l'outfit
-            VStack(spacing: 12) {
+            VStack(spacing: 14) {
                 ForEach(historicalOutfit.outfit.items) { item in
                     HistoricalOutfitItemRow(item: item)
                 }
             }
-            .padding()
+            .padding(20)
         }
-        .cleanCard(cornerRadius: 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppColors.cardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
+        }
+        .roundedCorner(18)
+        .shadow(color: AppColors.shadow.opacity(0.08), radius: 12, x: 0, y: 4)
     }
 }
 
@@ -166,32 +174,33 @@ struct HistoricalOutfitItemRow: View {
     let item: WardrobeItem
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             // Photo
             if let photoURL = item.photoURL,
                let image = PhotoManager.shared.loadPhoto(at: photoURL) {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 60, height: 60)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .frame(width: 56, height: 56)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 12)
                     .fill(AppColors.buttonSecondary)
-                    .frame(width: 60, height: 60)
+                    .frame(width: 56, height: 56)
                     .overlay(
                         Image(systemName: item.category.icon)
+                            .font(.system(size: 20))
                             .foregroundColor(AppColors.secondaryText)
                     )
             }
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.name)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(AppColors.primaryText)
                 
                 Text(item.category.rawValue)
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
             }
             
@@ -202,20 +211,28 @@ struct HistoricalOutfitItemRow: View {
 
 struct EmptyHistoryView: View {
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "clock")
-                .font(.system(size: 60))
-                .foregroundColor(AppColors.tertiaryText)
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(AppColors.buttonSecondary)
+                    .frame(width: 100, height: 100)
+                
+                Image(systemName: "clock")
+                    .font(.system(size: 40, weight: .light))
+                    .foregroundColor(AppColors.secondaryText)
+            }
             
-            Text("Aucun historique")
-                .font(.playfairDisplayBold(size: 24))
-                .foregroundColor(AppColors.primaryText)
-            
-            Text("Les outfits que vous portez apparaîtront ici")
-                .font(.system(size: 16))
-                .foregroundColor(AppColors.secondaryText)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+            VStack(spacing: 8) {
+                Text("Aucun historique".localized)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text("Les outfits que vous portez apparaîtront ici".localized)
+                    .font(.system(size: 15, weight: .regular))
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 50)
+            }
         }
     }
 }

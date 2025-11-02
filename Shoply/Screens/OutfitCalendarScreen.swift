@@ -47,36 +47,44 @@ struct OutfitCalendarScreen: View {
                 AppColors.background
                     .ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Sélecteur de date moderne
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
+                        // Sélecteur de date épuré
                         VStack(spacing: 16) {
-                        DatePicker("Date", selection: $selectedDate, displayedComponents: .date)
-                            .datePickerStyle(.graphical)
+                            DatePicker("Date", selection: $selectedDate, displayedComponents: .date)
+                                .datePickerStyle(.graphical)
                             
-                            // Bouton pour récupérer la météo de la date sélectionnée
+                            // Bouton pour récupérer la météo
                             if !weatherFetchedForSelectedDate && !isFetchingWeather {
                                 Button(action: {
                                     Task {
                                         await fetchWeatherForSelectedDate()
                                     }
                                 }) {
-                                    HStack {
+                                    HStack(spacing: 10) {
                                         Image(systemName: "cloud.sun.fill")
+                                            .font(.system(size: 16, weight: .medium))
                                         Text("Récupérer la météo pour cette date".localized)
+                                            .font(.system(size: 15, weight: .semibold))
                                     }
-                                    .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(AppColors.buttonPrimaryText)
-                                    .padding()
                                     .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
                                     .background(AppColors.buttonPrimary)
-                                    .cornerRadius(12)
+                                    .roundedCorner(14)
                                 }
                             }
                         }
-                        .padding()
-                        .cleanCard(cornerRadius: 20)
-                        .padding(.horizontal)
+                        .padding(20)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(AppColors.cardBackground)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
+                        }
+                        .roundedCorner(20)
+                        .shadow(color: AppColors.shadow.opacity(0.08), radius: 12, x: 0, y: 4)
+                        .padding(.horizontal, 20)
                         .onChange(of: selectedDate) { oldValue, newValue in
                             // Réinitialiser l'état météo quand on change de date
                             weatherFetchedForSelectedDate = false
@@ -86,43 +94,59 @@ struct OutfitCalendarScreen: View {
                         
                         // Afficher le statut de la météo
                         if isFetchingWeather || weatherService.isLoading {
-                            VStack(spacing: 12) {
+                            HStack(spacing: 12) {
                                 ProgressView()
                                 Text(isDateTooFar ? "Vérification de la disponibilité météo..." : weatherService.weatherStatusMessage)
-                                    .font(.system(size: 14))
+                                    .font(.system(size: 14, weight: .regular))
                                     .foregroundColor(AppColors.secondaryText)
                             }
-                            .padding()
-                            .cleanCard(cornerRadius: 16)
-                            .padding(.horizontal)
+                            .padding(18)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(AppColors.cardBackground)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 18)
+                                    .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
+                            }
+                            .roundedCorner(18)
+                            .shadow(color: AppColors.shadow.opacity(0.06), radius: 8, x: 0, y: 2)
+                            .padding(.horizontal, 20)
                         } else if let error = weatherErrorMessage {
-                            VStack(spacing: 16) {
+                            VStack(spacing: 14) {
                                 Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.system(size: 32))
-                                    .foregroundColor(AppColors.secondaryText)
+                                    .font(.system(size: 28))
+                                    .foregroundColor(AppColors.secondaryText.opacity(0.7))
                                 
                                 Text(error)
-                                    .font(.system(size: 15, weight: .regular))
+                                    .font(.system(size: 14, weight: .regular))
                                     .foregroundColor(AppColors.secondaryText)
                                     .multilineTextAlignment(.center)
-                                    .lineSpacing(4)
+                                    .lineSpacing(2)
                             }
-                            .padding(24)
-                            .cleanCard(cornerRadius: 20)
-                            .padding(.horizontal)
+                            .padding(22)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(AppColors.cardBackground)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 18)
+                                    .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
+                            }
+                            .roundedCorner(18)
+                            .shadow(color: AppColors.shadow.opacity(0.06), radius: 8, x: 0, y: 2)
+                            .padding(.horizontal, 20)
                         } else if weatherFetchedForSelectedDate && weatherService.morningWeather != nil {
-                            // Message de succès météo
-                            VStack(spacing: 16) {
-                                HStack {
+                            // Message de succès météo épuré
+                            VStack(spacing: 14) {
+                                HStack(spacing: 10) {
                                     Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 18))
                                         .foregroundColor(.green)
                                     Text(weatherService.weatherStatusMessage)
                                         .font(.system(size: 14, weight: .medium))
                                         .foregroundColor(.green)
                                 }
-                                .padding()
+                                .padding(16)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(AppColors.buttonSecondary)
-                                .cornerRadius(12)
+                                .roundedCorner(14)
                                 
                                 // Afficher les détails météo si disponibles
                                 if let morning = weatherService.morningWeather,
@@ -134,19 +158,17 @@ struct OutfitCalendarScreen: View {
                                     )
                                 }
                             }
-                            .padding(.horizontal)
+                            .padding(.horizontal, 20)
                             
-                            // Sélecteur d'algorithme (IA locale vs IA avancée)
+                            // Sélecteur d'algorithme
                             AlgorithmSelectionCard(
                                 useAdvancedAI: $useAdvancedAI,
-                                isAdvancedAIAvailable: isAdvancedAIAvailable,
-                                // Gemini uniquement
+                                isAdvancedAIAvailable: isAdvancedAIAvailable
                             )
-                            .padding(.horizontal)
+                            .padding(.horizontal, 20)
                             
                             // Bouton pour générer l'outfit
                             Button(action: {
-                                // Vérifier qu'on a assez d'articles avant de générer
                                 if wardrobeService.items.count < 2 {
                                     showingArticleError = true
                                 } else {
@@ -155,18 +177,19 @@ struct OutfitCalendarScreen: View {
                                     }
                                 }
                             }) {
-                                HStack {
+                                HStack(spacing: 10) {
                                     Image(systemName: "sparkles")
+                                        .font(.system(size: 16, weight: .medium))
                                     Text("Générer l'outfit pour cette date".localized)
+                                        .font(.system(size: 15, weight: .semibold))
                                 }
-                                .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(AppColors.buttonPrimaryText)
-                                .padding()
                                 .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
                                 .background(AppColors.buttonPrimary)
-                                .cornerRadius(12)
+                                .roundedCorner(14)
                             }
-                            .padding(.horizontal)
+                            .padding(.horizontal, 20)
                         }
                         
                         // Affichage de la génération en cours
@@ -176,20 +199,19 @@ struct OutfitCalendarScreen: View {
                                 progress: generationProgress,
                                 wardrobeService: wardrobeService
                             )
-                            .padding(.horizontal)
+                            .padding(.horizontal, 20)
                         } else if let error = generationError {
                             ModernErrorCard(error: error) {
                                 Task {
                                     await generateOutfitForDate()
                                 }
                             }
-                            .padding(.horizontal)
+                            .padding(.horizontal, 20)
                         } else if let outfit = scheduledOutfits[Calendar.current.startOfDay(for: selectedDate)] {
-                            // Affichage de l'outfit généré
-                            // Outfit généré pour la date sélectionnée
-                            VStack(spacing: 16) {
+                            // Affichage de l'outfit généré épuré
+                            VStack(spacing: 18) {
                                 Text(verbatim: "\(LocalizedString.localized("Outfit pour le")) \(selectedDate.formatted(date: .long, time: .omitted))")
-                                    .font(.playfairDisplayBold(size: 24))
+                                    .font(.system(size: 22, weight: .bold))
                                     .foregroundColor(AppColors.primaryText)
                                 
                                 ScheduledOutfitCard(outfit: outfit) {
@@ -202,19 +224,20 @@ struct OutfitCalendarScreen: View {
                                 Button(action: {
                                     historyStore.addOutfit(outfit, date: selectedDate)
                                 }) {
-                                    HStack {
+                                    HStack(spacing: 10) {
                                         Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 16, weight: .medium))
                                         Text("J'ai porté cet outfit".localized)
+                                            .font(.system(size: 15, weight: .semibold))
                                     }
-                                    .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(AppColors.buttonPrimaryText)
-                                    .padding()
                                     .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
                                     .background(AppColors.buttonPrimary)
-                                    .cornerRadius(12)
+                                    .roundedCorner(14)
                                 }
                             }
-                            .padding(.horizontal)
+                            .padding(.horizontal, 20)
                         }
                     }
                     .padding(.vertical)
@@ -498,4 +521,5 @@ extension Date {
 #Preview {
     OutfitCalendarScreen()
 }
+
 

@@ -78,64 +78,93 @@ struct AppleSignInScreen: View {
                             .scaleEffect(1.2)
                             .padding()
                     } else {
-                        VStack(spacing: 16) {
-                            Button {
-                                // Utiliser le service pour déclencher la connexion
-                                // S'assurer qu'on est sur le thread principal
-                                DispatchQueue.main.async {
-                                    appleSignInService.signInWithApple()
-                                }
-                            } label: {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "applelogo")
-                                        .font(.system(size: 18, weight: .semibold))
-                                    
-                                    Text("Se connecter avec Apple".localized)
-                                        .font(.system(size: 16, weight: .semibold))
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
-                                .background(Color.black)
-                                .cornerRadius(12)
-                                .shadow(color: AppColors.shadow.opacity(0.2), radius: 8, x: 0, y: 4)
+                        Button {
+                            // Utiliser le service pour déclencher la connexion
+                            // Apple gère automatiquement Touch ID / Face ID ou demande le mot de passe
+                            appleSignInService.signInWithApple()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "applelogo")
+                                    .font(.system(size: 18, weight: .semibold))
+                                
+                                Text("Se connecter avec Apple".localized)
+                                    .font(.system(size: 16, weight: .semibold))
                             }
-                            
-                            // Bouton pour passer et continuer sans Apple Sign In
-                            Button {
-                                // Marquer comme authentifié pour continuer (sans vraiment utiliser Apple Sign In)
-                                appleSignInService.isAuthenticated = true
-                                appleSignInService.errorMessage = nil
-                            } label: {
-                                Text("Passer cette étape".localized)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(AppColors.secondaryText)
-                                    .underline()
-                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.black)
+                            .cornerRadius(12)
+                            .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
                         }
                     }
                     
                     if let errorMessage = appleSignInService.errorMessage {
-                        VStack(spacing: 12) {
-                            Text(errorMessage)
-                                .font(.caption)
-                                .foregroundColor(.red)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal)
+                        VStack(spacing: 16) {
+                            // Message d'erreur plus informatif
+                            VStack(spacing: 8) {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(AppColors.buttonPrimary.opacity(0.8))
+                                
+                                Text(errorMessage)
+                                    .font(.system(size: 14, weight: .regular))
+                                    .foregroundColor(AppColors.secondaryText)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal)
+                            }
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 16)
+                            .background(AppColors.buttonSecondary)
+                            .roundedCorner(16)
+                            .shadow(color: AppColors.shadow, radius: 6, x: 0, y: 3)
                             
-                            // Bouton pour réessayer
+                            // Bouton pour continuer (plus visible que réessayer)
+                            Button {
+                                // Effacer l'erreur et passer à l'onboarding
+                                appleSignInService.errorMessage = nil
+                                UserDefaults.standard.set(true, forKey: "hasSeenAppleSignInScreen")
+                            } label: {
+                                Text("Continuer sans Apple Sign In".localized)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(AppColors.buttonPrimaryText)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(AppColors.buttonPrimary)
+                                    .roundedCorner(12)
+                                    .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                            }
+                            
+                            // Option pour réessayer (plus petit, optionnel)
                             Button {
                                 appleSignInService.errorMessage = nil
                                 appleSignInService.signInWithApple()
                             } label: {
                                 Text("Réessayer".localized)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(AppColors.buttonPrimary)
-                                    .padding(.horizontal, 20)
-                                    .padding(.vertical, 10)
-                                    .background(AppColors.buttonSecondary)
-                                    .roundedCorner(12)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(AppColors.secondaryText)
+                                    .padding(.top, 8)
                             }
+                        }
+                        .padding(.top, 8)
+                    }
+                    
+                    // Bouton pour continuer sans Apple Sign In (seulement si pas d'erreur)
+                    if appleSignInService.errorMessage == nil {
+                        Button {
+                            // Marquer comme vu pour passer à l'onboarding
+                            UserDefaults.standard.set(true, forKey: "hasSeenAppleSignInScreen")
+                            // Forcer la mise à jour de l'interface pour passer à l'onboarding
+                            // En réinitialisant l'état d'authentification si nécessaire
+                            DispatchQueue.main.async {
+                                // Cela permettra à ShoplyApp de détecter que l'utilisateur a choisi de passer
+                                // et d'afficher l'onboarding à la place
+                            }
+                        } label: {
+                            Text("Continuer sans Apple Sign In".localized)
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(AppColors.secondaryText)
+                                .padding(.top, 12)
                         }
                     }
                 }
@@ -165,25 +194,62 @@ struct AppleSignInScreen: View {
     
     private func syncWithiCloud() async {
         do {
-            // Vérifier si des données existent dans iCloud
+            // Vérifier si des données existent dans iCloud pour cet email
             let hasData = try await CloudKitService.shared.checkIfDataExists()
             
             if hasData {
                 // Récupérer les données depuis iCloud
                 await restoreFromiCloud()
+                
+                // Après restauration, vérifier si le profil est complet
+                if let profile = dataManager.loadUserProfile() {
+                    // Mettre à jour l'email si nécessaire
+                    if let email = appleSignInService.userEmail {
+                        var updatedProfile = profile
+                        updatedProfile.email = email
+                        dataManager.saveUserProfile(updatedProfile)
+                    }
+                    
+                    // Si le profil est complet (prénom rempli), on va directement à l'accueil
+                    // Sinon on passe à l'onboarding
+                    if !profile.firstName.isEmpty {
+                        // Profil complet - aller directement à l'accueil
+                        // La logique dans ShoplyApp.swift détectera automatiquement que onboardingCompleted est true
+                        await MainActor.run {
+                            isLoading = false
+                        }
+                        return
+                    }
+                }
             } else {
-                // Vérifier si un profil local existe
-                if dataManager.loadUserProfile() == nil {
-                    // Créer un nouveau profil
-                    await MainActor.run {
-                        showingProfileCreation = true
+                // Pas de données dans iCloud, vérifier le profil local
+                if let profile = dataManager.loadUserProfile() {
+                    // Mettre à jour l'email si nécessaire
+                    if let email = appleSignInService.userEmail {
+                        var updatedProfile = profile
+                        updatedProfile.email = email
+                        dataManager.saveUserProfile(updatedProfile)
+                    }
+                    
+                    // Si le profil local est complet, sauvegarder dans iCloud et aller à l'accueil
+                    if !profile.firstName.isEmpty {
+                        try await CloudKitService.shared.syncAllUserData()
+                        await MainActor.run {
+                            isLoading = false
+                        }
+                        return
                     }
                 } else {
-                    // Sauvegarder les données locales dans iCloud
-                    try await CloudKitService.shared.syncAllUserData()
+                    // Pas de profil local, créer un profil minimal avec l'email
+                    if let email = appleSignInService.userEmail {
+                        let newProfile = UserProfile(email: email)
+                        dataManager.saveUserProfile(newProfile)
+                    }
                 }
             }
             
+            // Si on arrive ici, le profil est incomplet ou n'existe pas
+            // On passe à l'onboarding (qui sera affiché automatiquement par ShoplyApp.swift)
             await MainActor.run {
                 isLoading = false
             }
@@ -191,11 +257,14 @@ struct AppleSignInScreen: View {
             await MainActor.run {
                 isLoading = false
                 appleSignInService.errorMessage = "Erreur de synchronisation: \(error.localizedDescription)".localized
-                
-                // Si erreur mais pas de profil, créer le profil
-                if dataManager.loadUserProfile() == nil {
-                    showingProfileCreation = true
-                }
+            }
+            
+            // En cas d'erreur, vérifier si un profil local existe
+            if let profile = dataManager.loadUserProfile(),
+               !profile.firstName.isEmpty {
+                // Profil local complet, on peut continuer
+            } else {
+                // Profil incomplet ou absent, on passera à l'onboarding
             }
         }
     }
@@ -283,6 +352,7 @@ struct ProfileCreationScreen: View {
                                     .padding()
                                     .background(AppColors.buttonSecondary)
                                     .roundedCorner(16)
+                                    .shadow(color: AppColors.shadow, radius: 6, x: 0, y: 3)
                             }
                             
                             // Âge
@@ -297,13 +367,19 @@ struct ProfileCreationScreen: View {
                                     .padding()
                                     .background(AppColors.buttonSecondary)
                                     .roundedCorner(16)
+                                    .shadow(color: AppColors.shadow, radius: 6, x: 0, y: 3)
                             }
                             
                             // Genre
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Genre".localized)
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(AppColors.primaryText)
+                                HStack(spacing: 4) {
+                                    Text("Genre".localized)
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(AppColors.primaryText)
+                                    Text("(Optionnel)".localized)
+                                        .font(.system(size: 14, weight: .regular))
+                                        .foregroundColor(AppColors.secondaryText)
+                                }
                                 
                                 Picker("Genre".localized, selection: $selectedGender) {
                                     ForEach(Gender.allCases, id: \.self) { gender in
@@ -314,12 +390,14 @@ struct ProfileCreationScreen: View {
                                 .padding()
                                 .background(AppColors.buttonSecondary)
                                 .roundedCorner(16)
+                                .shadow(color: AppColors.shadow, radius: 6, x: 0, y: 3)
                             }
                         }
                         .padding(.horizontal, 24)
                         .padding(.vertical, 24)
                         .background(AppColors.buttonSecondary)
                         .roundedCorner(24)
+                        .shadow(color: AppColors.shadow, radius: 10, x: 0, y: 5)
                         .padding(.horizontal)
                         
                         // Bouton continuer
@@ -333,8 +411,10 @@ struct ProfileCreationScreen: View {
                                 .padding()
                                 .background(AppColors.buttonPrimary)
                                 .roundedCorner(16)
+                                .shadow(color: AppColors.shadow, radius: 10, x: 0, y: 5)
                         }
-                        .disabled(firstName.isEmpty || age.isEmpty || selectedGender == .notSpecified)
+                        .disabled(firstName.isEmpty || age.isEmpty)
+                        .opacity((firstName.isEmpty || age.isEmpty) ? 0.5 : 1.0)
                         .padding(.horizontal)
                         .padding(.bottom, 40)
                     }
@@ -356,12 +436,19 @@ struct ProfileCreationScreen: View {
     }
     
     private func saveProfile() {
-        guard let ageInt = Int(age) else { return }
+        // Validation : prénom et âge obligatoires, genre optionnel
+        guard !firstName.trimmingCharacters(in: .whitespaces).isEmpty,
+              let ageInt = Int(age), ageInt >= 1 else { return }
+        
+        // Récupérer l'email Apple si disponible
+        let appleEmail = UserDefaults.standard.string(forKey: "apple_user_email")
         
         let profile = UserProfile(
             firstName: firstName,
             age: ageInt,
-            gender: selectedGender
+            gender: selectedGender, // Peut être notSpecified (optionnel)
+            email: appleEmail,
+            createdAt: Date()
         )
         
         dataManager.saveUserProfile(profile)

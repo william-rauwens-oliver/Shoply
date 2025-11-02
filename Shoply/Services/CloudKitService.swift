@@ -152,6 +152,9 @@ class CloudKitService: ObservableObject {
         record["firstName"] = profile.firstName
         record["age"] = profile.age
         record["gender"] = profile.gender.rawValue
+        if let email = profile.email {
+            record["email"] = email
+        }
         record["createdAt"] = profile.createdAt
         record["preferences"] = try encodeJSON(profile.preferences)
         
@@ -173,6 +176,7 @@ class CloudKitService: ObservableObject {
             }
             
             let gender = Gender(rawValue: genderString) ?? .notSpecified
+            let email = record["email"] as? String
             var preferences = UserPreferences()
             
             if let prefsData = record["preferences"] as? String,
@@ -185,6 +189,7 @@ class CloudKitService: ObservableObject {
                 firstName: firstName,
                 age: age,
                 gender: gender,
+                email: email,
                 createdAt: createdAt,
                 preferences: preferences
             )

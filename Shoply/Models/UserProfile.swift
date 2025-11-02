@@ -13,14 +13,16 @@ struct UserProfile: Codable {
     var firstName: String
     var age: Int
     var gender: Gender
+    var email: String?
     var createdAt: Date
     var lastWeatherUpdate: Date?
     var preferences: UserPreferences
     
-    init(firstName: String = "", age: Int = 0, gender: Gender = .notSpecified, createdAt: Date = Date(), preferences: UserPreferences = UserPreferences()) {
+    init(firstName: String = "", age: Int = 0, gender: Gender = .notSpecified, email: String? = nil, createdAt: Date = Date(), preferences: UserPreferences = UserPreferences()) {
         self.firstName = firstName
         self.age = age
         self.gender = gender
+        self.email = email
         self.createdAt = createdAt
         self.preferences = preferences
     }

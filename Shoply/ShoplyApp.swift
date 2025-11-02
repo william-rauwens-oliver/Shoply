@@ -19,7 +19,33 @@ struct ShoplyApp: App {
     @StateObject private var rgpdManager = RGDPManager.shared
     @StateObject private var dataManager = DataManager.shared
     @StateObject private var settingsManager = AppSettingsManager.shared
+    @StateObject private var appleSignInService = AppleSignInService.shared
     @State private var showingTutorial = false
+    
+    // Apple Sign In disponible - Permet de proposer l'authentification
+    // Avec un compte développeur gratuit, l'utilisateur peut choisir de passer cette étape
+    // Le bouton "Continuer sans Apple Sign In" permet de contourner le problème
+    private var isAppleSignInAvailable: Bool {
+        // Toujours proposer l'écran, mais l'utilisateur peut choisir de passer
+        // Si Apple Sign In n'est pas configuré (compte gratuit), l'utilisateur verra un bouton pour continuer
+        return true
+    }
+    
+    // Vérifier si l'utilisateur a déjà vu l'écran Apple Sign In
+    private var hasSeenAppleSignIn: Bool {
+        UserDefaults.standard.bool(forKey: "hasSeenAppleSignInScreen")
+    }
+    
+    private func markAppleSignInAsSeen() {
+        UserDefaults.standard.set(true, forKey: "hasSeenAppleSignInScreen")
+    }
+    
+    private func resetAppleSignInIfNeeded() {
+        // Permettre de réinitialiser si l'utilisateur n'est plus authentifié
+        if !appleSignInService.isAuthenticated {
+            UserDefaults.standard.set(false, forKey: "hasSeenAppleSignInScreen")
+        }
+    }
     
     init() {
         // Configuration initiale de l'app
@@ -49,7 +75,7 @@ struct ShoplyApp: App {
                     PrivacyConsentView()
                         .environmentObject(rgpdManager)
                 } else if !dataManager.onboardingCompleted && !dataManager.hasCompletedOnboarding() {
-                    // Afficher l'onboarding si pas encore complété (sans forcer Apple Sign In)
+                    // Afficher l'onboarding si pas encore complété
                     OnboardingScreen()
                         .environmentObject(dataManager)
                         .onAppear {

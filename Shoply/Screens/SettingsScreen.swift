@@ -9,33 +9,12 @@ import SwiftUI
 import AuthenticationServices
 import SafariServices
 import UIKit
+import UniformTypeIdentifiers
 
 /// Écran de paramètres complet
 struct SettingsScreen: View {
     @StateObject private var geminiService = GeminiService.shared
     @StateObject private var settingsManager = AppSettingsManager.shared
-    // CloudKitService sera accédé uniquement quand nécessaire, pas au démarrage
-    // Utilisation lazy pour éviter l'initialisation au chargement de l'écran
-    @State private var cloudKitService: CloudKitService? = nil
-    
-    private func getCloudKitService() -> CloudKitService {
-        if cloudKitService == nil {
-            cloudKitService = CloudKitService.shared
-            // Vérifier le statut iCloud uniquement quand on accède au service (de manière sécurisée)
-            // Utiliser un délai pour éviter les crashes au chargement
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak cloudKitService] in
-                guard let service = cloudKitService else { return }
-                service.checkAccountStatus()
-            }
-        }
-        return cloudKitService!
-    }
-    
-    // Version sécurisée qui retourne false si le service n'est pas initialisé
-    private func isCloudKitSignedIn() -> Bool {
-        guard let service = cloudKitService else { return false }
-        return service.isSignedIn
-    }
     @EnvironmentObject private var dataManager: DataManager
     
     @State private var showingAlert = false
@@ -47,6 +26,7 @@ struct SettingsScreen: View {
     @State private var showingLanguagePicker = false
     @State private var showingGeminiKeyInput = false
     @State private var geminiAPIKey = ""
+    @State private var showingDocumentPicker = false
     
     var body: some View {
         NavigationStack {
@@ -54,15 +34,16 @@ struct SettingsScreen: View {
                 AppColors.background
                     .ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(spacing: 32) {
-                        // En-tête
-                        VStack(spacing: 8) {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 28) {
+                        // En-tête épuré
+                        VStack(spacing: 4) {
                             Text(LocalizedString.localized("Paramètres", for: settingsManager.selectedLanguage))
-                                .font(.system(size: 32, weight: .light))
+                                .font(.system(size: 34, weight: .bold))
                                 .foregroundColor(AppColors.primaryText)
                         }
-                        .padding(.top, 20)
+                        .padding(.top, 24)
+                        .padding(.bottom, 8)
                         
                         // Section Apparence
                         SettingsSection(title: "Apparence".localized) {
@@ -119,24 +100,20 @@ struct SettingsScreen: View {
                                 .padding(.vertical, 8)
                             
                             // Information
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "info.circle.fill")
-                                        .foregroundColor(AppColors.buttonPrimary)
-                                        .font(.system(size: 16))
-                                    Text("Information".localized)
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundColor(AppColors.primaryText)
-                                }
+                            HStack(spacing: 10) {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(AppColors.buttonPrimary.opacity(0.8))
                                 
                                 Text("Gemini est intégré et prêt à être utilisé dans toute l'application.".localized)
-                                    .font(.system(size: 14, weight: .regular))
+                                    .font(.system(size: 13, weight: .regular))
                                     .foregroundColor(AppColors.secondaryText)
-                                    .lineSpacing(4)
+                                    .lineSpacing(2)
                             }
-                            .padding()
+                            .padding(14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .background(AppColors.buttonSecondary)
-                            .roundedCorner(20)
+                            .roundedCorner(16)
                         }
                         
                         // Section Données
@@ -148,6 +125,26 @@ struct SettingsScreen: View {
                             ) {
                                 Button(action: {
                                     exportUserData()
+                                }) {
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(AppColors.secondaryText)
+                                    }
+                                }
+                            }
+                            
+                            Divider()
+                                .background(AppColors.separator)
+                                .padding(.vertical, 8)
+                            
+                            SettingRow(
+                                icon: "square.and.arrow.down",
+                                title: "Importer mes données".localized,
+                                subtitle: "Restaurer vos données depuis un fichier JSON".localized
+                            ) {
+                                Button(action: {
+                                    importUserData()
                                 }) {
                                     HStack {
                                         Spacer()
@@ -179,76 +176,6 @@ struct SettingsScreen: View {
                             }
                         }
                         
-                        // Section Synchronisation iCloud
-                        SettingsSection(title: "Synchronisation iCloud".localized) {
-                            VStack(spacing: 12) {
-                                HStack {
-                                    Image(systemName: "icloud.fill")
-                                        .foregroundColor(AppColors.buttonPrimary)
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Sauvegarde iCloud".localized)
-                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(AppColors.primaryText)
-                                        Text(isCloudKitSignedIn() ? 
-                                            "Vos données sont synchronisées avec iCloud".localized :
-                                            "Connectez-vous à iCloud pour sauvegarder vos données".localized)
-                                            .font(.system(size: 12))
-                                            .foregroundColor(AppColors.secondaryText)
-                                    }
-                                    Spacer()
-                                    if isCloudKitSignedIn() {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(.green)
-                                    }
-                                }
-                                .padding()
-                                .background(AppColors.buttonSecondary)
-                                .roundedCorner(16)
-                                
-                                if isCloudKitSignedIn() {
-                                    Button(action: {
-                                        syncToiCloud()
-                                    }) {
-                                        HStack {
-                                            Image(systemName: "arrow.clockwise.circle.fill")
-                                            Text("Synchroniser maintenant".localized)
-                                        }
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(AppColors.buttonPrimaryText)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(AppColors.buttonPrimary)
-                                        .roundedCorner(16)
-                                    }
-                                    
-                                    Button(action: {
-                                        restoreFromiCloud()
-                                    }) {
-                                        HStack {
-                                            Image(systemName: "arrow.down.circle.fill")
-                                            Text("Récupérer depuis iCloud".localized)
-                                        }
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(AppColors.buttonPrimary)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(AppColors.buttonSecondary)
-                                        .roundedCorner(16)
-                                    }
-                                } else {
-                                    Text("Connectez-vous à iCloud dans Réglages → [Votre nom] → iCloud".localized)
-                                        .font(.system(size: 12))
-                                        .foregroundColor(AppColors.secondaryText)
-                                        .multilineTextAlignment(.center)
-                                        .padding(.horizontal)
-                                }
-                            }
-                            .padding(.vertical, 8)
-                        }
-                        
-                        Divider()
-                            .background(AppColors.separator)
-                            .padding(.vertical, 8)
                         
                         // Section Informations
                         SettingsSection(title: "À propos".localized) {
@@ -309,6 +236,14 @@ struct SettingsScreen: View {
             .sheet(isPresented: $showingExportSheet) {
                 ExportDataView()
             }
+            .sheet(isPresented: $showingDocumentPicker) {
+                DocumentPicker(
+                    allowedContentTypes: [UTType.json],
+                    onDocumentPicked: { url in
+                        importUserDataFromFile(url: url)
+                    }
+                )
+            }
         }
     }
     
@@ -335,29 +270,19 @@ struct SettingsScreen: View {
     }
     
     
-    private func syncToiCloud() {
-        Task {
-            do {
-                try await getCloudKitService().syncAllUserData()
-                alertMessage = "Synchronisation réussie !".localized
-                showingAlert = true
-            } catch {
-                alertMessage = "Erreur de synchronisation: \(error.localizedDescription)".localized
-                showingAlert = true
-            }
-        }
+    private func importUserData() {
+        showingDocumentPicker = true
     }
     
-    private func restoreFromiCloud() {
-        Task {
-            do {
-                try await getCloudKitService().restoreAllData()
-                alertMessage = "Données restaurées depuis iCloud !".localized
-                showingAlert = true
-            } catch {
-                alertMessage = "Erreur de restauration: \(error.localizedDescription)".localized
-                showingAlert = true
-            }
+    private func importUserDataFromFile(url: URL) {
+        do {
+            let jsonData = try Data(contentsOf: url)
+            try dataManager.importUserData(from: jsonData)
+            alertMessage = "Données importées avec succès !".localized
+            showingAlert = true
+        } catch {
+            alertMessage = "Erreur lors de l'import: \(error.localizedDescription)".localized
+            showingAlert = true
         }
     }
     
@@ -405,9 +330,27 @@ struct SettingsScreen: View {
     }
     
     private func deleteAllUserData() {
+        // Supprimer toutes les données utilisateur
         dataManager.deleteAllUserData()
-        alertMessage = "Toutes vos données ont été supprimées."
+        
+        // Déconnecter Apple Sign In
+        AppleSignInService.shared.signOut()
+        
+        // Supprimer tous les autres flags et données SAUF RGPD
+        UserDefaults.standard.removeObject(forKey: "hasSeenAppleSignInScreen")
+        UserDefaults.standard.removeObject(forKey: "hasCompletedTutorial")
+        
+        // NE PAS réinitialiser RGPD - on garde le consentement
+        // On retourne juste à Apple Sign In pour permettre une nouvelle connexion
+        
+        // Forcer la synchronisation
+        UserDefaults.standard.synchronize()
+        
+        alertMessage = "Toutes vos données ont été supprimées. Vous allez être redirigé vers l'écran de connexion."
         showingAlert = true
+        
+        // L'app va automatiquement revenir à l'écran Apple Sign In car isAuthenticated est maintenant false
+        // Grâce à la logique conditionnelle dans ShoplyApp.swift
     }
 }
 
@@ -423,36 +366,26 @@ struct SettingsSection<Content: View>: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.system(size: 18, weight: .medium))
+                .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(AppColors.primaryText)
+                .padding(.horizontal, 4)
             
             VStack(spacing: 0) {
                 content
             }
             .padding(20)
-            .background(
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(Material.regularMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 24)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        AppColors.cardBorder.opacity(0.3),
-                                        AppColors.cardBorder.opacity(0.1)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 0.5
-                            )
-                    )
-                    .shadow(color: AppColors.shadow.opacity(0.2), radius: 12, x: 0, y: 4)
-            )
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(AppColors.cardBackground)
+            .overlay {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 0.5)
+            }
+            .roundedCorner(20)
+            .shadow(color: AppColors.shadow.opacity(0.08), radius: 12, x: 0, y: 4)
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 20)
     }
 }
 
@@ -472,18 +405,19 @@ struct SettingRow<Content: View>: View {
     }
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 14) {
             Image(systemName: icon)
+                .font(.system(size: 20, weight: .regular))
                 .foregroundColor(iconColor)
-                .frame(width: 24, height: 24)
+                .frame(width: 28, height: 28)
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(AppColors.primaryText)
                 
                 Text(subtitle)
-                    .font(.system(size: 14, weight: .regular))
+                    .font(.system(size: 13, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
             }
             
@@ -491,7 +425,7 @@ struct SettingRow<Content: View>: View {
             
             accessory
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
     }
 }
 
@@ -743,6 +677,53 @@ struct InstructionStep: View {
             Spacer(minLength: 0)
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Document Picker
+struct DocumentPicker: UIViewControllerRepresentable {
+    let allowedContentTypes: [UTType]
+    let onDocumentPicked: (URL) -> Void
+    
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: allowedContentTypes, asCopy: true)
+        picker.delegate = context.coordinator
+        picker.allowsMultipleSelection = false
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {
+        // Pas besoin de mise à jour
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onDocumentPicked: onDocumentPicked)
+    }
+    
+    class Coordinator: NSObject, UIDocumentPickerDelegate {
+        let onDocumentPicked: (URL) -> Void
+        
+        init(onDocumentPicked: @escaping (URL) -> Void) {
+            self.onDocumentPicked = onDocumentPicked
+        }
+        
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            guard let url = urls.first else { return }
+            
+            // Sécuriser l'accès au fichier
+            let isAccessing = url.startAccessingSecurityScopedResource()
+            defer {
+                if isAccessing {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+            
+            onDocumentPicked(url)
+        }
+        
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            // L'utilisateur a annulé
+        }
     }
 }
 
