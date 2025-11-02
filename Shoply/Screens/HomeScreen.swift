@@ -112,9 +112,12 @@ struct SimpleHeader: View {
     @StateObject private var settingsManager = AppSettingsManager.shared
     @State private var greetingKey = "Bonjour"
     
+    private var greetingText: String {
+        greetingKey.localized
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            let greetingText = greetingKey.localized
             if let profile = dataManager.loadUserProfile(), !profile.firstName.isEmpty {
                 Text("\(greetingText), \(profile.firstName)")
                     .font(.system(size: 32, weight: .bold))
@@ -143,9 +146,17 @@ struct SimpleHeader: View {
     
     private func updateGreeting() {
         if let location = weatherService.location {
+            let lat = location.coordinate.latitude
+            let lon = location.coordinate.longitude
+            // Protection contre les valeurs invalides
+            guard !lat.isNaN && !lon.isNaN && !lat.isInfinite && !lon.isInfinite else {
+                let hour = Calendar.current.component(.hour, from: currentTime)
+                greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
+                return
+            }
             greetingKey = SunsetService.shared.getGreeting(
-                latitude: location.coordinate.latitude,
-                longitude: location.coordinate.longitude,
+                latitude: lat,
+                longitude: lon,
                 currentTime: currentTime
             )
         } else {

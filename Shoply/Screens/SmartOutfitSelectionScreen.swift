@@ -384,6 +384,10 @@ struct ModernHeaderView: View {
     @State private var greetingKey = "Bonjour"
     @State private var currentTime = Date()
     
+    private var greetingText: String {
+        greetingKey.localized
+    }
+    
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "sparkles")
@@ -391,7 +395,6 @@ struct ModernHeaderView: View {
                 .foregroundColor(AppColors.primaryText)
             
             if !userProfile.firstName.isEmpty {
-                let greetingText = greetingKey.localized
                 Text("\(greetingText), \(userProfile.firstName)")
                     .font(.playfairDisplayBold(size: 32))
                     .foregroundColor(AppColors.primaryText)
@@ -420,9 +423,17 @@ struct ModernHeaderView: View {
     
     private func updateGreeting() {
         if let location = weatherService.location {
+            let lat = location.coordinate.latitude
+            let lon = location.coordinate.longitude
+            // Protection contre les valeurs invalides
+            guard !lat.isNaN && !lon.isNaN && !lat.isInfinite && !lon.isInfinite else {
+                let hour = Calendar.current.component(.hour, from: currentTime)
+                greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
+                return
+            }
             greetingKey = SunsetService.shared.getGreeting(
-                latitude: location.coordinate.latitude,
-                longitude: location.coordinate.longitude,
+                latitude: lat,
+                longitude: lon,
                 currentTime: currentTime
             )
         } else {

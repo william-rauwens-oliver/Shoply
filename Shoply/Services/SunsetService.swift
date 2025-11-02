@@ -93,6 +93,12 @@ class SunsetService {
     
     /// Détermine si c'est le jour ou la nuit basé sur le coucher et lever de soleil
     func isDaytime(latitude: Double, longitude: Double, currentTime: Date = Date()) -> Bool {
+        // Protection contre les valeurs invalides
+        guard !latitude.isNaN && !longitude.isNaN && !latitude.isInfinite && !longitude.isInfinite else {
+            let hour = Calendar.current.component(.hour, from: currentTime)
+            return hour >= 6 && hour < 20
+        }
+        
         guard let sunrise = calculateSunrise(latitude: latitude, longitude: longitude, date: currentTime),
               let sunset = calculateSunset(latitude: latitude, longitude: longitude, date: currentTime) else {
             // Fallback: utiliser l'heure pour déterminer jour/nuit
@@ -106,6 +112,12 @@ class SunsetService {
     
     /// Retourne la salutation appropriée (Bonjour/Bonsoir) basée sur le lever/coucher du soleil
     func getGreeting(latitude: Double, longitude: Double, currentTime: Date = Date()) -> String {
+        // Protection contre les valeurs invalides
+        guard !latitude.isNaN && !longitude.isNaN && !latitude.isInfinite && !longitude.isInfinite else {
+            let hour = Calendar.current.component(.hour, from: currentTime)
+            return (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
+        }
+        
         if isDaytime(latitude: latitude, longitude: longitude, currentTime: currentTime) {
             return "Bonjour"
         } else {
