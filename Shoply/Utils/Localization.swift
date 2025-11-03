@@ -423,17 +423,7 @@ struct LocalizedString {
                 .portuguese: "Toma fotos de tu ropa",
                 .indonesian: "Take photos of your clothes"
             ],
-            "Historique": [                .french: "Historique",
-                .english: "History",
-                .spanish: "Historial",
-                .hindi: "History",
-                .chineseSimplified: "History",
-                .arabic: "History",
-                .bengali: "History",
-                .russian: "History",
-                .portuguese: "Historial",
-                .indonesian: "History"
-            ],
+            
             "Outfits déjà portés": [                .french: "Outfits déjà portés",
                 .english: "Outfits already worn",
                 .spanish: "Outfits ya usados",
@@ -788,17 +778,7 @@ struct LocalizedString {
                 .portuguese: "¡Inicia una nueva conversación para obtener consejos de estilo!",
                 .indonesian: "Start a new conversation to get style advice!"
             ],
-            "Nouvelle conversation": [                .french: "Nouvelle conversation",
-                .english: "New conversation",
-                .spanish: "Nueva conversación",
-                .hindi: "New conversation",
-                .chineseSimplified: "New conversation",
-                .arabic: "New conversation",
-                .bengali: "New conversation",
-                .russian: "New conversation",
-                .portuguese: "Nueva conversación",
-                .indonesian: "New conversation"
-            ],
+            
             "Historique des conversations": [                .french: "Historique",
                 .english: "History",
                 .spanish: "Historial",
@@ -1657,17 +1637,7 @@ struct LocalizedString {
                 .indonesian: "Start"
             ],
             // Calendrier
-            "Calendrier": [                .french: "Calendrier",
-                .english: "Calendar",
-                .spanish: "Calendario",
-                .hindi: "Calendar",
-                .chineseSimplified: "Calendar",
-                .arabic: "Calendar",
-                .bengali: "Calendar",
-                .russian: "Calendar",
-                .portuguese: "Calendario",
-                .indonesian: "Calendar"
-            ],
+            
             "Récupérer la météo pour cette date": [                .french: "Récupérer la météo pour cette date",
                 .english: "Get weather for this date",
                 .spanish: "Obtener el clima para esta fecha",

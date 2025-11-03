@@ -19,7 +19,6 @@ struct ShoplyApp: App {
     @StateObject private var rgpdManager = RGDPManager.shared
     @StateObject private var dataManager = DataManager.shared
     @StateObject private var settingsManager = AppSettingsManager.shared
-    @StateObject private var appleSignInService = AppleSignInService.shared
     @State private var showingTutorial = false
     
     // Apple Sign In disponible - Permet de proposer l'authentification
@@ -42,7 +41,7 @@ struct ShoplyApp: App {
     
     private func resetAppleSignInIfNeeded() {
         // Permettre de réinitialiser si l'utilisateur n'est plus authentifié
-        if !appleSignInService.isAuthenticated {
+        if !AppleSignInService.shared.isAuthenticated {
             UserDefaults.standard.set(false, forKey: "hasSeenAppleSignInScreen")
         }
     }
@@ -56,10 +55,8 @@ struct ShoplyApp: App {
     private func configureOrientations() {
         #if !WIDGET_EXTENSION
         // Forcer les orientations selon le type d'appareil
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            // iPhone : uniquement portrait
-            UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
-        }
+        // La gestion des orientations est assurée par AppDelegate.supportedInterfaceOrientationsFor
+        // Ne pas utiliser de KVC privée pour éviter les crashes au démarrage
         #endif
     }
     
