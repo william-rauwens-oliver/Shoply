@@ -16,6 +16,8 @@ struct OutfitCalendarScreen: View {
     @StateObject private var geminiService = GeminiService.shared
     @StateObject private var appleIntelligenceWrapper = AppleIntelligenceServiceWrapper.shared
     @StateObject private var settingsManager = AppSettingsManager.shared
+    @StateObject private var collectionService = WardrobeCollectionService.shared
+    @State private var selectedCollection: WardrobeCollection?
     @State private var selectedDate = Date()
     @State private var scheduledOutfits: [Date: MatchedOutfit] = [:]
     @State private var showingOutfitSelection = false
@@ -206,16 +208,6 @@ struct OutfitCalendarScreen: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(AppColors.buttonSecondary)
                                 .roundedCorner(14)
-                                
-                                // Afficher les détails météo si disponibles
-                                if let morning = weatherService.morningWeather,
-                                   let afternoon = weatherService.afternoonWeather {
-                                    ModernWeatherCard(
-                                        morning: morning,
-                                        afternoon: afternoon,
-                                        cityName: weatherService.cityName.isEmpty ? nil : weatherService.cityName
-                                    )
-                                }
                             }
                             .padding(.horizontal, 20)
                             
@@ -223,7 +215,9 @@ struct OutfitCalendarScreen: View {
                             StyleSelectionCard(
                                 selectedStyle: $selectedStyle,
                                 customStylePrompt: .constant(""),
-                                showingCustomInput: .constant(false)
+                                showingCustomInput: .constant(false),
+                                selectedCollection: selectedCollection,
+                                collectionService: collectionService
                             )
                             .padding(.horizontal, 20)
                             

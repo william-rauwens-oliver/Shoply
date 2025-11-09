@@ -20,7 +20,7 @@ class ShoplyAIAdvancedLLM {
     
     // Informations sur le modèle
     let modelName = "Shoply AI Advanced"
-    let creator = "William"
+    let creator = "William RAUWENS OLIVER"
     let parameterCount = 500_000
     let version = "2.0.0"
     
@@ -437,10 +437,8 @@ class ShoplyAIAdvancedLLM {
             }
         }
         
-        // Toujours ajouter la signature de William (seul ingénieur et seule personne qui l'a créé)
-        finalResponse = addCreatorSignature(to: finalResponse)
-        
-        return finalResponse
+        // Ajouter la signature du créateur (William) pour Shoply AI
+        return addCreatorSignature(to: finalResponse, input: input)
        }
     
     // MARK: - Analyse Avancée
@@ -912,9 +910,7 @@ class ShoplyAIAdvancedLLM {
             }
         }
         
-        // Ajouter la signature de William
-        response = addCreatorSignature(to: response)
-        
+        // Ne plus ajouter de signature
         return response
     }
     
@@ -1013,7 +1009,7 @@ class ShoplyAIAdvancedLLM {
         var cleaned = removeGoogleGeminiMentions(response)
         
         // Diviser en phrases
-        var sentences = cleaned.components(separatedBy: CharacterSet(charactersIn: ".!?")).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let sentences = cleaned.components(separatedBy: CharacterSet(charactersIn: ".!?")).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         
         // Supprimer les phrases trop similaires (répétitions)
         var cleanedSentences: [String] = []
@@ -1041,102 +1037,47 @@ class ShoplyAIAdvancedLLM {
         return cleaned.isEmpty ? response : cleaned
     }
     
-    /// Supprime toute mention de Google, Gemini, équipe, ou autres références et les remplace par William seul
+    /// Supprime toute mention de Google, Gemini, équipe, ou William sans rien ajouter
     private func removeGoogleGeminiMentions(_ text: String) -> String {
         var cleaned = text
         
-        // Liste des termes à remplacer (insensible à la casse)
-        let replacements: [(pattern: String, replacement: String)] = [
-            // Mentions directes de Google
-            ("Google", "William"),
-            ("google", "William"),
-            ("GOOGLE", "William"),
-            
-            // Mentions de Gemini
-            ("Gemini", "Shoply AI"),
-            ("gemini", "Shoply AI"),
-            ("GEMINI", "Shoply AI"),
-            
-            // Mentions combinées
-            ("Google Gemini", "Shoply AI"),
-            ("google gemini", "Shoply AI"),
-            ("Google's Gemini", "Shoply AI"),
-            ("Google Gemini AI", "Shoply AI"),
-            
-            // Phrases complètes à remplacer
-            ("Je suis Gemini", "Je suis Shoply AI, créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("Je suis Google Gemini", "Je suis Shoply AI, créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("Je suis un modèle de langage développé par Google", "Je suis Shoply AI, un LLM créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("développé par Google", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("créé par Google", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("fait par Google", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("de Google", "de William"),
-            
-            // Autres variations
-            ("modèle de Google", "modèle de William"),
-            ("IA de Google", "IA de William"),
-            ("assistant de Google", "assistant de William"),
-            
-            // Mentions d'équipe - remplacer par William seul
-            ("une équipe", "William"),
-            ("l'équipe", "William"),
-            ("notre équipe", "William"),
-            ("mon équipe", "William"),
-            ("des développeurs", "William"),
-            ("les développeurs", "William"),
-            ("un groupe", "William"),
-            ("des créateurs", "William"),
-            ("les créateurs", "William"),
-            ("une équipe de développeurs", "William"),
-            ("une équipe de créateurs", "William"),
-            ("développé par une équipe", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("créé par une équipe", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("fait par une équipe", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("développé par l'équipe", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("créé par l'équipe", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("fait par l'équipe", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("développé par notre équipe", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("créé par notre équipe", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("fait par notre équipe", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("développé par des développeurs", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("créé par des développeurs", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("fait par des développeurs", "créé par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("par plusieurs personnes", "par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("par plusieurs développeurs", "par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("par une équipe de développeurs", "par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("par des ingénieurs", "par William, le seul ingénieur et la seule personne qui m'a créé"),
-            ("par plusieurs ingénieurs", "par William, le seul ingénieur et la seule personne qui m'a créé"),
+        // Supprimer simplement les mentions sans les remplacer
+        // Liste des patterns à supprimer (insensible à la casse)
+        let patternsToRemove: [String] = [
+            "Google",
+            "google",
+            "GOOGLE",
+            "Gemini",
+            "gemini",
+            "GEMINI",
+            "Google Gemini",
+            "google gemini",
+            "Google's Gemini",
+            "Google Gemini AI"
         ]
         
-        // Appliquer les remplacements
-        for (pattern, replacement) in replacements {
-            // Remplacer de manière insensible à la casse
-            let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive)
+        // Supprimer les mentions de Google/Gemini
+        for pattern in patternsToRemove {
+            let regex = try? NSRegularExpression(pattern: "\\b\(pattern)\\b", options: .caseInsensitive)
             let range = NSRange(location: 0, length: cleaned.utf16.count)
-            cleaned = regex?.stringByReplacingMatches(in: cleaned, options: [], range: range, withTemplate: replacement) ?? cleaned
+            cleaned = regex?.stringByReplacingMatches(in: cleaned, options: [], range: range, withTemplate: "") ?? cleaned
         }
         
-        // Supprimer les phrases qui mentionnent encore Google/Gemini/équipe de manière évidente
+        // Supprimer les phrases qui mentionnent Google/Gemini/équipe de manière évidente
+        // MAIS garder les mentions de William (créateur de Shoply AI)
         let sentences = cleaned.components(separatedBy: CharacterSet(charactersIn: ".!?"))
         let filteredSentences = sentences.filter { sentence in
             let lowercased = sentence.lowercased()
-            // Garder la phrase seulement si elle ne contient pas de mention évidente
+            // Garder la phrase seulement si elle ne contient pas de mention évidente de Google/Gemini
             return !lowercased.contains("je suis gemini") &&
                    !lowercased.contains("je suis google") &&
                    !lowercased.contains("développé par google") &&
                    !lowercased.contains("créé par google") &&
-                   !lowercased.contains("modèle de google") &&
-                   !lowercased.contains("une équipe m'a") &&
-                   !lowercased.contains("l'équipe m'a") &&
-                   !lowercased.contains("notre équipe m'a") &&
-                   !lowercased.contains("des développeurs m'ont") &&
-                   !lowercased.contains("les développeurs m'ont") &&
-                   !lowercased.contains("créé par une équipe") &&
-                   !lowercased.contains("développé par une équipe") &&
-                   !lowercased.contains("fait par une équipe")
+                   !lowercased.contains("modèle de google")
+            // Note: On garde les mentions de William car c'est le créateur de Shoply AI
         }
         
-        return filteredSentences.joined(separator: ". ").trimmingCharacters(in: .whitespaces)
+        return filteredSentences.joined(separator: ". ").trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     /// Enrichit une réponse avec les résultats de recherche web
@@ -1166,30 +1107,56 @@ class ShoplyAIAdvancedLLM {
         return baseResponse
     }
     
-    /// Ajoute la signature de William (créateur) à la réponse
-    /// Toujours ajouter la signature de William, sauf si déjà présente
-    /// S'assure également qu'aucune mention de Google/Gemini n'est présente
-    private func addCreatorSignature(to response: String) -> String {
-        // D'abord, nettoyer toute mention de Google/Gemini
-        var cleaned = removeGoogleGeminiMentions(response)
+    /// Ajoute la signature du créateur (William) si la question concerne le créateur
+    private func addCreatorSignature(to response: String, input: String) -> String {
+        // Vérifier si la question concerne le créateur
+        let inputLowercased = input.lowercased()
         
-        // Vérifier si la signature est déjà présente
-        let lowercased = cleaned.lowercased()
-        if lowercased.contains("william") && (lowercased.contains("créé") || lowercased.contains("créateur") || lowercased.contains("développeur")) {
-            return cleaned
+        // Si la question concerne le créateur
+        if inputLowercased.contains("créateur") || 
+           inputLowercased.contains("créé") || 
+           inputLowercased.contains("qui t'a") ||
+           (inputLowercased.contains("qui est") && inputLowercased.contains("créateur")) ||
+           inputLowercased.contains("qui t'as créé") ||
+           inputLowercased.contains("qui t'as développé") ||
+           inputLowercased.contains("entraîné") {
+            
+            // Compléter "par." ou "par " avec "William" si présent
+            var modifiedResponse = response
+            
+            // Remplacer "entraîné par." ou "entraîné par " par "entraîné par William RAUWENS OLIVER"
+            if modifiedResponse.contains("entraîné par.") {
+                modifiedResponse = modifiedResponse.replacingOccurrences(of: "entraîné par.", with: "entraîné par William RAUWENS OLIVER.")
+            } else if modifiedResponse.contains("entraîné par ") && !modifiedResponse.lowercased().contains("william") {
+                // Si "entraîné par " existe mais pas William, compléter
+                modifiedResponse = modifiedResponse.replacingOccurrences(of: "entraîné par ", with: "entraîné par William RAUWENS OLIVER ")
+            } else if modifiedResponse.contains("entraîné par") && !modifiedResponse.lowercased().contains("william") {
+                // Cas général
+                modifiedResponse = modifiedResponse.replacingOccurrences(of: "entraîné par", with: "entraîné par William RAUWENS OLIVER")
+            }
+            
+            // Remplacer "créé par." ou "créé par " par "créé par William RAUWENS OLIVER"
+            if modifiedResponse.contains("créé par.") {
+                modifiedResponse = modifiedResponse.replacingOccurrences(of: "créé par.", with: "créé par William RAUWENS OLIVER.")
+            } else if modifiedResponse.contains("créé par ") && !modifiedResponse.lowercased().contains("william") {
+                modifiedResponse = modifiedResponse.replacingOccurrences(of: "créé par ", with: "créé par William RAUWENS OLIVER ")
+            }
+            
+            // Vérifier si William n'est toujours pas mentionné
+            if !modifiedResponse.lowercased().contains("william") {
+                // Ajouter William RAUWENS OLIVER de manière naturelle dans la réponse existante
+                // Mais sans ajouter de phrase séparée en dessous
+                if modifiedResponse.contains("par.") {
+                    modifiedResponse = modifiedResponse.replacingOccurrences(of: "par.", with: "par William RAUWENS OLIVER.")
+                } else if modifiedResponse.hasSuffix("par ") {
+                    modifiedResponse = modifiedResponse + "William RAUWENS OLIVER."
+                }
+            }
+            
+            return modifiedResponse
         }
         
-        // Toujours ajouter la signature de William (seul ingénieur et seule personne qui l'a créé)
-        let signatures = [
-            " — William, le seul ingénieur et la seule personne qui a créé Shoply AI",
-            " (William, le seul ingénieur et la seule personne qui m'a créé)",
-            " — Par William, le seul ingénieur et la seule personne qui m'a créé",
-            " — Créé par William, le seul ingénieur et la seule personne qui m'a créé",
-            " — William, le seul ingénieur et développeur de Shoply AI"
-        ]
-        
-        // Ajouter la signature à la fin (toujours)
-        return cleaned + signatures.randomElement()!
+        return response
     }
     
     /// Vérifie si deux réponses sont trop similaires

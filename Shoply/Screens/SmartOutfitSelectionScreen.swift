@@ -16,6 +16,8 @@ struct SmartOutfitSelectionScreen: View {
     @StateObject private var geminiService = GeminiService.shared
     @StateObject private var appleIntelligenceWrapper = AppleIntelligenceServiceWrapper.shared
     @StateObject private var settingsManager = AppSettingsManager.shared
+    @StateObject private var collectionService = WardrobeCollectionService.shared
+    @State private var selectedCollection: WardrobeCollection?
     @State private var isGenerating = false
     @State private var generatedOutfits: [MatchedOutfit] = []
     @State private var showingResults = false
@@ -91,86 +93,43 @@ struct SmartOutfitSelectionScreen: View {
                         }
                     )
                 } else {
-                    ScrollView {
-                        VStack(spacing: 32) {
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: DesignSystem.Spacing.lg) {
                             // En-tête moderne avec animation
                             ModernHeaderView(userProfile: userProfile)
-                                .padding(.top, 20)
-                                .slideIn()
+                                .padding(.top, DesignSystem.Spacing.lg)
+                                .padding(.horizontal, DesignSystem.Spacing.md)
                             
-                            // Sélection de style vestimentaire
+                            // Sélection de style vestimentaire (utilise les collections sélectionnées)
                             StyleSelectionCard(
                                 selectedStyle: $selectedStyle,
                                 customStylePrompt: $customStylePrompt,
-                                showingCustomInput: $showingCustomStyleInput
+                                showingCustomInput: $showingCustomStyleInput,
+                                selectedCollection: selectedCollection,
+                                collectionService: collectionService
                             )
-                            .slideIn()
+                            .padding(.horizontal, DesignSystem.Spacing.md)
                             
                             // Demande spécifique de l'utilisateur
                             UserRequestCard(
                                 userRequest: $userSpecificRequest,
                                 showingInput: $showingUserRequestInput
                             )
-                                .slideIn()
-                            
-                            // Carte météo moderne
-                            if let morning = weatherService.morningWeather,
-                               let afternoon = weatherService.afternoonWeather {
-                                VStack(spacing: 16) {
-                                    // Message de succès météo
-                                    if weatherService.weatherFetchedSuccessfully {
-                                        HStack {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .foregroundColor(.green)
-                                            Text(weatherService.weatherStatusMessage)
-                                                .font(.system(size: 14, weight: .medium))
-                                                .foregroundColor(.green)
-                                        }
-                                        .padding()
-                                        .background(AppColors.buttonSecondary)
-                                        .cornerRadius(12)
-                                    }
-                                    
-                                ModernWeatherCard(
-                                    morning: morning,
-                                    afternoon: afternoon,
-                                    cityName: weatherService.cityName.isEmpty ? nil : weatherService.cityName
-                                )
-                                }
-                                .slideIn()
-                            } else if weatherService.isLoading {
-                                VStack(spacing: 12) {
-                                    ProgressView()
-                                    Text(weatherService.weatherStatusMessage)
-                                        .font(.system(size: 14))
-                                        .foregroundColor(AppColors.secondaryText)
-                                }
-                                .padding()
-                                .cleanCard(cornerRadius: 16)
-                                    .slideIn()
-                            } else if let error = weatherError {
-                                ModernErrorCard(error: error) {
-                                    Task {
-                                        await startOutfitGeneration()
-                                    }
-                                }
-                            }
+                            .padding(.horizontal, DesignSystem.Spacing.md)
                             
                             // Sélecteur d'algorithme (IA locale vs IA avancée)
                             AlgorithmSelectionCard(
                                 useAdvancedAI: $useAdvancedAI,
                                 isAdvancedAIAvailable: isAdvancedAIAvailable
                             )
-                            .slideIn()
-                            
-                            Spacer(minLength: 20)
+                            .padding(.horizontal, DesignSystem.Spacing.md)
                             
                             // Bouton principal moderne avec animation
                             ModernGenerateButton(
                                 isEnabled: canGenerate,
                                 action: {
                                     // Vérifier les conditions avant de générer
-                                    if selectedStyle == nil {
+                                    if selectedStyle == nil && customStylePrompt.isEmpty {
                                         showingArticleError = true
                                     } else if !hasEnoughItems() {
                                         showingArticleError = true
@@ -181,8 +140,8 @@ struct SmartOutfitSelectionScreen: View {
                                     }
                                 }
                             )
-                            .padding(.horizontal, 24)
-                            .padding(.bottom, 40)
+                            .padding(.horizontal, DesignSystem.Spacing.md)
+                            .padding(.bottom, DesignSystem.Spacing.xxl)
                         }
                     }
                 }
@@ -191,7 +150,7 @@ struct SmartOutfitSelectionScreen: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Sélection intelligente".localized)
-                        .font(.playfairDisplayBold(size: 20))
+                        .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
                 }
             }
@@ -204,7 +163,7 @@ struct SmartOutfitSelectionScreen: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Group {
-                    if selectedStyle == nil {
+                    if selectedStyle == nil && customStylePrompt.isEmpty {
                         Text("Veuillez sélectionner un style vestimentaire avant de générer des outfits.".localized)
                     } else {
                         let tops = wardrobeService.items.filter { $0.category == .top }.count
@@ -218,8 +177,8 @@ struct SmartOutfitSelectionScreen: View {
     }
     
     private var canGenerate: Bool {
-        // Vérifier qu'un style est sélectionné (obligatoire)
-        guard selectedStyle != nil else {
+        // Vérifier qu'un style est sélectionné (obligatoire) - soit selectedStyle, soit customStylePrompt
+        guard selectedStyle != nil || !customStylePrompt.isEmpty else {
             return false
         }
         
@@ -272,7 +231,7 @@ struct SmartOutfitSelectionScreen: View {
         }
         
         // Vérifier que le style est sélectionné
-        guard selectedStyle != nil else {
+        guard selectedStyle != nil || !customStylePrompt.isEmpty else {
             await MainActor.run {
                 weatherError = "Veuillez sélectionner un style vestimentaire avant de générer des outfits.".localized
                 isGenerating = false
@@ -343,16 +302,19 @@ struct SmartOutfitSelectionScreen: View {
         let userRequest = userSpecificRequest.trimmingCharacters(in: .whitespaces)
         let finalUserRequest = !userRequest.isEmpty ? userRequest : nil
         
+        // Passer la collection sélectionnée à l'algorithme
+        let collectionToUse = selectedCollection
+        
         if useAdvancedAI && isAdvancedAIAvailable {
             // Utiliser l'IA avancée sélectionnée (ChatGPT ou Gemini)
-            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: false, userRequest: finalUserRequest) { progress in
+            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: false, userRequest: finalUserRequest, selectedCollection: collectionToUse) { progress in
             await MainActor.run {
                 self.generationProgress = 0.3 + (progress * 0.6)
                 }
             }
         } else {
             // Utiliser l'algorithme local uniquement
-            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: true, userRequest: finalUserRequest) { progress in
+            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: true, userRequest: finalUserRequest, selectedCollection: collectionToUse) { progress in
                 await MainActor.run {
                     self.generationProgress = 0.3 + (progress * 0.6)
                 }
@@ -389,26 +351,31 @@ struct ModernHeaderView: View {
     }
     
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 48))
-                .foregroundColor(AppColors.primaryText)
+        VStack(spacing: DesignSystem.Spacing.md) {
+            ZStack {
+                Circle()
+                    .fill(AppColors.buttonSecondary)
+                    .frame(width: 80, height: 80)
+                
+                Image(systemName: "sparkles")
+                    .font(.system(size: 40, weight: .medium))
+                    .foregroundColor(AppColors.buttonPrimary)
+            }
             
             if !userProfile.firstName.isEmpty {
                 Text("\(greetingText), \(userProfile.firstName)")
-                    .font(.playfairDisplayBold(size: 32))
+                    .font(DesignSystem.Typography.title())
                     .foregroundColor(AppColors.primaryText)
             } else {
                 Text("Sélection intelligente".localized)
-                    .font(.playfairDisplayBold(size: 32))
+                    .font(DesignSystem.Typography.title())
                     .foregroundColor(AppColors.primaryText)
             }
             
             Text("Laissez l'IA choisir vos meilleurs outfits".localized)
-                .font(.system(size: 16, weight: .regular))
+                .font(DesignSystem.Typography.subheadline())
                 .foregroundColor(AppColors.secondaryText)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
         }
         .onAppear {
             updateGreeting()
@@ -443,80 +410,6 @@ struct ModernHeaderView: View {
     }
 }
 
-// MARK: - Carte météo moderne
-
-struct ModernWeatherCard: View {
-    let morning: WeatherData
-    let afternoon: WeatherData
-    let cityName: String?
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            if let cityName = cityName, !cityName.isEmpty {
-                HStack {
-                    Image(systemName: "location.fill")
-                        .font(.system(size: 14))
-                    Text(cityName)
-                        .font(.system(size: 18, weight: .semibold))
-                }
-                .foregroundColor(AppColors.primaryText)
-            }
-            
-            HStack(spacing: 24) {
-                WeatherPeriodView(
-                    period: "Matin",
-                    icon: "sunrise.fill",
-                    temperature: Int(morning.temperature),
-                    condition: morning.condition.rawValue
-                )
-                
-                Divider()
-                    .frame(height: 60)
-                    .background(AppColors.separator)
-                
-                WeatherPeriodView(
-                    period: "Après-midi",
-                    icon: "sun.max.fill",
-                    temperature: Int(afternoon.temperature),
-                    condition: afternoon.condition.rawValue
-                )
-            }
-        }
-        .padding(24)
-        .cleanCard(cornerRadius: 20)
-        .padding(.horizontal, 24)
-    }
-}
-
-struct WeatherPeriodView: View {
-    let period: String
-    let icon: String
-    let temperature: Int
-    let condition: String
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                Text(period)
-                    .font(.system(size: 13, weight: .medium))
-                    .textCase(.uppercase)
-                    .tracking(1)
-            }
-            .foregroundColor(AppColors.secondaryText)
-            
-            Text("\(temperature)°")
-                .font(.system(size: 42, weight: .light))
-                .foregroundColor(AppColors.primaryText)
-            
-            Text(condition)
-                .font(.system(size: 12, weight: .regular))
-                .foregroundColor(AppColors.secondaryText)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
 
 // MARK: - Stats moderne
 
@@ -574,14 +467,12 @@ struct ModernStatItem: View {
                 .foregroundColor(AppColors.primaryText)
             
             Text(value)
-                .font(.playfairDisplayBold(size: 32))
+                .font(DesignSystem.Typography.title())
                 .foregroundColor(AppColors.primaryText)
             
             Text(label)
-                .font(.system(size: 11, weight: .medium))
+                .font(DesignSystem.Typography.caption())
                 .foregroundColor(AppColors.secondaryText)
-                .textCase(.uppercase)
-                .tracking(0.5)
         }
         .frame(maxWidth: .infinity)
     }
@@ -596,31 +487,42 @@ struct ModernGenerateButton: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 18, weight: .semibold))
+            HStack(spacing: DesignSystem.Spacing.md) {
+                ZStack {
+                    Circle()
+                        .fill(isEnabled ? AppColors.buttonPrimaryText.opacity(0.2) : AppColors.buttonSecondary)
+                        .frame(width: 44, height: 44)
+                    
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(isEnabled ? AppColors.buttonPrimaryText : AppColors.secondaryText)
+                }
                 
                 Text("Générer mes outfits".localized)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(DesignSystem.Typography.title2())
+                    .foregroundColor(isEnabled ? AppColors.buttonPrimaryText : AppColors.secondaryText)
             }
-            .foregroundColor(isEnabled ? AppColors.buttonPrimaryText : AppColors.secondaryText)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 18)
+            .padding(.vertical, DesignSystem.Spacing.lg)
             .background(isEnabled ? AppColors.buttonPrimary : AppColors.buttonSecondary)
-            .cornerRadius(16)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.Radius.lg)
+                    .stroke(isEnabled ? AppColors.buttonPrimary.opacity(0.3) : AppColors.cardBorder, lineWidth: isEnabled ? 2 : 1.5)
+            )
             .shadow(
-                color: isEnabled ? AppColors.shadow : Color.clear,
-                radius: isEnabled ? 12 : 0,
+                color: isEnabled ? AppColors.shadow.opacity(0.4) : Color.clear,
+                radius: isEnabled ? 16 : 0,
                 x: 0,
-                y: isEnabled ? 4 : 0
+                y: isEnabled ? 6 : 0
             )
         }
         .disabled(!isEnabled)
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
+        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
+                .onChanged { _ in if isEnabled { isPressed = true } }
                 .onEnded { _ in isPressed = false }
         )
     }
@@ -674,7 +576,7 @@ struct ModernLoadingView: View {
                             .symbolEffect(.pulse, options: .repeating)
                     } else {
                     Text("\(Int(progress * 100))%")
-                        .font(.playfairDisplayBold(size: 24))
+                        .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
                     
                     Image(systemName: "sparkles")
@@ -823,7 +725,7 @@ struct ModernOutfitResultsView: View {
                         
                         VStack(alignment: .trailing, spacing: 4) {
                             Text("\(outfits.count) " + "outfits générés".localized)
-                                .font(.playfairDisplayBold(size: 28))
+                                .font(DesignSystem.Typography.title())
                                 .foregroundColor(AppColors.primaryText)
                             
                             Text("Sélectionnés pour vous".localized)
@@ -878,7 +780,7 @@ struct ModernOutfitCard: View {
                         .frame(width: 32, height: 32)
                     
                     Text("\(rank)")
-                        .font(.playfairDisplayBold(size: 16))
+                        .font(DesignSystem.Typography.headline())
                         .foregroundColor(AppColors.buttonPrimaryText)
                 }
                 
@@ -1057,75 +959,126 @@ struct StyleSelectionCard: View {
     @Binding var selectedStyle: OutfitType?
     @Binding var customStylePrompt: String
     @Binding var showingCustomInput: Bool
+    var selectedCollection: WardrobeCollection?
+    @ObservedObject var collectionService: WardrobeCollectionService
     
-    private let availableStyles: [OutfitType] = [.casual, .business, .smartCasual, .formal, .weekend]
-    
-    var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Style vestimentaire".localized)
-                        .font(.playfairDisplayBold(size: 18))
-                        .foregroundColor(AppColors.primaryText)
-                    
-                    Text("Choisissez le style d'outfit que vous souhaitez".localized)
-                        .font(.system(size: 13))
-                        .foregroundColor(AppColors.secondaryText)
-                }
-                
-                Spacer()
-            }
-            
-            // Boutons de sélection de style
-            VStack(spacing: 12) {
-                ForEach(availableStyles, id: \.self) { style in
-                    Button(action: {
-                        selectedStyle = style
-                        showingCustomInput = false
-                        customStylePrompt = ""
-                    }) {
-                        HStack {
-                            Image(systemName: getStyleIcon(style))
-                                .font(.system(size: 18))
-                                .foregroundColor(selectedStyle == style ? AppColors.buttonPrimaryText : AppColors.primaryText)
-                            
-                            Text(style.rawValue)
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(selectedStyle == style ? AppColors.buttonPrimaryText : AppColors.primaryText)
-                            
-                            Spacer()
-                            
-                            if selectedStyle == style {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(AppColors.buttonPrimaryText)
-                            }
-                        }
-                        .padding()
-                        .background(selectedStyle == style ? AppColors.buttonPrimary : AppColors.buttonSecondary)
-                        .roundedCorner(12)
-                        .shadow(color: AppColors.shadow, radius: selectedStyle == style ? 8 : 4, x: 0, y: selectedStyle == style ? 4 : 2)
-                    }
-                }
-            }
-        }
-        .padding(20)
-        .cleanCard(cornerRadius: 16)
-        .padding(.horizontal, 24)
+    // Utiliser les collections au lieu des styles
+    private var availableCollections: [WardrobeCollection] {
+        collectionService.collections.filter { !$0.itemIds.isEmpty }
     }
     
-    private func getStyleIcon(_ style: OutfitType) -> String {
-        switch style {
-        case .casual:
-            return "tshirt.fill"
-        case .business:
-            return "briefcase.fill"
-        case .smartCasual:
-            return "shirt.fill"
-        case .formal:
-            return "person.suit.cloth.fill"
-        case .weekend:
-            return "sun.max.fill"
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                headerSection
+                
+                // Boutons de sélection de collection
+                if availableCollections.isEmpty {
+                    emptyStateView
+                } else {
+                    collectionsList
+                }
+            }
+            .padding(DesignSystem.Spacing.lg)
         }
+    }
+    
+    private var headerSection: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            ZStack {
+                Circle()
+                    .fill(AppColors.buttonPrimary.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                
+                Image(systemName: "tshirt.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(AppColors.buttonPrimary)
+            }
+            
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                Text("Style vestimentaire".localized)
+                    .font(DesignSystem.Typography.title2())
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text("Choisissez une collection pour votre outfit".localized)
+                    .font(DesignSystem.Typography.footnote())
+                    .foregroundColor(AppColors.secondaryText)
+            }
+        }
+    }
+    
+    private var emptyStateView: some View {
+        Text("Aucune collection disponible".localized)
+            .font(DesignSystem.Typography.footnote())
+            .foregroundColor(AppColors.secondaryText)
+            .padding(.vertical, DesignSystem.Spacing.sm)
+    }
+    
+    private var collectionsList: some View {
+        VStack(spacing: DesignSystem.Spacing.sm) {
+            ForEach(availableCollections) { collection in
+                CollectionStyleButton(
+                    collection: collection,
+                    isSelected: customStylePrompt == collection.name,
+                    onTap: {
+                        selectedStyle = nil
+                        customStylePrompt = collection.name
+                    }
+                )
+            }
+        }
+    }
+}
+
+private struct CollectionStyleButton: View {
+    let collection: WardrobeCollection
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                iconView
+                textView
+                Spacer()
+                if isSelected {
+                    checkmarkView
+                }
+            }
+            .padding(DesignSystem.Spacing.md)
+            .background(isSelected ? AppColors.buttonPrimary : AppColors.buttonSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+        }
+    }
+    
+    private var iconView: some View {
+        ZStack {
+            Circle()
+                .fill(isSelected ? AppColors.buttonPrimaryText.opacity(0.2) : AppColors.buttonSecondary)
+                .frame(width: 40, height: 40)
+            
+            Image(systemName: collection.icon)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(isSelected ? AppColors.buttonPrimaryText : AppColors.primaryText)
+        }
+    }
+    
+    private var textView: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            Text(collection.name)
+                .font(DesignSystem.Typography.headline())
+                .foregroundColor(isSelected ? AppColors.buttonPrimaryText : AppColors.primaryText)
+            
+            Text("\(collection.itemIds.count) items")
+                .font(DesignSystem.Typography.caption())
+                .foregroundColor(isSelected ? AppColors.buttonPrimaryText.opacity(0.8) : AppColors.secondaryText)
+        }
+    }
+    
+    private var checkmarkView: some View {
+        Image(systemName: "checkmark.circle.fill")
+            .font(.system(size: 20, weight: .medium))
+            .foregroundColor(AppColors.buttonPrimaryText)
     }
 }
 
@@ -1135,57 +1088,84 @@ struct UserRequestCard: View {
     @Binding var userRequest: String
     @Binding var showingInput: Bool
     @FocusState private var isTextFieldFocused: Bool
+    @State private var isPressed = false
     
     var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Demande spécifique".localized)
-                        .font(.playfairDisplayBold(size: 18))
-                        .foregroundColor(AppColors.primaryText)
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+                HStack(spacing: DesignSystem.Spacing.md) {
+                    ZStack {
+                        Circle()
+                            .fill(AppColors.buttonPrimary.opacity(0.2))
+                            .frame(width: 48, height: 48)
+                        
+                        Image(systemName: "text.bubble.fill")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(AppColors.buttonPrimary)
+                    }
                     
-                    Text("Dites-moi quel vêtement vous voulez (ex: je veux mon short rouge)".localized)
-                        .font(.system(size: 13))
-                        .foregroundColor(AppColors.secondaryText)
-                }
-                
-                Spacer()
-                
-                Button(action: {
-                    showingInput.toggle()
-                    if !showingInput {
-                        userRequest = ""
-                    } else {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            isTextFieldFocused = true
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Text("Demande spécifique".localized)
+                            .font(DesignSystem.Typography.title2())
+                            .foregroundColor(AppColors.primaryText)
+                        
+                        Text("Dites-moi quel vêtement vous voulez (ex: je veux mon short rouge)".localized)
+                            .font(DesignSystem.Typography.footnote())
+                            .foregroundColor(AppColors.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            showingInput.toggle()
+                            if !showingInput {
+                                userRequest = ""
+                            } else {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    isTextFieldFocused = true
+                                }
+                            }
+                        }
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(showingInput ? AppColors.buttonSecondary : AppColors.buttonPrimary.opacity(0.15))
+                                .frame(width: 44, height: 44)
+                            
+                            Image(systemName: showingInput ? "xmark" : "plus")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(showingInput ? AppColors.secondaryText : AppColors.buttonPrimary)
                         }
                     }
-                }) {
-                    Image(systemName: showingInput ? "xmark.circle.fill" : "plus.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(showingInput ? .red : AppColors.buttonPrimary)
+                    .scaleEffect(isPressed ? 0.95 : 1.0)
+                    .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in isPressed = true }
+                            .onEnded { _ in isPressed = false }
+                    )
+                }
+                
+                if showingInput {
+                    TextField("Ex: je veux mon short rouge, mon t-shirt bleu...".localized, text: $userRequest, axis: .vertical)
+                        .focused($isTextFieldFocused)
+                        .font(DesignSystem.Typography.body())
+                        .foregroundColor(AppColors.primaryText)
+                        .padding(DesignSystem.Spacing.lg)
+                        .background(AppColors.buttonSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DesignSystem.Radius.md)
+                                .stroke(isTextFieldFocused ? AppColors.buttonPrimary : AppColors.cardBorder, lineWidth: isTextFieldFocused ? 2.5 : 1.5)
+                        )
+                        .lineLimit(2...4)
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
-            
-            if showingInput {
-                TextField("Ex: je veux mon short rouge, mon t-shirt bleu...".localized, text: $userRequest, axis: .vertical)
-                    .focused($isTextFieldFocused)
-                    .font(.system(size: 15))
-                    .foregroundColor(AppColors.primaryText)
-                    .padding()
-                    .background(AppColors.buttonSecondary)
-                    .roundedCorner(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(isTextFieldFocused ? AppColors.buttonPrimary : AppColors.cardBorder.opacity(0.3), lineWidth: isTextFieldFocused ? 2 : 1)
-                    )
-                    .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
-                    .lineLimit(2...4)
-            }
+            .padding(DesignSystem.Spacing.lg)
         }
-        .padding(20)
-        .cleanCard(cornerRadius: 16)
-        .padding(.horizontal, 24)
     }
 }
 
@@ -1216,105 +1196,166 @@ struct AlgorithmSelectionCard: View {
         return false
     }
     
+    private var advancedAIColor: Color {
+        if isAppleIntelligence {
+            return Color.blue
+        }
+        return Color.purple
+    }
+    
     var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Méthode de génération".localized)
-                        .font(.playfairDisplayBold(size: 18))
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+                HStack(spacing: DesignSystem.Spacing.md) {
+                    ZStack {
+                        Circle()
+                            .fill(AppColors.buttonPrimary.opacity(0.2))
+                            .frame(width: 48, height: 48)
+                        
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(AppColors.buttonPrimary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Text("Méthode de génération".localized)
+                            .font(DesignSystem.Typography.title2())
+                            .foregroundColor(AppColors.primaryText)
+                        
+                        Text("Choisissez comment générer vos outfits".localized)
+                            .font(DesignSystem.Typography.footnote())
+                            .foregroundColor(AppColors.secondaryText)
+                    }
+                }
+                
+                // Options d'IA
+                VStack(spacing: DesignSystem.Spacing.md) {
+                    // Option Gemini/Apple Intelligence
+                    AIOptionButton(
+                        icon: isAppleIntelligence ? "applelogo" : "star.circle.fill",
+                        title: "\(providerDisplayName) (IA avancée)",
+                        description: isAppleIntelligence ? "Plus puissant • Données restent sur votre appareil • Privé et sécurisé" : "Plus puissant • Plus de chances de trouver • Données envoyées à \(providerDisplayName)",
+                        isSelected: useAdvancedAI && isAdvancedAIAvailable,
+                        color: advancedAIColor,
+                        isEnabled: isAdvancedAIAvailable,
+                        action: {
+                            if isAdvancedAIAvailable {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    useAdvancedAI = true
+                                }
+                            }
+                        }
+                    )
+                    
+                    // Option Shoply AI (local)
+                    AIOptionButton(
+                        icon: "sparkles",
+                        title: "Shoply AI",
+                        description: "Moins puissant • Données restent sur votre appareil",
+                        isSelected: !useAdvancedAI,
+                        color: AppColors.buttonPrimary,
+                        isEnabled: true,
+                        action: {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                useAdvancedAI = false
+                            }
+                        }
+                    )
+                }
+                
+                // Avertissement si l'IA avancée n'est pas disponible
+                if !isAdvancedAIAvailable {
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        Image(systemName: "info.circle.fill")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(AppColors.secondaryText)
+                        Text("\(providerDisplayName) " + "n'est pas configuré. Utilisation de l'algorithme local.".localized)
+                            .font(DesignSystem.Typography.caption())
+                            .foregroundColor(AppColors.secondaryText)
+                    }
+                    .padding(DesignSystem.Spacing.md)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(AppColors.buttonSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+                }
+            }
+            .padding(DesignSystem.Spacing.lg)
+        }
+    }
+}
+
+// MARK: - Composant réutilisable pour les options IA
+
+struct AIOptionButton: View {
+    let icon: String
+    let title: String
+    let description: String
+    let isSelected: Bool
+    let color: Color
+    let isEnabled: Bool
+    let action: () -> Void
+    @State private var isPressed = false
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? color.opacity(0.25) : AppColors.buttonSecondary)
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(isSelected ? color : AppColors.secondaryText)
+                }
+                
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    Text(title.localized)
+                        .font(DesignSystem.Typography.headline())
                         .foregroundColor(AppColors.primaryText)
                     
-                    Text("Choisissez comment générer vos outfits".localized)
-                        .font(.system(size: 13))
+                    Text(description.localized)
+                        .font(DesignSystem.Typography.caption())
                         .foregroundColor(AppColors.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 
                 Spacer()
-            }
-            
-            // Toggle principal
-            VStack(spacing: 12) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 8) {
-                            Image(systemName: isAppleIntelligence ? "applelogo" : "brain.head.profile")
-                                .font(.system(size: 18))
-                                .foregroundColor(useAdvancedAI ? (isAppleIntelligence ? .blue : .purple) : AppColors.secondaryText)
-                            
-                            Text("\(providerDisplayName) ".localized + "(IA avancée)".localized)
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(AppColors.primaryText)
-                        }
-                        
-                        Text(isAppleIntelligence ? "Plus puissant • Données restent sur votre appareil • Privé et sécurisé".localized : "Plus puissant • Plus de chances de trouver • Données envoyées à".localized + " \(providerDisplayName)")
-                            .font(.system(size: 12))
-                            .foregroundColor(AppColors.secondaryText)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    
-                    Spacer()
-                    
-                    Toggle("", isOn: Binding(
-                        get: { useAdvancedAI && isAdvancedAIAvailable },
-                        set: { useAdvancedAI = $0 && isAdvancedAIAvailable }
-                    ))
-                    .disabled(!isAdvancedAIAvailable)
-                }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(useAdvancedAI && isAdvancedAIAvailable ? (isAppleIntelligence ? Color.blue.opacity(0.1) : Color.purple.opacity(0.1)) : AppColors.buttonSecondary)
-                )
                 
-                HStack {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "cpu")
-                                .font(.system(size: 18))
-                                .foregroundColor(!useAdvancedAI ? AppColors.buttonPrimary : AppColors.secondaryText)
-                            
-                            Text("Mon algorithme (local)".localized)
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(AppColors.primaryText)
-                        }
+                ZStack {
+                    if isSelected {
+                        Circle()
+                            .fill(color.opacity(0.2))
+                            .frame(width: 32, height: 32)
                         
-                        Text("Moins puissant • Données restent sur votre appareil".localized)
-                            .font(.system(size: 12))
-                            .foregroundColor(AppColors.secondaryText)
-                            .fixedSize(horizontal: false, vertical: true)
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundColor(color)
+                    } else {
+                        Circle()
+                            .stroke(AppColors.cardBorder, lineWidth: 2.5)
+                            .frame(width: 28, height: 28)
                     }
-                    
-                    Spacer()
-                    
-                    Toggle("", isOn: Binding(
-                        get: { !useAdvancedAI },
-                        set: { useAdvancedAI = !$0 }
-                    ))
                 }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(!useAdvancedAI ? AppColors.buttonSecondary : Color.clear)
-                )
             }
-            
-            // Avertissement si l'IA avancée n'est pas disponible
-            if !isAdvancedAIAvailable {
-                HStack(spacing: 8) {
-                    Image(systemName: "info.circle.fill")
-                        .foregroundColor(AppColors.secondaryText)
-                    Text("\(providerDisplayName) " + "n'est pas configuré. Utilisation de l'algorithme local.".localized)
-                        .font(.system(size: 12))
-                        .foregroundColor(AppColors.secondaryText)
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color.orange.opacity(0.1))
-                .cornerRadius(8)
-            }
+            .padding(DesignSystem.Spacing.lg)
+            .background(isSelected ? color.opacity(0.12) : AppColors.buttonSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.Radius.lg)
+                    .stroke(isSelected ? color.opacity(0.6) : AppColors.cardBorder, lineWidth: isSelected ? 2.5 : 1.5)
+            )
+            .shadow(color: isSelected ? color.opacity(0.2) : Color.clear, radius: isSelected ? 8 : 0, x: 0, y: isSelected ? 4 : 0)
         }
-        .padding(20)
-        .cleanCard(cornerRadius: 16)
+        .disabled(!isEnabled)
+        .opacity(isEnabled ? 1.0 : 0.6)
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in if isEnabled { isPressed = true } }
+                .onEnded { _ in isPressed = false }
+        )
     }
 }
 

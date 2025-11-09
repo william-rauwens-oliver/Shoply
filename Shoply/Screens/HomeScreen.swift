@@ -7,7 +7,6 @@
 
 import SwiftUI
 import Combine
-import CoreLocation
 #if !WIDGET_EXTENSION
 import UserNotifications
 import UIKit
@@ -16,64 +15,123 @@ import UIKit
 struct HomeScreen: View {
     @StateObject private var wardrobeService = WardrobeService()
     @StateObject private var settingsManager = AppSettingsManager.shared
+    @StateObject private var historyStore = OutfitHistoryStore()
     @State private var currentTime = Date()
+    @State private var showingChat = false
+    @State private var showingConversations = false
     
     var body: some View {
         NavigationStack {
             ZStack {
-                // Fond ultra-simple et épuré avec opacité maximale
                 AppColors.background
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        // En-tête minimaliste
-                        SimpleHeader(currentTime: currentTime)
-                            .padding(.top, 28)
-                            .padding(.bottom, 36)
+                    VStack(spacing: DesignSystem.Spacing.lg) {
+                        // Header avec photo de profil
+                        HeaderView(currentTime: currentTime)
+                            .padding(.top, DesignSystem.Spacing.lg)
+                            .padding(.horizontal, DesignSystem.Spacing.md)
                         
-                        // Grille de cartes ultra-épurée
-                        VStack(spacing: 18) {
-                            // Carte principale - Sélection intelligente
-                            NavigationLink(destination: SmartOutfitSelectionScreen()) {
-                                SimpleSelectionCard()
+                        // Carte principale - Sélection intelligente
+                        NavigationLink(destination: SmartOutfitSelectionScreen()) {
+                            MainActionCard()
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        
+                        // Deux cartes côte à côte
+                        HStack(spacing: DesignSystem.Spacing.md) {
+                            NavigationLink(destination: WardrobeManagementScreen()) {
+                                QuickActionCard(
+                                    icon: "tshirt.fill",
+                                    title: "Garde-robe",
+                                    value: "\(wardrobeService.items.count)",
+                                    color: AppColors.buttonPrimary
+                                )
                             }
                             .buttonStyle(PlainButtonStyle())
                             
-                            // Deux colonnes pour les cartes secondaires
-                            HStack(spacing: 16) {
-                                // Garde-robe
-                                NavigationLink(destination: WardrobeManagementScreen()) {
-                                    SimpleWardrobeCard()
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                
-                                // Historique
-                                NavigationLink(destination: OutfitHistoryScreen()) {
-                                    SimpleHistoryCard()
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                            }
-                            
-                            // Calendrier
-                            NavigationLink(destination: OutfitCalendarScreen()) {
-                                SimpleCalendarCard()
+                            NavigationLink(destination: OutfitHistoryScreen()) {
+                                QuickActionCard(
+                                    icon: "clock.fill",
+                                    title: "Historique",
+                                    value: "\(historyStore.outfits.count)",
+                                    color: AppColors.buttonPrimary
+                                )
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 140)
+                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        
+                        // Section fonctionnalités
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+                            HStack {
+                                Text("Fonctionnalités".localized)
+                                    .font(DesignSystem.Typography.title2())
+                                    .foregroundColor(AppColors.primaryText)
+                                Spacer()
+                            }
+                            .padding(.horizontal, DesignSystem.Spacing.md)
+                            
+                            // Grille de fonctionnalités
+                            LazyVGrid(columns: [
+                                GridItem(.flexible(), spacing: DesignSystem.Spacing.md),
+                                GridItem(.flexible(), spacing: DesignSystem.Spacing.md)
+                            ], spacing: DesignSystem.Spacing.md) {
+                                FeatureGridItem(icon: "chart.bar.fill", title: "Statistiques", destination: StatisticsScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "folder.fill", title: "Collections", destination: CollectionsScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "heart.fill", title: "Wishlist", destination: WishlistScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "airplane", title: "Voyage", destination: TravelModeScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "star.fill", title: "Badges", destination: GamificationScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "barcode.viewfinder", title: "Scanner", destination: BarcodeScannerScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "dollarsign.circle.fill", title: "Prix", destination: PriceComparisonScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "briefcase.fill", title: "Pro", destination: ProfessionalModeScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "book.fill", title: "Lookbooks", destination: LookbooksScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "chart.line.uptrend.xyaxis", title: "Tendances", destination: TrendAnalysisScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "calendar", title: "Événements", destination: CalendarEventsScreen(), color: AppColors.buttonPrimary)
+                                FeatureGridItem(icon: "square.and.arrow.up", title: "Partage", destination: SocialShareScreen(), color: AppColors.buttonPrimary)
+                            }
+                            .padding(.horizontal, DesignSystem.Spacing.md)
+                        }
+                        
+                        // Espace pour le bouton flottant
+                        Spacer()
+                            .frame(height: 80)
                     }
                 }
                 
-                // Bouton chat simple et direct
+                // Bouton chat flottant
                 VStack {
                     Spacer()
                     HStack {
                         Spacer()
-                        SimpleChatButton()
-                            .padding(.trailing, 20)
-                            .padding(.bottom, 100)
+                        Menu {
+                            Button(action: {
+                                showingChat = true
+                            }) {
+                                Label("Nouvelle conversation".localized, systemImage: "square.and.pencil")
+                            }
+                            
+                            Button(action: {
+                                showingConversations = true
+                            }) {
+                                Label("Historique".localized, systemImage: "clock.arrow.circlepath")
+                            }
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(AppColors.buttonPrimary)
+                                    .frame(width: 60, height: 60)
+                                    .shadow(color: AppColors.shadow.opacity(0.3), radius: 12, x: 0, y: 6)
+                                
+                                Image(systemName: "message.fill")
+                                    .font(.system(size: 22, weight: .medium))
+                                    .foregroundColor(AppColors.buttonPrimaryText)
+                            }
+                        }
+                        .padding(.trailing, DesignSystem.Spacing.lg)
+                        .padding(.bottom, DesignSystem.Spacing.lg)
                     }
                 }
             }
@@ -81,29 +139,36 @@ struct HomeScreen: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Shoply")
-                        .font(.system(size: 24, weight: .semibold))
+                        .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
+                    HStack(spacing: DesignSystem.Spacing.md) {
                         NavigationLink(destination: FavoritesScreen()) {
                             Image(systemName: "heart.fill")
-                                .font(.system(size: 17, weight: .medium))
+                                .font(.system(size: 20, weight: .medium))
                                 .foregroundColor(AppColors.primaryText)
                         }
                         
                         NavigationLink(destination: ProfileScreen()) {
                             Image(systemName: "person.fill")
-                                .font(.system(size: 17, weight: .medium))
+                                .font(.system(size: 20, weight: .medium))
                                 .foregroundColor(AppColors.primaryText)
                         }
                     }
                 }
             }
         }
+        .sheet(isPresented: $showingChat) {
+            ChatAIScreen()
+        }
+        .sheet(isPresented: $showingConversations) {
+            NavigationStack {
+                ChatConversationsScreen()
+            }
+        }
         .onAppear {
-            // Réinitialiser le badge de notification à chaque fois qu'on arrive sur l'écran d'accueil
             clearApplicationBadge()
         }
         .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
@@ -113,17 +178,14 @@ struct HomeScreen: View {
     
     #if !WIDGET_EXTENSION
     private func clearApplicationBadge() {
-        // Réinitialiser le badge de notification
         if #available(iOS 16.0, *) {
             UNUserNotificationCenter.current().setBadgeCount(0) { error in
                 if let error = error {
-                    print("⚠️ Erreur lors de la réinitialisation du badge: \(error.localizedDescription)")
+                    print("⚠️ Erreur badge: \(error.localizedDescription)")
                 }
             }
         } else {
-            // Fallback pour iOS < 16 uniquement
             DispatchQueue.main.async {
-                // Ancienne méthode pour iOS < 16
                 UIApplication.shared.applicationIconBadgeNumber = 0
             }
         }
@@ -131,274 +193,195 @@ struct HomeScreen: View {
     #endif
 }
 
-// En-tête minimaliste
-struct SimpleHeader: View {
+// MARK: - Composants HomeScreen
+
+struct HeaderView: View {
     let currentTime: Date
     @StateObject private var dataManager = DataManager.shared
-    @StateObject private var weatherService = WeatherService.shared
-    @StateObject private var settingsManager = AppSettingsManager.shared
     @State private var greetingKey = "Bonjour"
     
     private var greetingText: String {
         greetingKey.localized
     }
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let profile = dataManager.loadUserProfile(), !profile.firstName.isEmpty {
-                Text("\(greetingText), \(profile.firstName)")
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundColor(AppColors.primaryText)
-            } else {
-                Text(greetingText)
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundColor(AppColors.primaryText)
-            }
-            
-            Text(formattedDate)
-                .font(.system(size: 15, weight: .regular))
-                .foregroundColor(AppColors.secondaryText)
-        }
-        .padding(.horizontal, 20)
-        .onAppear {
-            updateGreeting()
-        }
-        .onChange(of: currentTime) { _, _ in
-            updateGreeting()
-        }
-        .onChange(of: settingsManager.selectedLanguage) { _, _ in
-            updateGreeting()
-        }
+    private var profile: UserProfile? {
+        dataManager.loadUserProfile()
     }
     
-    private func updateGreeting() {
-        if let location = weatherService.location {
-            let lat = location.coordinate.latitude
-            let lon = location.coordinate.longitude
-            // Protection contre les valeurs invalides
-            guard !lat.isNaN && !lon.isNaN && !lat.isInfinite && !lon.isInfinite else {
-                let hour = Calendar.current.component(.hour, from: currentTime)
-                greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
-                return
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.lg) {
+            // Photo de profil
+            if let profile = profile, let photo = profile.profilePhoto {
+                Image(uiImage: photo)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 56, height: 56)
+                    .clipShape(Circle())
+                    .overlay {
+                        Circle()
+                            .stroke(AppColors.cardBorder, lineWidth: 2)
+                    }
+            } else {
+                Circle()
+                    .fill(AppColors.buttonSecondary)
+                    .frame(width: 56, height: 56)
+                    .overlay {
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 24, weight: .light))
+                            .foregroundColor(AppColors.primaryText)
+                    }
+                    .overlay {
+                        Circle()
+                            .stroke(AppColors.cardBorder, lineWidth: 2)
+                    }
             }
-            greetingKey = SunsetService.shared.getGreeting(
-                latitude: lat,
-                longitude: lon,
-                currentTime: currentTime
-            )
-        } else {
-            let hour = Calendar.current.component(.hour, from: currentTime)
-            greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
+            
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                if let profile = profile, !profile.firstName.isEmpty {
+                    Text("\(greetingText), \(profile.firstName)")
+                        .font(DesignSystem.Typography.largeTitle())
+                        .foregroundColor(AppColors.primaryText)
+                        .lineLimit(1)
+                } else {
+                    Text(greetingText)
+                        .font(DesignSystem.Typography.largeTitle())
+                        .foregroundColor(AppColors.primaryText)
+                }
+                
+                Text(formattedDate)
+                    .font(DesignSystem.Typography.subheadline())
+                    .foregroundColor(AppColors.secondaryText)
+            }
+            
+            Spacer()
+        }
+        .onAppear {
+            updateGreeting()
         }
     }
     
     private var formattedDate: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE d MMMM"
-        
-        // Utiliser la locale appropriée selon la langue sélectionnée
-        let localeIdentifier: String
-        switch settingsManager.selectedLanguage {
-        case .english: localeIdentifier = "en_US"
-        case .spanish: localeIdentifier = "es_ES"
-        case .french: localeIdentifier = "fr_FR"
-        case .portuguese: localeIdentifier = "pt_PT"
-        case .russian: localeIdentifier = "ru_RU"
-        case .arabic: localeIdentifier = "ar_SA"
-        case .hindi: localeIdentifier = "hi_IN"
-        case .chineseSimplified: localeIdentifier = "zh_CN"
-        case .bengali: localeIdentifier = "bn_BD"
-        case .indonesian: localeIdentifier = "id_ID"
+        formatter.locale = Locale(identifier: AppSettingsManager.shared.selectedLanguage.rawValue)
+        formatter.dateStyle = .full
+        return formatter.string(from: currentTime)
+    }
+    
+    private func updateGreeting() {
+        let hour = Calendar.current.component(.hour, from: currentTime)
+        if hour < 12 {
+            greetingKey = "Bonjour"
+        } else if hour < 18 {
+            greetingKey = "Bon après-midi"
+        } else {
+            greetingKey = "Bonsoir"
         }
-        
-        formatter.locale = Locale(identifier: localeIdentifier)
-        return formatter.string(from: currentTime).capitalized
     }
 }
 
-// Carte sélection intelligente - Design ultra-simple
-struct SimpleSelectionCard: View {
+struct MainActionCard: View {
     var body: some View {
-        HStack(spacing: 20) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Sélection IA".localized)
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(AppColors.primaryText)
-                
-                Text("Créez vos tenues avec l'intelligence artificielle".localized)
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundColor(AppColors.secondaryText)
-                    .lineLimit(2)
-            }
-            
-            Spacer()
-            
-            Image(systemName: "sparkles")
-                .font(.system(size: 32, weight: .light))
-                .foregroundColor(AppColors.buttonPrimary)
-                .frame(width: 60, height: 60)
-                .background(AppColors.buttonPrimary.opacity(0.1))
-                .clipShape(Circle())
-        }
-        .padding(24)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Material.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(AppColors.cardBorder.opacity(0.5), lineWidth: 1)
-                )
-        )
-        .shadow(color: AppColors.shadow.opacity(0.3), radius: 12, x: 0, y: 4)
-    }
-}
-
-// Carte garde-robe - Design simple
-struct SimpleWardrobeCard: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "tshirt.fill")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(AppColors.buttonPrimary)
-                
-                Text("Garde-robe".localized)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(AppColors.primaryText)
-            }
-            
-            Text("Vos vêtements".localized)
-                .font(.system(size: 13, weight: .regular))
-                .foregroundColor(AppColors.secondaryText)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .frame(height: 110)
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Material.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(AppColors.cardBorder.opacity(0.5), lineWidth: 1)
-                )
-        )
-        .shadow(color: AppColors.shadow.opacity(0.3), radius: 10, x: 0, y: 3)
-    }
-}
-
-// Carte historique - Design simple
-struct SimpleHistoryCard: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "clock.fill")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(AppColors.buttonPrimary)
-                
-                Text("Historique".localized)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(AppColors.primaryText)
-            }
-            
-            Text("Tenues portées".localized)
-                .font(.system(size: 13, weight: .regular))
-                .foregroundColor(AppColors.secondaryText)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .frame(height: 110)
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Material.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(AppColors.cardBorder.opacity(0.5), lineWidth: 1)
-                )
-        )
-        .shadow(color: AppColors.shadow.opacity(0.3), radius: 10, x: 0, y: 3)
-    }
-}
-
-// Carte calendrier - Design simple
-
-struct SimpleCalendarCard: View {
-    var body: some View {
-        HStack(spacing: 20) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Calendrier".localized)
-                    .font(.system(size: 22, weight: .bold))
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            HStack(spacing: DesignSystem.Spacing.lg) {
+                ZStack {
+                    Circle()
+                        .fill(AppColors.buttonSecondary)
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 28, weight: .medium))
                         .foregroundColor(AppColors.primaryText)
-
-                Text("Planifiez vos tenues".localized)
-                        .font(.system(size: 14, weight: .regular))
+                }
+                
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    Text("Sélection Intelligente".localized)
+                        .font(DesignSystem.Typography.title2())
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    Text("Générez des outfits adaptés".localized)
+                        .font(DesignSystem.Typography.subheadline())
                         .foregroundColor(AppColors.secondaryText)
                 }
-
+                
                 Spacer()
-
-            Image(systemName: "calendar")
-                .font(.system(size: 28, weight: .medium))
-                .foregroundColor(AppColors.buttonPrimary)
-                .frame(width: 56, height: 56)
-                .background(AppColors.buttonPrimary.opacity(0.1))
-                .clipShape(Circle())
-        }
-        .padding(24)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Material.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(AppColors.cardBorder.opacity(0.5), lineWidth: 1)
-                )
-        )
-        .shadow(color: AppColors.shadow.opacity(0.3), radius: 12, x: 0, y: 4)
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(AppColors.secondaryText)
             }
-}
-
-// Bouton chat avec menu et historique
-struct SimpleChatButton: View {
-    @State private var showingChat = false
-    @State private var showingConversations = false
-    
-    var body: some View {
-        Menu {
-            Button {
-                showingChat = true
-            } label: {
-                Label("Nouvelle conversation".localized, systemImage: "square.and.pencil")
-            }
-            
-            Button {
-                showingConversations = true
-            } label: {
-                Label("Historique".localized, systemImage: "message.fill")
-            }
-        } label: {
-                Image(systemName: "sparkles")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(AppColors.buttonPrimaryText)
-                .frame(width: 56, height: 56)
-                .background(AppColors.buttonPrimary)
-                .clipShape(Circle())
-                .shadow(color: AppColors.shadow.opacity(0.4), radius: 12, x: 0, y: 6)
-        }
-        .sheet(isPresented: $showingChat) {
-            NavigationStack {
-                ChatAIScreen()
-            }
-        }
-        .sheet(isPresented: $showingConversations) {
-            NavigationStack {
-                ChatConversationsScreen()
-            }
+            .padding(DesignSystem.Spacing.lg)
         }
     }
 }
 
-#Preview {
-    NavigationStack {
-        HomeScreen()
-            .environmentObject(DataManager.shared)
+struct QuickActionCard: View {
+    let icon: String
+    let title: String
+    let value: String
+    let color: Color
+    
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(spacing: DesignSystem.Spacing.lg) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.15))
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 26, weight: .semibold))
+                        .foregroundColor(color)
+                }
+                
+                VStack(spacing: DesignSystem.Spacing.xs) {
+                    Text(title.localized)
+                        .font(DesignSystem.Typography.footnote())
+                        .foregroundColor(AppColors.secondaryText)
+                    
+                    Text(value)
+                        .font(DesignSystem.Typography.title())
+                        .foregroundColor(AppColors.primaryText)
+                        .fontWeight(.bold)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, DesignSystem.Spacing.lg)
+        }
+    }
+}
+
+struct FeatureGridItem<Destination: View>: View {
+    let icon: String
+    let title: String
+    let destination: Destination
+    let color: Color
+    
+    var body: some View {
+        NavigationLink(destination: destination) {
+            Card(cornerRadius: DesignSystem.Radius.lg) {
+                VStack(spacing: DesignSystem.Spacing.md) {
+                    ZStack {
+                        Circle()
+                            .fill(color.opacity(0.15))
+                            .frame(width: 48, height: 48)
+                        
+                        Image(systemName: icon)
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(color)
+                    }
+                    
+                    Text(title.localized)
+                        .font(DesignSystem.Typography.footnote())
+                        .foregroundColor(AppColors.primaryText)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .fontWeight(.medium)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 110)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }

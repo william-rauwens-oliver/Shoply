@@ -15,14 +15,16 @@ struct ChatMessage: Identifiable, Codable, Equatable {
     let timestamp: Date
     var isSystemMessage: Bool
     var imageData: Data? // Image en format Data pour la persistance
+    var aiModeString: String? // Mode AI utilisé pour générer ce message (pour les messages de l'IA)
     
-    init(content: String, isUser: Bool, isSystemMessage: Bool = false, imageData: Data? = nil) {
+    init(content: String, isUser: Bool, isSystemMessage: Bool = false, imageData: Data? = nil, aiModeString: String? = nil) {
         self.id = UUID()
         self.content = content
         self.isUser = isUser
         self.timestamp = Date()
         self.isSystemMessage = isSystemMessage
         self.imageData = imageData
+        self.aiModeString = aiModeString
     }
     
     // Propriété calculée pour obtenir l'image si disponible

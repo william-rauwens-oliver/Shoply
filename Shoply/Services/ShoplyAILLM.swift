@@ -22,7 +22,7 @@ class ShoplyAILLM {
     
     // Informations sur le modèle
     let modelName = "Shoply AI"
-    let creator = "William"
+    let creator = "William RAUWENS OLIVER"
     let parameterCount = 500_000
     let version = "1.0.0"
     
@@ -120,7 +120,7 @@ class ShoplyAILLM {
         // Templates de réponses avec variabilité
         responseTemplates = [
             "greeting": [
-                "Bonjour ! Je suis Shoply AI, créé par William. Je peux vous aider avec toutes vos questions sur la mode, les outfits, et bien plus encore. Comment puis-je vous assister aujourd'hui ?",
+                "Bonjour ! Je suis Shoply AI, créé par William RAUWENS OLIVER. Je peux vous aider avec toutes vos questions sur la mode, les outfits, et bien plus encore. Comment puis-je vous assister aujourd'hui ?",
                 "Salut ! 👋 Shoply AI à votre service. Je suis là pour répondre à toutes vos questions, que ce soit sur la mode, le style, ou n'importe quel autre sujet. Que souhaitez-vous savoir ?",
                 "Hello ! Je suis votre assistant Shoply AI. N'hésitez pas à me poser vos questions, je suis là pour vous aider !"
             ],
@@ -335,7 +335,7 @@ class ShoplyAILLM {
     
     private func generateGreetingResponse(userProfile: UserProfile?) -> String {
         let templates = responseTemplates["greeting"] ?? []
-        var response = templates.randomElement() ?? "Bonjour ! Je suis Shoply AI, créé par William. Comment puis-je vous aider ?"
+        var response = templates.randomElement() ?? "Bonjour ! Je suis Shoply AI, créé par William RAUWENS OLIVER. Comment puis-je vous aider ?"
         
         if let profile = userProfile, !profile.firstName.isEmpty {
             response = response.replacingOccurrences(of: "vous", with: profile.firstName)

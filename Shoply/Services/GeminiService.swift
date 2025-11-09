@@ -239,6 +239,260 @@ class GeminiService: ObservableObject {
         return finalSuggestions
     }
     
+    // MARK: - Recommandations Professionnelles
+    
+    /// Génère des recommandations professionnelles pour entretiens, présentations, etc.
+    func generateProfessionalRecommendations(
+        occasion: ProfessionalOutfit.ProfessionalOccasion,
+        userProfile: UserProfile,
+        wardrobeItems: [WardrobeItem]
+    ) async throws -> String {
+        guard isEnabled else {
+            throw GeminiError.apiKeyMissing
+        }
+        
+        let prompt = """
+        Je prépare un \(occasion.rawValue) et j'ai besoin de recommandations vestimentaires professionnelles.
+        
+        PROFIL:
+        - Genre: \(userProfile.gender.rawValue)
+        - Âge: \(userProfile.age)
+        
+        OCCASION: \(occasion.rawValue)
+        
+        GARDE-ROBE DISPONIBLE:
+        \(wardrobeItems.map { "- \($0.name) (\($0.category.rawValue), \($0.color))" }.joined(separator: "\n"))
+        
+        Donne-moi des recommandations détaillées pour cette occasion :
+        1. Quels vêtements de ma garde-robe dois-je porter ?
+        2. Quelles couleurs sont les plus appropriées ?
+        3. Des conseils sur les accessoires
+        4. Des conseils généraux pour cette occasion
+        
+        Réponds de manière professionnelle et détaillée.
+        """
+        
+        return try await sendGeminiRequest(prompt: prompt)
+    }
+    
+    // MARK: - Analyse de Tendances
+    
+    /// Analyse les tendances selon le pays, la ville et l'âge
+    func analyzeTrends(
+        country: String,
+        city: String?,
+        age: Int,
+        userProfile: UserProfile
+    ) async throws -> String {
+        guard isEnabled else {
+            throw GeminiError.apiKeyMissing
+        }
+        
+        let locationInfo = city != nil ? "\(city!), \(country)" : country
+        
+        let prompt = """
+        Analyse les tendances de mode actuelles pour :
+        - Localisation: \(locationInfo)
+        - Âge: \(age) ans
+        - Genre: \(userProfile.gender.rawValue)
+        
+        Donne-moi les tendances d'outfits actuelles de manière concise et claire :
+        - Les styles les plus portés
+        - Les couleurs tendances
+        - Les pièces essentielles
+        - Des recommandations personnalisées
+        
+        Réponds de manière concise et à jour.
+        """
+        
+        return try await sendGeminiRequest(prompt: prompt)
+    }
+    
+    // MARK: - Conseils Voyage
+    
+    /// Génère des conseils de voyage avec Gemini
+    func generateTravelAdvice(
+        destination: String,
+        startDate: Date,
+        endDate: Date,
+        userProfile: UserProfile
+    ) async throws -> String {
+        guard isEnabled else {
+            throw GeminiError.apiKeyMissing
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.locale = Locale(identifier: "fr_FR")
+        
+        let prompt = """
+        Je vais voyager à \(destination) du \(formatter.string(from: startDate)) au \(formatter.string(from: endDate)).
+        
+        Mon profil :
+        - Âge: \(userProfile.age) ans
+        - Genre: \(userProfile.gender.rawValue)
+        
+        Donne-moi des conseils détaillés sur ce qu'il faut prendre pour ce voyage :
+        - Les vêtements essentiels à emporter
+        - Les accessoires nécessaires
+        - Les chaussures adaptées
+        - Des conseils selon la météo prévue
+        - Des recommandations de style pour cette destination
+        
+        Réponds de manière détaillée et pratique.
+        """
+        
+        return try await sendGeminiRequest(prompt: prompt)
+    }
+    
+    // MARK: - Génération Lookbook
+    
+    /// Génère un lookbook avec Gemini
+    func generateLookbook(
+        title: String,
+        description: String?,
+        outfits: [HistoricalOutfit],
+        userProfile: UserProfile
+    ) async throws -> String {
+        guard isEnabled else {
+            throw GeminiError.apiKeyMissing
+        }
+        
+        let outfitsDescription = outfits.prefix(10).map { outfit in
+            "- \(outfit.outfit.displayName) (porté le \(formatDate(outfit.dateWorn)))"
+        }.joined(separator: "\n")
+        
+        let prompt = """
+        Crée un lookbook professionnel avec le titre "\(title)".
+        \(description != nil ? "Description: \(description!)\n" : "")
+        
+        Outfits à inclure :
+        \(outfitsDescription)
+        
+        Crée une description de lookbook professionnelle qui met en valeur ces outfits.
+        Inclus des suggestions de thème, de mise en page, et de style visuel.
+        
+        Réponds de manière créative et professionnelle.
+        """
+        
+        return try await sendGeminiRequest(prompt: prompt)
+    }
+    
+    // MARK: - Suggestions Calendrier
+    
+    /// Génère des suggestions d'outfits pour un événement du calendrier
+    func generateEventOutfitSuggestions(
+        event: CalendarEvent,
+        userProfile: UserProfile,
+        wardrobeItems: [WardrobeItem],
+        weather: WeatherData?
+    ) async throws -> [String] {
+        guard isEnabled else {
+            throw GeminiError.apiKeyMissing
+        }
+        
+        var weatherInfo = ""
+        if let weather = weather {
+            weatherInfo = """
+            MÉTÉO:
+            - Température: \(Int(weather.temperature))°C
+            - Conditions: \(weather.condition.rawValue)
+            """
+        }
+        
+        let prompt = """
+        Je dois assister à cet événement et j'ai besoin de suggestions d'outfits :
+        
+        ÉVÉNEMENT:
+        - Titre: \(event.title)
+        - Type: \(event.eventType.rawValue)
+        - Date: \(formatDate(event.startDate))
+        \(event.location != nil ? "- Lieu: \(event.location!)" : "")
+        \(event.notes != nil ? "- Notes: \(event.notes!)" : "")
+        
+        \(weatherInfo)
+        
+        PROFIL:
+        - Genre: \(userProfile.gender.rawValue)
+        - Âge: \(userProfile.age)
+        
+        GARDE-ROBE:
+        \(wardrobeItems.map { "- \($0.name) (\($0.category.rawValue), \($0.color))" }.joined(separator: "\n"))
+        
+        Propose-moi 3 styles vestimentaires différents adaptés à cet événement, en tenant compte de la météo et de mon profil.
+        Pour chaque style, indique :
+        - Les vêtements spécifiques de ma garde-robe à porter
+        - Pourquoi ce style est adapté à cet événement
+        - Des conseils supplémentaires
+        
+        Format: "Style 1: ...", "Style 2: ...", "Style 3: ..."
+        """
+        
+        let response = try await sendGeminiRequest(prompt: prompt)
+        
+        // Parser la réponse en plusieurs suggestions
+        let suggestions = response.components(separatedBy: "\n")
+            .filter { $0.contains("Style") || $0.contains("style") }
+            .map { $0.trimmingCharacters(in: CharacterSet.whitespaces) }
+            .filter { !$0.isEmpty }
+        
+        return suggestions.isEmpty ? [response] : suggestions
+    }
+    
+    // MARK: - Helper pour requêtes Gemini
+    
+    private func sendGeminiRequest(prompt: String) async throws -> String {
+        guard let apiKey = apiKey else {
+            throw GeminiError.apiKeyMissing
+        }
+        
+        let urlString = "\(baseURL)?key=\(apiKey)"
+        guard let url = URL(string: urlString) else {
+            throw GeminiError.invalidURL
+        }
+        
+        let requestBody: [String: Any] = [
+            "contents": [
+                [
+                    "parts": [
+                        ["text": prompt]
+                    ]
+                ]
+            ]
+        ]
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw GeminiError.apiError
+        }
+        
+        let apiResponse = try JSONDecoder().decode(GeminiResponse.self, from: data)
+        
+        guard let content = apiResponse.candidates.first?.content,
+              let text = content.parts.compactMap({ $0.text }).first else {
+            throw GeminiError.noResponse
+        }
+        
+        return text
+    }
+    
+    // MARK: - Helpers
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "fr_FR")
+        return formatter.string(from: date)
+    }
+    
     // MARK: - Construction du prompt
     
     private func buildPrompt(

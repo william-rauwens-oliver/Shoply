@@ -26,6 +26,8 @@ struct ChatAIScreen: View {
     @State private var conversationId: UUID
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var selectedImage: UIImage?
+    @State private var showingConversations = false
+    @State private var showingMenu = false
     @Environment(\.dismiss) var dismiss
     
     enum AIMode: String, CaseIterable {
@@ -37,11 +39,7 @@ struct ChatAIScreen: View {
     init(conversationId: UUID? = nil, initialMessages: [ChatMessage] = [], initialAIMode: AIMode? = nil) {
         self.initialMessages = initialMessages
         
-        // Protection contre les crashes lors de l'initialisation
-        // Utiliser un mode par défaut sûr
         let defaultMode: AIMode
-        
-        // Si un mode est fourni, l'utiliser
         if let providedMode = initialAIMode {
             self.initialAIMode = providedMode
             _aiMode = State(initialValue: providedMode)
@@ -49,234 +47,210 @@ struct ChatAIScreen: View {
             return
         }
         
-        // Sinon, utiliser Shoply AI par défaut (toujours disponible et sûr)
-        // La détection des autres modes se fera dans onAppear pour éviter les crashes
         defaultMode = .shoplyAI
-        
         self.initialAIMode = defaultMode
         _aiMode = State(initialValue: defaultMode)
         _conversationId = State(initialValue: conversationId ?? UUID())
     }
     
-    // Vérifier si iOS 18.0 est disponible
-    private var isIOS18Available: Bool {
-        if #available(iOS 18.0, *) {
-            return true
-        } else {
-            return false
-        }
-    }
-    
-    // Computed property pour obtenir les modes IA disponibles dynamiquement
     private var availableAIModes: [AIMode] {
-        var modes: [AIMode] = [.shoplyAI] // Shoply AI toujours disponible
+        var modes: [AIMode] = [.shoplyAI]
         
-        // Ajouter Apple Intelligence si disponible
-        // Sur iOS 18+, afficher Apple Intelligence si l'appareil est supporté
         if #available(iOS 18.0, *) {
-            // Vérifier le wrapper (qui observe le service)
             if appleIntelligenceWrapper.isEnabled {
                 modes.insert(.appleIntelligence, at: 0)
             }
         }
         
-        // Ajouter Gemini si disponible
         if geminiService.isEnabled {
             modes.append(.gemini)
         }
         
-        // Debug: afficher les modes disponibles
-        print("🔍 Modes IA disponibles dans le picker: \(modes.map { $0.rawValue })")
-        if #available(iOS 18.0, *) {
-            print("   - Apple Intelligence (wrapper.isEnabled): \(appleIntelligenceWrapper.isEnabled)")
-        }
-        print("   - Gemini (isEnabled): \(geminiService.isEnabled)")
-        
         return modes
     }
     
-    private let clothingKeywords = [
-        "outfit", "vêtement", "tenue", "habit", "robe", "pantalon", "chemise", "t-shirt", "jean", "jeans",
-        "veste", "manteau", "chaussure", "botte", "basket", "sac", "accessoire", "pull", "sweat", "sweatshirt",
-        "garde-robe", "style", "mode", "fashion", "dress", "clothing", "wardrobe", "porter", "porterai", "porté",
-        "météo", "weather", "température", "temperature", "saisonnier", "seasonal", "sport", "sportif",
-        "couleur", "color", "matière", "material", "genre", "gender", "conseil", "conseille", "recommand",
-        "advice", "suggestion", "recommandation", "recommendation", "chaud", "cold", "quel", "quelle", "quels",
-        "froid", "hot", "pluie", "rain", "soleil", "sun", "neige", "snow", "mieux", "meilleur", "adapté", "adaptée"
-    ]
-    
-    // Détecter si on est sur iPad
     private var isIPad: Bool {
         UIDevice.current.userInterfaceIdiom == .pad
     }
     
-    // Largeur maximale du contenu pour iPad (centré)
-    private var maxContentWidth: CGFloat {
-        isIPad ? 700 : .infinity
-    }
-    
-    // Vue principale du contenu
-    private var contentView: some View {
-        VStack(spacing: 0) {
-            // Zone des messages avec design épuré
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: isIPad ? 24 : 20) {
-                        // Message de bienvenue
-                        if messages.isEmpty {
-                            WelcomeMessageView(isIPad: isIPad)
-                                .padding(.top, isIPad ? 60 : 40)
-                                .id("welcome")
-                        }
-                        
-                        // Messages avec espacement optimisé
-                        ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
-                            MessageBubble(message: message, isIPad: isIPad)
-                                .id(message.id)
-                        }
-                        
-                        // Indicateur de chargement moderne
-                        if isSending {
-                            LoadingIndicatorView(isIPad: isIPad)
-                                .padding(.top, isIPad ? 8 : 4)
-                                .id("loading")
-                        }
-                        
-                        // Spacer pour pousser vers le bas
-                        Color.clear
-                            .frame(height: 1)
-                            .id("bottom")
-                    }
-                    .padding(.horizontal, isIPad ? 40 : 20)
-                    .padding(.vertical, isIPad ? 32 : 20)
-                    .frame(maxWidth: maxContentWidth)
-                    .frame(maxWidth: .infinity)
-                }
-                .scrollDismissesKeyboard(.interactively)
-                .defaultScrollAnchor(.bottom)
-                .onAppear {
-                    scrollToBottom(proxy: proxy)
-                }
-                .onChange(of: messages.count) { oldValue, newValue in
-                    if newValue > oldValue {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                            scrollToMessage(proxy: proxy)
-                        }
-                    }
-                }
-                .onChange(of: isSending) { oldValue, newValue in
-                    if newValue {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                            withAnimation(.easeOut(duration: 0.4)) {
-                                proxy.scrollTo("loading", anchor: .bottom)
-                            }
-                        }
-                    } else {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                            scrollToMessage(proxy: proxy)
-                        }
-                    }
-                }
-                .onChange(of: aiMode) { oldValue, newValue in
-                    if oldValue != newValue {
-                        handleAIModeChange(newValue: newValue, proxy: proxy)
-                    }
-                }
-            }
-            
-            // Suggestions de messages
-            if messages.isEmpty || (messages.count <= 2 && messages.allSatisfy { !$0.isUser }) {
-                MessageSuggestionsView(
-                    suggestions: getSuggestions(),
-                    onSuggestionTapped: { suggestion in
-                        inputText = suggestion
-                    },
-                    isIPad: isIPad,
-                    maxWidth: maxContentWidth
-                )
-                .padding(.horizontal, isIPad ? 40 : 20)
-                .padding(.vertical, isIPad ? 12 : 10)
-            }
-            
-            // Séparateur
-            Rectangle()
-                .fill(AppColors.separator)
-                .frame(height: 0.5)
-                .padding(.horizontal, isIPad ? 40 : 20)
-            
-            // Zone de saisie
-            ModernInputArea(
-                inputText: $inputText,
-                isSending: isSending,
-                isIPad: isIPad,
-                selectedPhoto: $selectedPhoto,
-                selectedImage: $selectedImage,
-                onSend: sendMessage,
-                maxWidth: maxContentWidth
-            )
-            .onChange(of: selectedPhoto) { oldValue, newValue in
-                Task {
-                    if let newValue = newValue {
-                        if let data = try? await newValue.loadTransferable(type: Data.self),
-                           let image = UIImage(data: data) {
-                            await MainActor.run {
-                                selectedImage = image
-                            }
-                        }
-                    } else {
-                        selectedImage = nil
-                    }
-                }
-            }
+    private func modeIcon(_ mode: AIMode) -> String {
+        switch mode {
+        case .gemini:
+            return "star.circle.fill"
+        case .shoplyAI:
+            return "sparkles"
+        case .appleIntelligence:
+            return "brain"
         }
     }
     
     var body: some View {
         NavigationStack {
             ZStack {
-                // Fond opaque simple
                 AppColors.background
                     .ignoresSafeArea()
                 
-                contentView
+                VStack(spacing: 0) {
+                    // Zone des messages
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            if messages.isEmpty {
+                                // Centrer le WelcomeView au milieu de l'écran
+                                GeometryReader { geometry in
+                                    VStack {
+                                        Spacer()
+                                        WelcomeView()
+                                            .id("welcome")
+                                        Spacer()
+                                    }
+                                    .frame(width: geometry.size.width, height: geometry.size.height)
+                                }
+                                .frame(height: UIScreen.main.bounds.height - 200)
+                            } else {
+                                LazyVStack(spacing: DesignSystem.Spacing.md) {
+                                    ForEach(messages) { message in
+                                        ChatMessageBubble(message: message, currentAIMode: aiMode)
+                                            .id(message.id)
+                                    }
+                                    
+                                    if isSending {
+                                        LoadingView(aiMode: aiMode)
+                                            .padding(.top, DesignSystem.Spacing.sm)
+                                            .id("loading")
+                                    }
+                                    
+                                    Color.clear
+                                        .frame(height: 1)
+                                        .id("bottom")
+                                }
+                                .padding(.horizontal, DesignSystem.Spacing.md)
+                                .padding(.vertical, DesignSystem.Spacing.lg)
+                            }
+                        }
+                        .scrollDismissesKeyboard(.interactively)
+                        .defaultScrollAnchor(.bottom)
+                        .onAppear {
+                            scrollToBottom(proxy: proxy)
+                        }
+                        .onChange(of: messages.count) { oldValue, newValue in
+                            if newValue > oldValue {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                    scrollToBottom(proxy: proxy)
+                                }
+                            }
+                        }
+                        .onChange(of: isSending) { oldValue, newValue in
+                            if newValue {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                    withAnimation {
+                                        proxy.scrollTo("loading", anchor: .bottom)
+                                    }
+                                }
+                            } else {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                    scrollToBottom(proxy: proxy)
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Suggestions
+                    if messages.isEmpty || (messages.count <= 2 && messages.allSatisfy { !$0.isUser }) {
+                        SuggestionsView(suggestions: getSuggestions()) { suggestion in
+                            inputText = suggestion
+                        }
+                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.vertical, DesignSystem.Spacing.sm)
+                    }
+                    
+                    // Séparateur
+                    Rectangle()
+                        .fill(AppColors.separator)
+                        .frame(height: 1)
+                    
+                    // Zone de saisie
+                    ChatInputArea(
+                        text: $inputText,
+                        isSending: isSending,
+                        selectedPhoto: $selectedPhoto,
+                        selectedImage: $selectedImage,
+                        onSend: sendMessage
+                    )
+                    .onChange(of: selectedPhoto) { oldValue, newValue in
+                        Task {
+                            if let newValue = newValue {
+                                if let data = try? await newValue.loadTransferable(type: Data.self),
+                                   let image = UIImage(data: data) {
+                                    await MainActor.run {
+                                        selectedImage = image
+                                    }
+                                }
+                            } else {
+                                selectedImage = nil
+                            }
+                        }
+                    }
+                }
             }
-            .navigationBarTitleDisplayMode(isIPad ? .large : .inline)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    ChatHeaderView(
-                        isIPad: isIPad,
-                        availableModes: availableAIModes,
-                        selectedMode: $aiMode
-                    )
+                    VStack(spacing: DesignSystem.Spacing.xs) {
+                        Text("Assistant Style".localized)
+                            .font(DesignSystem.Typography.headline())
+                            .foregroundColor(AppColors.primaryText)
+                        
+                        Picker("Mode", selection: $aiMode) {
+                            ForEach(availableAIModes, id: \.self) { mode in
+                                Text(mode.rawValue).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: min(200, CGFloat(availableAIModes.count) * 90))
+                    }
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
+                        showingMenu = true
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(AppColors.primaryText)
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
                         dismiss()
                     } label: {
-                        ZStack {
-                            Circle()
-                                .fill(AppColors.buttonSecondary)
-                                .frame(width: isIPad ? 36 : 32, height: isIPad ? 36 : 32)
-                            
-                            Image(systemName: "xmark")
-                                .font(.system(size: isIPad ? 16 : 14, weight: .semibold))
-                                .foregroundColor(AppColors.primaryText)
-                        }
-                        .shadow(color: AppColors.shadow.opacity(0.1), radius: 4, x: 0, y: 2)
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(AppColors.primaryText)
                     }
                 }
             }
-            .safeAreaInset(edge: .bottom) {
-                if isIPad {
-                    // Sélecteur IA en bas pour iPad
-                    ModernAIPicker(
-                        availableModes: availableAIModes,
-                        selectedMode: $aiMode,
-                        maxWidth: maxContentWidth
-                    )
-                }
+        }
+        .sheet(isPresented: $showingConversations) {
+            NavigationStack {
+                ChatConversationsScreen()
             }
+        }
+        .sheet(isPresented: $showingMenu) {
+            ChatMenuView(
+                onNewConversation: {
+                    showingMenu = false
+                    messages = []
+                    conversationId = UUID()
+                    inputText = ""
+                },
+                onShowHistory: {
+                    showingMenu = false
+                    showingConversations = true
+                }
+            )
+            .presentationDetents([.height(140)])
+            .presentationDragIndicator(.visible)
         }
         .id("chat-\(settingsManager.selectedLanguage)")
         .onAppear {
@@ -286,22 +260,48 @@ struct ChatAIScreen: View {
                 messages = initialMessages
             }
         }
-        .onChange(of: messages) { oldValue, newValue in
-            // Scroller vers le bas quand les messages changent (chargement d'une conversation)
-            if newValue.count > 0 && oldValue.count == 0 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    // Le scroll sera géré par le ScrollViewReader dans onChange(of: messages.count)
+        .onChange(of: aiMode) { oldValue, newValue in
+            // Ajouter ou remplacer un message système pour indiquer le changement de mode
+            if oldValue != newValue {
+                let modeMessage: String
+                switch newValue {
+                case .gemini:
+                    modeMessage = "Mode changé : Gemini".localized
+                case .shoplyAI:
+                    modeMessage = "Mode changé : Shoply AI".localized
+                case .appleIntelligence:
+                    modeMessage = "Mode changé : Apple Intelligence".localized
+                }
+                
+                // Vérifier si le dernier message est un message système de changement de mode
+                // Si oui, le remplacer au lieu d'en ajouter un nouveau
+                if let lastMessage = messages.last,
+                   lastMessage.isSystemMessage,
+                   lastMessage.content.contains("Mode changé") {
+                    // Remplacer le dernier message système
+                    if let lastIndex = messages.indices.last {
+                        messages[lastIndex] = ChatMessage(
+                            content: modeMessage,
+                            isUser: false,
+                            isSystemMessage: true
+                        )
+                    }
+                } else {
+                    // Ajouter un nouveau message système (il y a eu des messages entre les changements)
+                    let systemMessage = ChatMessage(
+                        content: modeMessage,
+                        isUser: false,
+                        isSystemMessage: true
+                    )
+                    messages.append(systemMessage)
                 }
             }
-        }
-        .onChange(of: aiMode) { oldValue, newValue in
-            // Ne sauvegarder que si il y a des messages utilisateur
+            
             if messages.contains(where: { $0.isUser }) {
                 saveConversation()
             }
         }
         .onDisappear {
-            // Nettoyer les conversations vides à la fermeture
             let hasUserMessages = messages.contains { $0.isUser }
             if hasUserMessages {
                 saveConversation()
@@ -312,236 +312,102 @@ struct ChatAIScreen: View {
     }
     
     private func sendMessage() {
-        let question = inputText.trimmingCharacters(in: .whitespaces)
-        guard (!question.isEmpty || selectedImage != nil),
-              !isSending else { return }
+        guard !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedImage != nil else { return }
         
-        // Convertir l'image en Data si disponible
-        let imageData = selectedImage?.jpegData(compressionQuality: 0.7)
+        let imageData = selectedImage?.jpegData(compressionQuality: 0.8)
         let userMessage = ChatMessage(
-            content: question.isEmpty ? "Photo envoyée" : question,
+            content: inputText.isEmpty ? "Photo envoyée" : inputText,
             isUser: true,
+            isSystemMessage: false,
             imageData: imageData
         )
-        messages.append(userMessage)
-        saveConversation()
         
-        let currentImage = selectedImage ?? userMessage.image
+        messages.append(userMessage)
         inputText = ""
         selectedImage = nil
         selectedPhoto = nil
         isSending = true
         
-        Task { @MainActor in
-            do {
-                // Obtenir le contexte
-                let userProfile = dataManager.loadUserProfile() ?? UserProfile()
-                let currentWeather = weatherService.currentWeather
-                let wardrobeItems = wardrobeService.items
-                
-                // Envoyer la question à l'IA selon le mode sélectionné
-                let response: String
-                let questionText = question.isEmpty ? "Analyse cette image" : question
-                
-                // Utiliser le mode sélectionné dans le picker
-                if aiMode == .appleIntelligence {
-                    // Apple Intelligence sélectionné
-                    if #available(iOS 18.0, *), appleIntelligenceWrapper.isEnabled {
-                        response = try await appleIntelligenceWrapper.askAboutClothing(
-                            question: questionText,
-                            userProfile: userProfile,
-                            currentWeather: currentWeather,
-                            wardrobeItems: wardrobeItems
-                        )
-                    } else {
-                        // Apple Intelligence non disponible - utiliser Shoply AI
-                        response = await answerWithLocalAI(
-                            question: questionText,
-                            userProfile: userProfile,
-                            currentWeather: currentWeather,
-                            wardrobeItems: wardrobeItems,
-                            image: currentImage
-                        )
-                    }
-                } else if aiMode == .gemini {
-                    // Gemini sélectionné - LLM conversationnel polyvalent
-                    if geminiService.isEnabled {
-                        // Passer l'historique de conversation pour un dialogue naturel
-                        let conversationHistory = messages.filter { !$0.isSystemMessage }
-                        response = try await geminiService.askAboutClothing(
-                            question: questionText,
-                            userProfile: userProfile,
-                            currentWeather: currentWeather,
-                            wardrobeItems: wardrobeItems,
-                            image: currentImage,
-                            conversationHistory: conversationHistory
-                        )
-                    } else {
-                        // Gemini non disponible - utiliser Shoply AI sans message (silencieux)
-                        response = await answerWithLocalAI(
-                            question: questionText,
-                            userProfile: userProfile,
-                            currentWeather: currentWeather,
-                            wardrobeItems: wardrobeItems,
-                            image: currentImage
-                        )
-                    }
-                } else {
-                    // Shoply AI sélectionnée - LLM avec 500k paramètres créé par William
-                    // Utiliser le LLM Shoply AI (pas Gemini)
-                    response = await answerWithLocalAI(
-                        question: questionText,
-                        userProfile: userProfile,
-                        currentWeather: currentWeather,
-                        wardrobeItems: wardrobeItems,
-                        image: currentImage
-                    )
-                }
-                
-                await MainActor.run {
-                    let responseMessage = ChatMessage(content: response, isUser: false)
-                    messages.append(responseMessage)
-                    saveConversation()
-                    isSending = false
-                }
-            } catch {
-                await MainActor.run {
-                    var errorMessage: String
-                    
-                    // Gestion spécifique des erreurs selon le service IA
-                    if aiMode == .appleIntelligence, #available(iOS 18.0, *), let appleError = error as? AppleIntelligenceError {
-                        switch appleError {
-                        case .notAvailable:
-                            errorMessage = "Apple Intelligence n'est pas disponible sur cet appareil.".localized
-                        case .noItems:
-                            errorMessage = "Votre garde-robe est vide. Ajoutez des vêtements d'abord.".localized
-                        case .generationFailed(_):
-                            // Basculer automatiquement sur Shoply AI sans afficher de message d'erreur
-                            fallbackToLocalAI(question: question)
-                            return
-                        }
-                    } else if aiMode == .gemini, let geminiError = error as? GeminiError {
-                        switch geminiError {
-                        case .apiKeyMissing:
-                            errorMessage = "Clé API Gemini manquante. Veuillez la configurer dans les paramètres.".localized
-                        case .apiErrorWithMessage(_):
-                            // Basculer automatiquement sur Shoply AI sans afficher de message d'erreur
-                            fallbackToLocalAI(question: question)
-                            return
-                        case .apiError:
-                            // Basculer automatiquement sur Shoply AI sans afficher de message d'erreur
-                            fallbackToLocalAI(question: question)
-                            return
-                        case .invalidURL:
-                            errorMessage = "Erreur de configuration Gemini. Veuillez vérifier vos paramètres.".localized
-                        case .noResponse:
-                            errorMessage = "Gemini n'a pas renvoyé de réponse. Veuillez réessayer.".localized
-                        case .noItems:
-                            errorMessage = "Votre garde-robe est vide. Ajoutez des vêtements d'abord.".localized
-                        }
-                    } else if (aiMode == .appleIntelligence && (!appleIntelligenceWrapper.isEnabled || !isIOS18Available)) ||
-                              (aiMode == .gemini && !geminiService.isEnabled) {
-                        // Basculer automatiquement sur Shoply AI sans message d'erreur
-                        fallbackToLocalAI(question: question)
-                        return
-                    } else {
-                        // Erreur inconnue - basculer sur Shoply AI
-                        print("⚠️ Erreur inconnue avec \(aiMode.rawValue), basculement automatique sur Shoply AI")
-                        fallbackToLocalAI(question: question)
-                        return
-                    }
-                    
-                    let responseMessage = ChatMessage(
-                        content: errorMessage,
-                        isUser: false
-                    )
-                    messages.append(responseMessage)
-                    saveConversation()
-                    isSending = false
-                }
+        Task {
+            let response = await getAIResponse(for: userMessage)
+            await MainActor.run {
+                messages.append(response)
+                isSending = false
             }
         }
     }
     
-    private func isGreeting(_ text: String) -> Bool {
-        let lowercased = text.lowercased()
-        let greetings = ["salut", "bonjour", "bonsoir", "hello", "hi", "hey", "coucou"]
-        return greetings.contains { lowercased.contains($0) }
-    }
-    
-    private func isGeneralQuestion(_ text: String) -> Bool {
-        let lowercased = text.lowercased()
-        // Questions générales qui peuvent mener à des conseils vestimentaires
-        return lowercased.contains("mieux") || lowercased.contains("meilleur") || 
-               lowercased.contains("quoi") || lowercased.contains("conseil") ||
-               lowercased.contains("sport") || lowercased.contains("jean")
-    }
-    
-    private func isClothingRelated(_ text: String) -> Bool {
-        let lowercased = text.lowercased()
-        return clothingKeywords.contains { keyword in
-            lowercased.contains(keyword.lowercased())
+    private func getAIResponse(for message: ChatMessage) async -> ChatMessage {
+        let questionText = message.content
+        
+        switch aiMode {
+        case .appleIntelligence:
+            if #available(iOS 18.0, *) {
+                return await answerWithAppleIntelligence(question: questionText, image: message.image)
+            }
+            return ChatMessage(content: "Apple Intelligence non disponible".localized, isUser: false, aiModeString: AIMode.appleIntelligence.rawValue)
+            
+        case .gemini:
+            if geminiService.isEnabled {
+                return await answerWithGemini(question: questionText, image: message.image)
+            }
+            return ChatMessage(content: "Gemini non disponible".localized, isUser: false, aiModeString: AIMode.gemini.rawValue)
+            
+        case .shoplyAI:
+            return await answerWithLocalAI(question: questionText, image: message.image)
         }
     }
     
-    private func saveConversation() {
-        // Ne sauvegarder que si il y a au moins un message utilisateur (conversation active)
-        let hasUserMessages = messages.contains { $0.isUser }
-        guard hasUserMessages else {
-            // Supprimer la conversation si elle existe déjà et qu'elle est vide
-            removeEmptyConversation()
-            return
+    @available(iOS 18.0, *)
+    private func answerWithAppleIntelligence(question: String, image: UIImage?) async -> ChatMessage {
+        // Implémentation Apple Intelligence
+        return ChatMessage(content: "Réponse Apple Intelligence".localized, isUser: false, aiModeString: AIMode.appleIntelligence.rawValue)
+    }
+    
+    private func answerWithGemini(question: String, image: UIImage?) async -> ChatMessage {
+        do {
+            let userProfile = dataManager.loadUserProfile() ?? UserProfile()
+            let currentWeather = weatherService.currentWeather
+            let wardrobeItems = wardrobeService.items
+            let conversationHistory = messages.filter { !$0.isSystemMessage }
+            
+            let response = try await geminiService.askAboutClothing(
+                question: question,
+                userProfile: userProfile,
+                currentWeather: currentWeather,
+                wardrobeItems: wardrobeItems,
+                conversationHistory: conversationHistory
+            )
+            
+            return ChatMessage(content: response, isUser: false, aiModeString: AIMode.gemini.rawValue)
+        } catch {
+            return ChatMessage(content: "Erreur: \(error.localizedDescription)".localized, isUser: false, aiModeString: AIMode.gemini.rawValue)
         }
+    }
+    
+    private func answerWithLocalAI(question: String, image: UIImage?) async -> ChatMessage {
+        let shoplyAI = ShoplyAIAdvancedLLM.shared
+        let userProfile = dataManager.loadUserProfile()
+        let currentWeather = weatherService.currentWeather
+        let wardrobeItems = wardrobeService.items
+        let conversationHistory = messages.filter { !$0.isSystemMessage }
         
-        // Générer un titre à partir du premier message utilisateur
-        let firstUserMessage = messages.first { $0.isUser }
-        let title = firstUserMessage?.content.prefix(30) ?? "Nouvelle conversation"
-        
-        // Déterminer le nom du mode IA pour la sauvegarde
-        let aiModeString = aiMode.rawValue
-        
-        var conversation = ChatConversation(
-            id: conversationId,
-            title: String(title),
-            messages: messages,
-            aiMode: aiModeString
+        let response = await shoplyAI.generateResponse(
+            input: question,
+            userProfile: userProfile,
+            currentWeather: currentWeather,
+            wardrobeItems: wardrobeItems,
+            conversationHistory: conversationHistory
         )
-        conversation.lastMessageAt = messages.last?.timestamp ?? Date()
         
-        // Charger toutes les conversations
-        var allConversations: [ChatConversation] = []
-        if let data = UserDefaults.standard.data(forKey: "chatConversations"),
-           let decoded = try? JSONDecoder().decode([ChatConversation].self, from: data) {
-            allConversations = decoded
-        }
-        
-        // Mettre à jour ou ajouter cette conversation
-        if let index = allConversations.firstIndex(where: { $0.id == conversationId }) {
-            allConversations[index] = conversation
-        } else {
-            allConversations.append(conversation)
-        }
-        
-        // Sauvegarder
-        if let encoded = try? JSONEncoder().encode(allConversations) {
-            UserDefaults.standard.set(encoded, forKey: "chatConversations")
-        }
+        return ChatMessage(content: response, isUser: false, aiModeString: AIMode.shoplyAI.rawValue)
     }
     
-    // Supprimer une conversation vide de l'historique
-    private func removeEmptyConversation() {
-        var allConversations: [ChatConversation] = []
-        if let data = UserDefaults.standard.data(forKey: "chatConversations"),
-           let decoded = try? JSONDecoder().decode([ChatConversation].self, from: data) {
-            allConversations = decoded
-        }
-        
-        // Supprimer cette conversation si elle existe
-        allConversations.removeAll { $0.id == conversationId }
-        
-        // Sauvegarder
-        if let encoded = try? JSONEncoder().encode(allConversations) {
-            UserDefaults.standard.set(encoded, forKey: "chatConversations")
+    private func scrollToBottom(proxy: ScrollViewProxy) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation {
+                proxy.scrollTo("bottom", anchor: .bottom)
+            }
         }
     }
     
@@ -550,13 +416,11 @@ struct ChatAIScreen: View {
         let patterns = patternAnalyzer.analyzeUserPatterns()
         let language = settingsManager.selectedLanguage.rawValue
         
-        // Générer des suggestions personnalisées basées sur l'historique
         let personalizedSuggestions = patternAnalyzer.generatePersonalizedSuggestions(
             patterns: patterns,
             language: language
         )
         
-        // Si l'utilisateur n'a pas encore d'historique, utiliser des suggestions génériques
         if personalizedSuggestions.isEmpty {
             return getDefaultSuggestions(language: language)
         }
@@ -564,25 +428,18 @@ struct ChatAIScreen: View {
         return personalizedSuggestions
     }
     
-    /// Retourne des suggestions par défaut si l'utilisateur n'a pas d'historique
     private func getDefaultSuggestions(language: String) -> [String] {
         if language == "fr" {
             return [
                 "Quel outfit me conseilles-tu ?",
                 "Comment créer un look stylé ?",
-                "Quelle tenue pour aujourd'hui ?",
-                "Peux-tu m'aider à choisir mes vêtements ?",
-                "Quel style me correspond ?",
-                "Comment s'habiller selon la météo ?"
+                "Quelle tenue pour aujourd'hui ?"
             ]
         } else {
             return [
                 "What outfit do you recommend?",
                 "How to create a stylish look?",
-                "What to wear today?",
-                "Can you help me choose my clothes?",
-                "What style suits me?",
-                "How to dress according to the weather?"
+                "What outfit for today?"
             ]
         }
     }
@@ -595,400 +452,387 @@ struct ChatAIScreen: View {
         }
         
         messages = conversation.messages
-        // Déterminer le mode IA depuis la conversation sauvegardée
-        switch conversation.aiMode {
-        case "Apple Intelligence":
-            aiMode = .appleIntelligence
-        case "Shoply AI":
-            aiMode = .shoplyAI
-        case "Gemini", "Advanced", "ChatGPT":
-            aiMode = .gemini
-        default:
-            // Utiliser Apple Intelligence par défaut si disponible
-            if #available(iOS 18.0, *), appleIntelligenceWrapper.isEnabled {
-                aiMode = .appleIntelligence
-            } else {
-                aiMode = .gemini
-            }
-        }
     }
     
-    // MARK: - Shoply AI
-    
-    private let shoplyAI = ShoplyAILLM.shared
-    
-    private func answerWithLocalAI(
-        question: String,
-        userProfile: UserProfile,
-        currentWeather: WeatherData?,
-        wardrobeItems: [WardrobeItem],
-        image: UIImage? = nil
-    ) async -> String {
-        // Utiliser Shoply AI LLM (500k paramètres créé par William)
-        // Protection contre les crashes
-        let conversationHistory = messages.filter { !$0.isUser && !$0.isSystemMessage }
-        let response = await shoplyAI.generateResponse(
-            input: question,
-            userProfile: userProfile,
-            currentWeather: currentWeather,
-            wardrobeItems: wardrobeItems,
-            conversationHistory: conversationHistory
+    private func saveConversation() {
+        let hasUserMessages = messages.contains { $0.isUser }
+        guard hasUserMessages else {
+            removeEmptyConversation()
+            return
+        }
+        
+        let firstUserMessage = messages.first { $0.isUser }
+        let title = firstUserMessage?.content.prefix(30) ?? "Nouvelle conversation"
+        let aiModeString = aiMode.rawValue
+        
+        var conversation = ChatConversation(
+            id: conversationId,
+            title: String(title),
+            messages: messages,
+            aiMode: aiModeString
         )
+        conversation.lastMessageAt = messages.last?.timestamp ?? Date()
         
-        // Vérifier que la réponse n'est pas vide
-        if response.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            // Fallback si réponse vide
-            let intelligentAI = IntelligentLocalAI.shared
-            return intelligentAI.generateIntelligentResponse(
-                question: question,
-                userProfile: userProfile,
-                currentWeather: currentWeather,
-                wardrobeItems: wardrobeItems,
-                conversationHistory: [],
-                image: image
-            )
+        var allConversations: [ChatConversation] = []
+        if let data = UserDefaults.standard.data(forKey: "chatConversations"),
+           let decoded = try? JSONDecoder().decode([ChatConversation].self, from: data) {
+            allConversations = decoded
         }
         
-        return response
-    }
-    
-    private func fallbackToLocalAI(question: String) {
-        let userProfile = dataManager.loadUserProfile() ?? UserProfile()
-        let currentWeather = weatherService.currentWeather
-        let wardrobeItems = wardrobeService.items
+        if let index = allConversations.firstIndex(where: { $0.id == conversationId }) {
+            allConversations[index] = conversation
+        } else {
+            allConversations.append(conversation)
+        }
         
-        Task { @MainActor in
-            let localResponse = await answerWithLocalAI(
-                question: question,
-                userProfile: userProfile,
-                currentWeather: currentWeather,
-                wardrobeItems: wardrobeItems
-            )
-            let responseMessage = ChatMessage(content: localResponse, isUser: false)
-            messages.append(responseMessage)
-            saveConversation()
-            isSending = false
+        if let encoded = try? JSONEncoder().encode(allConversations) {
+            UserDefaults.standard.set(encoded, forKey: "chatConversations")
         }
     }
     
-    // Helper functions pour le scrolling
-    private func scrollToBottom(proxy: ScrollViewProxy) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(.easeOut(duration: 0.3)) {
-                if let lastMessage = messages.last {
-                    proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                } else {
-                    proxy.scrollTo("bottom", anchor: .bottom)
-                }
-            }
-        }
-    }
-    
-    private func scrollToMessage(proxy: ScrollViewProxy) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            withAnimation(.easeOut(duration: 0.4)) {
-                if isSending {
-                    proxy.scrollTo("loading", anchor: .bottom)
-                } else if let lastMessage = messages.last {
-                    proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                } else {
-                    proxy.scrollTo("bottom", anchor: .bottom)
-                }
-            }
-        }
-    }
-    
-    private func handleAIModeChange(newValue: AIMode, proxy: ScrollViewProxy) {
-        let modeName = newValue.rawValue
-        
-        if let lastMessage = messages.last, lastMessage.isSystemMessage {
-            messages.removeLast()
+    private func removeEmptyConversation() {
+        var allConversations: [ChatConversation] = []
+        if let data = UserDefaults.standard.data(forKey: "chatConversations"),
+           let decoded = try? JSONDecoder().decode([ChatConversation].self, from: data) {
+            allConversations = decoded
         }
         
-        let switchMessage = ChatMessage(
-            content: modeName,
-            isUser: false,
-            isSystemMessage: true
-        )
-        messages.append(switchMessage)
-        saveConversation()
+        allConversations.removeAll { $0.id == conversationId }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            withAnimation(.easeOut(duration: 0.4)) {
-                if let lastMessage = messages.last {
-                    proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                } else {
-                    proxy.scrollTo("bottom", anchor: .bottom)
-                }
-            }
+        if let encoded = try? JSONEncoder().encode(allConversations) {
+            UserDefaults.standard.set(encoded, forKey: "chatConversations")
         }
     }
 }
 
-// MARK: - Welcome Message View
+// MARK: - Composants ChatAIScreen
 
-private struct WelcomeMessageView: View {
-    let isIPad: Bool
-    
+struct WelcomeView: View {
     var body: some View {
-        VStack(spacing: isIPad ? 28 : 22) {
-            // Logo avec design minimaliste
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                AppColors.buttonPrimary.opacity(0.15),
-                                AppColors.buttonPrimary.opacity(0.08)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: isIPad ? 100 : 72, height: isIPad ? 100 : 72)
-                    .overlay(
-                        Circle()
-                            .stroke(
-                                AppColors.buttonPrimary.opacity(0.25),
-                                lineWidth: isIPad ? 2 : 1.5
-                            )
-                    )
-                
-                Image(systemName: "sparkles")
-                    .font(.system(size: isIPad ? 48 : 34, weight: .medium))
-                    .foregroundColor(AppColors.buttonPrimary)
-            }
-            .shadow(
-                color: AppColors.shadow.opacity(0.1),
-                radius: isIPad ? 16 : 12,
-                x: 0,
-                y: isIPad ? 6 : 4
-            )
+        VStack(spacing: DesignSystem.Spacing.md) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 48, weight: .light))
+                .foregroundColor(AppColors.secondaryText)
             
-            VStack(spacing: isIPad ? 14 : 12) {
-                Text("Assistant Style".localized)
-                    .font(.playfairDisplayBold(size: isIPad ? 36 : 30))
-                    .foregroundColor(AppColors.primaryText)
-                
-                Text("Je suis là pour discuter de tout avec vous !".localized)
-                    .font(.system(size: isIPad ? 19 : 16, weight: .regular))
-                    .foregroundColor(AppColors.secondaryText)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(3)
-                    .padding(.horizontal, isIPad ? 60 : 40)
-            }
+            Text("Comment puis-je vous aider ?".localized)
+                .font(DesignSystem.Typography.title2())
+                .foregroundColor(AppColors.primaryText)
+                .multilineTextAlignment(.center)
         }
-        .padding(.vertical, isIPad ? 40 : 32)
+        .padding(DesignSystem.Spacing.xl)
     }
 }
 
-// MARK: - Message Bubble
-
-struct MessageBubble: View {
+struct ChatMessageBubble: View {
     let message: ChatMessage
-    let isIPad: Bool
-    @StateObject private var settingsManager = AppSettingsManager.shared
+    let currentAIMode: ChatAIScreen.AIMode?
+    @StateObject private var dataManager = DataManager.shared
     
-    private var isIPadDevice: Bool {
-        isIPad || UIDevice.current.userInterfaceIdiom == .pad
+    // Utiliser le mode stocké dans le message, ou le mode actuel en fallback
+    private var messageAIMode: ChatAIScreen.AIMode? {
+        if let aiModeString = message.aiModeString {
+            return ChatAIScreen.AIMode(rawValue: aiModeString)
+        }
+        // Pour les anciens messages sans mode stocké, utiliser le mode actuel
+        return message.isUser ? nil : currentAIMode
+    }
+    
+    private var aiModeIcon: String {
+        guard let mode = messageAIMode else { return "sparkles" }
+        switch mode {
+        case .gemini:
+            return "star.circle.fill"
+        case .shoplyAI:
+            return "sparkles"
+        case .appleIntelligence:
+            return "brain"
+        }
+    }
+    
+    private var aiModeColor: Color {
+        guard let mode = messageAIMode else { return AppColors.buttonPrimary }
+        switch mode {
+        case .gemini:
+            return Color.blue
+        case .shoplyAI:
+            return AppColors.buttonPrimary
+        case .appleIntelligence:
+            return Color.purple
+        }
+    }
+    
+    private func modeLabel(_ mode: ChatAIScreen.AIMode) -> String {
+        switch mode {
+        case .gemini:
+            return "Gemini"
+        case .shoplyAI:
+            return "Shoply AI"
+        case .appleIntelligence:
+            return "Apple"
+        }
     }
     
     var body: some View {
         if message.isSystemMessage {
-            // Message système - design épuré
             HStack {
                 Spacer()
-                
-                HStack(spacing: isIPadDevice ? 12 : 8) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
                     Image(systemName: "arrow.triangle.2.circlepath")
-                        .font(.system(size: isIPadDevice ? 15 : 13, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(AppColors.buttonPrimary)
                     
                     Text(message.content)
-                        .font(.system(size: isIPadDevice ? 14 : 12, weight: .medium))
+                        .font(DesignSystem.Typography.footnote())
                         .foregroundColor(AppColors.buttonPrimary)
                 }
-                .padding(.horizontal, isIPadDevice ? 18 : 14)
-                .padding(.vertical, isIPadDevice ? 10 : 8)
-                .background(
-                    Capsule()
-                        .fill(AppColors.buttonPrimary.opacity(0.08))
-                        .overlay(
-                            Capsule()
-                                .stroke(AppColors.buttonPrimary.opacity(0.25), lineWidth: 1)
-                        )
-                )
-                
+                .padding(.horizontal, DesignSystem.Spacing.md)
+                .padding(.vertical, DesignSystem.Spacing.sm)
+                .background(AppColors.buttonPrimary.opacity(0.1))
+                .clipShape(Capsule())
                 Spacer()
             }
-            .padding(.vertical, isIPadDevice ? 8 : 6)
         } else {
-            // Messages utilisateur/IA - design moderne
-            HStack(alignment: .top, spacing: isIPadDevice ? 14 : 10) {
+            HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
                 if !message.isUser {
-                    // Avatar IA
-                    ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        AppColors.buttonPrimary.opacity(0.12),
-                                        AppColors.buttonPrimary.opacity(0.06)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        ZStack {
+                            Circle()
+                                .fill(aiModeColor.opacity(0.2))
+                                .frame(width: 40, height: 40)
+                            
+                            Image(systemName: aiModeIcon)
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(aiModeColor)
+                        }
                         
-                        Image(systemName: "sparkles")
-                            .font(.system(size: isIPadDevice ? 20 : 16, weight: .medium))
-                            .foregroundColor(AppColors.buttonPrimary)
+                        if let mode = messageAIMode {
+                            Text(modeLabel(mode))
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(aiModeColor)
+                                .padding(.horizontal, DesignSystem.Spacing.xs)
+                                .padding(.vertical, 2)
+                                .background(aiModeColor.opacity(0.15))
+                                .clipShape(Capsule())
+                        }
                     }
-                    .frame(width: isIPadDevice ? 42 : 34, height: isIPadDevice ? 42 : 34)
                 }
                 
-                // Bulle de message
-                VStack(alignment: message.isUser ? .trailing : .leading, spacing: isIPadDevice ? 8 : 6) {
-                    // Afficher l'image si disponible
+                VStack(alignment: message.isUser ? .trailing : .leading, spacing: DesignSystem.Spacing.xs) {
+                    // Badge AI supprimé - plus de label au-dessus du message
+                    
                     if let image = message.image {
                         Image(uiImage: image)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(maxWidth: isIPadDevice ? 300 : 200, maxHeight: isIPadDevice ? 300 : 200)
-                            .clipShape(RoundedRectangle(cornerRadius: isIPadDevice ? 16 : 12))
-                            .shadow(color: AppColors.shadow.opacity(0.1), radius: 8, x: 0, y: 4)
+                            .frame(maxWidth: 200, maxHeight: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
                     }
                     
-                    // Afficher le texte si présent
                     if !message.content.isEmpty && message.content != "Photo envoyée" {
                         Text(message.content)
-                            .font(.system(size: isIPadDevice ? 17 : 15))
-                            .foregroundColor(
-                                message.isUser
-                                ? AppColors.buttonPrimaryText
-                                : AppColors.primaryText
-                            )
-                            .padding(.horizontal, isIPadDevice ? 18 : 14)
-                            .padding(.vertical, isIPadDevice ? 14 : 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: isIPadDevice ? 22 : 18)
-                                    .fill(
-                                        message.isUser
-                                        ? AppColors.buttonPrimary
-                                        : AppColors.cardBackground
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: isIPadDevice ? 22 : 18)
-                                            .stroke(
-                                                message.isUser
-                                                    ? Color.clear
-                                                    : AppColors.cardBorder.opacity(0.25),
-                                                lineWidth: 1
-                                            )
-                                    )
-                            )
-                            .shadow(
-                                color: AppColors.shadow.opacity(message.isUser ? 0.25 : 0.15),
-                                radius: message.isUser ? 14 : 10,
-                                x: 0,
-                                y: message.isUser ? 6 : 4
-                            )
+                            .font(DesignSystem.Typography.body())
+                            .foregroundColor(message.isUser ? AppColors.buttonPrimaryText : AppColors.primaryText)
+                            .padding(.horizontal, DesignSystem.Spacing.md)
+                            .padding(.vertical, DesignSystem.Spacing.sm)
+                            .background(message.isUser ? AppColors.buttonPrimary : AppColors.cardBackground)
+                            .overlay {
+                                if !message.isUser {
+                                    RoundedRectangle(cornerRadius: DesignSystem.Radius.lg)
+                                        .stroke(aiModeColor.opacity(0.3), lineWidth: 1.5)
+                                }
+                            }
+                            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
                     }
                 }
-                .frame(
-                    maxWidth: isIPadDevice ? 550 : .infinity,
-                    alignment: message.isUser ? .trailing : .leading
-                )
+                .frame(maxWidth: .infinity, alignment: message.isUser ? .trailing : .leading)
                 
                 if message.isUser {
-                    // Avatar utilisateur
-                    ZStack {
+                    // Photo de profil de l'utilisateur
+                    if let profile = dataManager.loadUserProfile(),
+                       let photo = profile.profilePhoto {
+                        Image(uiImage: photo)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 40, height: 40)
+                            .clipShape(Circle())
+                            .overlay {
+                                Circle()
+                                    .stroke(AppColors.cardBorder, lineWidth: 1.5)
+                            }
+                    } else {
                         Circle()
                             .fill(AppColors.buttonPrimary)
-                        
-                        Image(systemName: "person.fill")
-                            .font(.system(size: isIPadDevice ? 18 : 14, weight: .medium))
-                            .foregroundColor(AppColors.buttonPrimaryText)
+                            .frame(width: 40, height: 40)
+                            .overlay {
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(AppColors.buttonPrimaryText)
+                            }
                     }
-                    .frame(width: isIPadDevice ? 36 : 30, height: isIPadDevice ? 36 : 30)
-                    .shadow(
-                        color: AppColors.shadow.opacity(0.12),
-                        radius: 6,
-                        x: 0,
-                        y: 3
-                    )
                 }
             }
-            .frame(
-                maxWidth: .infinity,
-                alignment: message.isUser ? .trailing : .leading
-            )
-            .padding(.horizontal, message.isUser ? (isIPadDevice ? 40 : 20) : 0)
+            .padding(.horizontal, DesignSystem.Spacing.md)
         }
     }
 }
 
-// MARK: - Composants Modernes
-
-struct ChatHeaderView: View {
-    let isIPad: Bool
-    let availableModes: [ChatAIScreen.AIMode]
-    @Binding var selectedMode: ChatAIScreen.AIMode
+struct ChatMenuView: View {
+    let onNewConversation: () -> Void
+    let onShowHistory: () -> Void
     
     var body: some View {
-        if isIPad {
-            // iPad : Titre uniquement dans la toolbar
-            Text("Assistant Style".localized)
-                .font(.playfairDisplayBold(size: 32))
-                .foregroundColor(AppColors.primaryText)
-        } else {
-            // iPhone : Titre + Picker dans la toolbar
-            VStack(spacing: 6) {
-                Text("Assistant Style".localized)
-                    .font(.playfairDisplayBold(size: 18))
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Options".localized)
+                    .font(DesignSystem.Typography.headline())
                     .foregroundColor(AppColors.primaryText)
+                Spacer()
+            }
+            .padding(.horizontal, DesignSystem.Spacing.lg)
+            .padding(.vertical, DesignSystem.Spacing.md)
+            
+            Divider()
+                .background(AppColors.separator)
+            
+            // Options
+            VStack(spacing: 0) {
+                Button(action: onNewConversation) {
+                    HStack(spacing: DesignSystem.Spacing.md) {
+                        ZStack {
+                            Circle()
+                                .fill(AppColors.buttonSecondary)
+                                .frame(width: 40, height: 40)
+                            
+                            Image(systemName: "square.and.pencil")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(AppColors.primaryText)
+                        }
+                        
+                        Text("Nouvelle conversation".localized)
+                            .font(DesignSystem.Typography.body())
+                            .foregroundColor(AppColors.primaryText)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, DesignSystem.Spacing.lg)
+                    .padding(.vertical, DesignSystem.Spacing.md)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PlainButtonStyle())
                 
-                Picker("Mode IA", selection: $selectedMode) {
-                    ForEach(availableModes, id: \.self) { mode in
-                        Text(mode.rawValue).tag(mode)
+                Divider()
+                    .background(AppColors.separator)
+                    .padding(.leading, DesignSystem.Spacing.lg + 40 + DesignSystem.Spacing.md)
+                
+                Button(action: onShowHistory) {
+                    HStack(spacing: DesignSystem.Spacing.md) {
+                        ZStack {
+                            Circle()
+                                .fill(AppColors.buttonSecondary)
+                                .frame(width: 40, height: 40)
+                            
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(AppColors.primaryText)
+                        }
+                        
+                        Text("Historique".localized)
+                            .font(DesignSystem.Typography.body())
+                            .foregroundColor(AppColors.primaryText)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, DesignSystem.Spacing.lg)
+                    .padding(.vertical, DesignSystem.Spacing.md)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .background(AppColors.background)
+    }
+}
+
+struct LoadingView: View {
+    let aiMode: ChatAIScreen.AIMode?
+    
+    init(aiMode: ChatAIScreen.AIMode? = nil) {
+        self.aiMode = aiMode
+    }
+    
+    private var aiModeLabel: String {
+        guard let mode = aiMode else { return "Shoply AI" }
+        switch mode {
+        case .gemini:
+            return "Gemini"
+        case .shoplyAI:
+            return "Shoply AI"
+        case .appleIntelligence:
+            return "Apple"
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            ProgressView()
+                .scaleEffect(0.8)
+            Text("\(aiModeLabel) réfléchit...".localized)
+                .font(DesignSystem.Typography.footnote())
+                .foregroundColor(AppColors.secondaryText)
+        }
+        .padding(DesignSystem.Spacing.md)
+    }
+}
+
+struct SuggestionsView: View {
+    let suggestions: [String]
+    let onTap: (String) -> Void
+    
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                ForEach(suggestions, id: \.self) { suggestion in
+                    Button(action: { onTap(suggestion) }) {
+                        Text(suggestion)
+                            .font(DesignSystem.Typography.footnote())
+                            .foregroundColor(AppColors.primaryText)
+                            .padding(.horizontal, DesignSystem.Spacing.md)
+                            .padding(.vertical, DesignSystem.Spacing.sm)
+                            .background(AppColors.cardBackground)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: DesignSystem.Radius.md)
+                                    .stroke(AppColors.cardBorder, lineWidth: 1)
+                            }
+                            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
                     }
                 }
-                .pickerStyle(.segmented)
-                .frame(width: min(280, CGFloat(availableModes.count) * 85))
             }
         }
     }
 }
 
-struct ModernInputArea: View {
-    @Binding var inputText: String
+struct ChatInputArea: View {
+    @Binding var text: String
     let isSending: Bool
-    let isIPad: Bool
     @Binding var selectedPhoto: PhotosPickerItem?
     @Binding var selectedImage: UIImage?
     let onSend: () -> Void
-    let maxWidth: CGFloat
-    @FocusState private var isTextFieldFocused: Bool
+    @FocusState private var isFocused: Bool
     
     var body: some View {
-            VStack(spacing: isIPad ? 12 : 10) {
-            // Aperçu de l'image sélectionnée
+        VStack(spacing: DesignSystem.Spacing.sm) {
             if let image = selectedImage {
-                HStack {
+                HStack(spacing: DesignSystem.Spacing.sm) {
                     Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: isIPad ? 80 : 60, height: isIPad ? 80 : 60)
-                        .clipShape(RoundedRectangle(cornerRadius: isIPad ? 12 : 10))
+                        .frame(width: 60, height: 60)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.sm))
                     
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Photo sélectionnée".localized)
-                            .font(.system(size: isIPad ? 15 : 13, weight: .medium))
-                            .foregroundColor(AppColors.primaryText)
-                        Text("Appuyez sur X pour supprimer".localized)
-                            .font(.system(size: isIPad ? 13 : 11))
-                            .foregroundColor(AppColors.secondaryText)
-                    }
+                    Text("Photo sélectionnée".localized)
+                        .font(DesignSystem.Typography.footnote())
+                        .foregroundColor(AppColors.secondaryText)
                     
                     Spacer()
                     
@@ -997,237 +841,48 @@ struct ModernInputArea: View {
                         selectedPhoto = nil
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: isIPad ? 24 : 20))
+                            .font(.system(size: 20))
                             .foregroundColor(AppColors.secondaryText)
                     }
                 }
-                .padding(isIPad ? 14 : 12)
-                .background(
-                    RoundedRectangle(cornerRadius: isIPad ? 16 : 14)
-                        .fill(AppColors.buttonSecondary)
-                )
-                .padding(.horizontal, isIPad ? 40 : 20)
+                .padding(DesignSystem.Spacing.sm)
+                .background(AppColors.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+                .padding(.horizontal, DesignSystem.Spacing.md)
             }
             
-            // Zone de saisie avec design moderne
-            HStack(spacing: isIPad ? 16 : 12) {
-                // Bouton de sélection de photo
+            HStack(spacing: DesignSystem.Spacing.sm) {
                 PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                    Image(systemName: selectedImage != nil ? "photo.fill" : "photo")
-                        .font(.system(size: isIPad ? 22 : 20, weight: .medium))
-                        .foregroundColor(selectedImage != nil ? AppColors.buttonPrimary : AppColors.secondaryText)
-                        .frame(width: isIPad ? 44 : 40, height: isIPad ? 44 : 40)
-                        .background(
-                            Circle()
-                                .fill(selectedImage != nil ? AppColors.buttonPrimary.opacity(0.1) : AppColors.buttonSecondary)
-                        )
-                }
-                
-                // Champ de texte avec style épuré
-                HStack(spacing: isIPad ? 14 : 12) {
-                    Image(systemName: "text.bubble")
-                        .font(.system(size: isIPad ? 18 : 16))
-                        .foregroundColor(AppColors.secondaryText)
-                        .frame(width: isIPad ? 24 : 20)
-                    
-                    TextField("Posez votre question...".localized, text: $inputText, axis: .vertical)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: isIPad ? 17 : 15))
+                    Image(systemName: "photo")
+                        .font(.system(size: 18, weight: .medium))
                         .foregroundColor(AppColors.primaryText)
-                        .focused($isTextFieldFocused)
-                        .lineLimit(1...5)
-                        .onSubmit {
-                            if !inputText.isEmpty && !isSending {
-                                onSend()
-                            }
-                        }
+                        .frame(width: 36, height: 36)
                 }
-                .padding(.horizontal, isIPad ? 20 : 16)
-                .padding(.vertical, isIPad ? 16 : 14)
-                .background(
-                    RoundedRectangle(cornerRadius: isIPad ? 24 : 20)
-                        .fill(AppColors.cardBackground)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: isIPad ? 24 : 20)
-                                .stroke(
-                                    isTextFieldFocused 
-                                    ? AppColors.buttonPrimary.opacity(0.4)
-                                    : AppColors.cardBorder.opacity(0.3),
-                                    lineWidth: isTextFieldFocused ? 2 : 1
-                                )
-                        )
-                )
-                .shadow(
-                    color: AppColors.shadow.opacity(isTextFieldFocused ? 0.15 : 0.08),
-                    radius: isTextFieldFocused ? 12 : 8,
-                    x: 0,
-                    y: isTextFieldFocused ? 4 : 2
-                )
                 
-                // Bouton d'envoi moderne
+                TextField("Tapez votre message...".localized, text: $text, axis: .vertical)
+                    .font(DesignSystem.Typography.body())
+                    .foregroundColor(AppColors.primaryText)
+                    .focused($isFocused)
+                    .lineLimit(1...5)
+                    .padding(.horizontal, DesignSystem.Spacing.md)
+                    .padding(.vertical, DesignSystem.Spacing.sm)
+                    .background(AppColors.cardBackground)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: DesignSystem.Radius.md)
+                            .stroke(AppColors.cardBorder, lineWidth: 1)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+                
                 Button(action: onSend) {
-                    ZStack {
-                        Circle()
-                            .fill(
-                                (inputText.isEmpty && selectedImage == nil) || isSending
-                                ? AppColors.buttonSecondary
-                                : AppColors.buttonPrimary
-                            )
-                            .frame(width: isIPad ? 52 : 44, height: isIPad ? 52 : 44)
-                        
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: isIPad ? 20 : 18, weight: .semibold))
-                            .foregroundColor(
-                                (inputText.isEmpty && selectedImage == nil) || isSending
-                                ? AppColors.secondaryText
-                                : AppColors.buttonPrimaryText
-                            )
-                    }
-                    .shadow(
-                        color: ((inputText.isEmpty && selectedImage == nil) || isSending)
-                        ? Color.clear
-                        : AppColors.shadow.opacity(0.2),
-                        radius: (inputText.isEmpty && selectedImage == nil) ? 0 : 8,
-                        x: 0,
-                        y: (inputText.isEmpty && selectedImage == nil) ? 0 : 4
-                    )
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 28, weight: .medium))
+                        .foregroundColor(text.isEmpty && selectedImage == nil ? AppColors.secondaryText : AppColors.buttonPrimary)
                 }
-                .disabled((inputText.isEmpty && selectedImage == nil) || isSending)
-                .animation(.spring(response: 0.3), value: inputText.isEmpty)
-                .animation(.spring(response: 0.3), value: selectedImage == nil)
+                .disabled(text.isEmpty && selectedImage == nil || isSending)
             }
-            .padding(.horizontal, isIPad ? 40 : 20)
-            .padding(.vertical, isIPad ? 20 : 16)
-            .background(
-                Rectangle()
-                    .fill(AppColors.background)
-                    .shadow(color: AppColors.shadow.opacity(0.05), radius: 0, x: 0, y: -4)
-            )
-            .frame(maxWidth: maxWidth)
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
-struct LoadingIndicatorView: View {
-    let isIPad: Bool
-    @State private var animationPhase = 0
-    
-    var body: some View {
-        HStack(spacing: isIPad ? 14 : 12) {
-            // Indicateur de chargement avec animation fluide
-            HStack(spacing: isIPad ? 8 : 6) {
-                ForEach(0..<3) { index in
-                    Circle()
-                        .fill(AppColors.buttonPrimary.opacity(0.5))
-                        .frame(width: isIPad ? 9 : 7, height: isIPad ? 9 : 7)
-                        .opacity(
-                            (animationPhase + index) % 3 == 0 ? 1.0 : 0.3
-                        )
-                }
-            }
-            .onAppear {
-                withAnimation(.easeInOut(duration: 0.8).repeatForever()) {
-                    animationPhase = 3
-                }
-            }
-            
-            Text("L'IA réfléchit...".localized)
-                .font(.system(size: isIPad ? 17 : 15, weight: .medium))
-                .foregroundColor(AppColors.secondaryText)
-        }
-        .padding(.horizontal, isIPad ? 22 : 16)
-        .padding(.vertical, isIPad ? 14 : 12)
-        .background(
-            Capsule()
-                .fill(AppColors.buttonSecondary)
-                .overlay(
-                    Capsule()
-                        .stroke(AppColors.cardBorder.opacity(0.25), lineWidth: 1)
-                )
-        )
-        .shadow(color: AppColors.shadow.opacity(0.06), radius: 6, x: 0, y: 2)
-    }
-}
-
-struct ModernAIPicker: View {
-    let availableModes: [ChatAIScreen.AIMode]
-    @Binding var selectedMode: ChatAIScreen.AIMode
-    let maxWidth: CGFloat
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            Rectangle()
-                .fill(AppColors.separator)
-                .frame(height: 0.5)
-            
-            HStack {
-                Spacer()
-                
-                Picker("Mode IA", selection: $selectedMode) {
-                    ForEach(availableModes, id: \.self) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: min(500, CGFloat(availableModes.count) * 120))
-                
-                Spacer()
-            }
-            .padding(.vertical, 16)
-            .padding(.horizontal, 40)
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.vertical, DesignSystem.Spacing.sm)
             .background(AppColors.background)
         }
     }
 }
-
-// MARK: - Message Suggestions View
-
-struct MessageSuggestionsView: View {
-    let suggestions: [String]
-    let onSuggestionTapped: (String) -> Void
-    let isIPad: Bool
-    let maxWidth: CGFloat
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: isIPad ? 12 : 10) {
-            Text("Suggestions de questions".localized)
-                .font(.system(size: isIPad ? 16 : 14, weight: .semibold))
-                .foregroundColor(AppColors.secondaryText)
-                .padding(.horizontal, isIPad ? 4 : 2)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: isIPad ? 14 : 12) {
-                    ForEach(suggestions, id: \.self) { suggestion in
-                        Button(action: {
-                            onSuggestionTapped(suggestion)
-                        }) {
-                            Text(suggestion.localized)
-                                .font(.system(size: isIPad ? 15 : 13, weight: .medium))
-                                .foregroundColor(AppColors.buttonPrimaryText)
-                                .padding(.horizontal, isIPad ? 18 : 16)
-                                .padding(.vertical, isIPad ? 12 : 10)
-                                .background(
-                                    RoundedRectangle(cornerRadius: isIPad ? 20 : 18)
-                                        .fill(AppColors.buttonPrimary)
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: isIPad ? 20 : 18)
-                                        .stroke(AppColors.cardBorder.opacity(0.2), lineWidth: 0.5)
-                                )
-                        }
-                        .shadow(color: AppColors.shadow.opacity(0.1), radius: 6, x: 0, y: 2)
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                }
-                .padding(.horizontal, isIPad ? 4 : 2)
-            }
-        }
-        .frame(maxWidth: maxWidth)
-    }
-}
-
-#Preview {
-    ChatAIScreen()
-}
-

@@ -117,23 +117,30 @@ struct OutfitHistoryScreen: View {
                     EmptyHistoryView()
                 } else {
                     ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: 20) {
-                            ForEach(historyStore.outfits) { historicalOutfit in
-                                HistoricalOutfitCard(
-                                    historicalOutfit: historicalOutfit,
-                                    onToggleFavorite: {
-                                        historyStore.toggleFavorite(outfit: historicalOutfit)
-                                    },
-                                    onDelete: {
-                                        if let index = historyStore.outfits.firstIndex(where: { $0.id == historicalOutfit.id }) {
-                                            historyStore.removeOutfit(at: index)
+                        VStack(spacing: 20) {
+                            // Statistiques
+                            HistoryStatsCard(historyStore: historyStore)
+                                .padding(.horizontal, 24)
+                                .padding(.top, 24)
+                            
+                            LazyVStack(spacing: 20) {
+                                ForEach(historyStore.outfits) { historicalOutfit in
+                                    HistoricalOutfitCard(
+                                        historicalOutfit: historicalOutfit,
+                                        onToggleFavorite: {
+                                            historyStore.toggleFavorite(outfit: historicalOutfit)
+                                        },
+                                        onDelete: {
+                                            if let index = historyStore.outfits.firstIndex(where: { $0.id == historicalOutfit.id }) {
+                                                historyStore.removeOutfit(at: index)
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             }
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 24)
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 24)
                     }
                 }
             }
@@ -341,6 +348,87 @@ struct EmptyHistoryView: View {
                     .lineLimit(3)
             }
         }
+    }
+}
+
+struct HistoryStatsCard: View {
+    @ObservedObject var historyStore: OutfitHistoryStore
+    
+    private var totalOutfits: Int {
+        historyStore.outfits.count
+    }
+    
+    private var averageComfort: Double {
+        // Calculer le confort moyen basé sur les reviews si disponibles
+        // Pour l'instant, utiliser un calcul basé sur le score de l'outfit
+        let scores = historyStore.outfits.map { $0.outfit.score }
+        guard !scores.isEmpty else { return 0 }
+        return scores.reduce(0, +) / Double(scores.count)
+    }
+    
+    private var mostWornStyle: String {
+        // Analyser les styles les plus portés
+        let styles = historyStore.outfits.compactMap { outfit -> String? in
+            // Extraire le style du reason ou des items
+            if outfit.outfit.reason.contains("casual") || outfit.outfit.reason.contains("décontracté") {
+                return "Décontracté"
+            } else if outfit.outfit.reason.contains("business") || outfit.outfit.reason.contains("professionnel") {
+                return "Professionnel"
+            } else if outfit.outfit.reason.contains("formal") || outfit.outfit.reason.contains("formel") {
+                return "Formel"
+            }
+            return nil
+        }
+        
+        let styleCounts = Dictionary(grouping: styles, by: { $0 }).mapValues { $0.count }
+        if let mostCommon = styleCounts.max(by: { $0.value < $1.value }) {
+            return mostCommon.key
+        }
+        return "Varié"
+    }
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Statistiques")
+                .font(.playfairDisplayBold(size: 20))
+                .foregroundColor(AppColors.primaryText)
+            
+            HStack(spacing: 20) {
+                VStack(spacing: 4) {
+                    Text("\(totalOutfits)")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(AppColors.accent)
+                    Text("Outfits portés")
+                        .font(.system(size: 12))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+                
+                VStack(spacing: 4) {
+                    Text("\(Int(averageComfort))%")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(AppColors.accent)
+                    Text("Confort moyen")
+                        .font(.system(size: 12))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+                
+                VStack(spacing: 4) {
+                    Text(mostWornStyle)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(AppColors.accent)
+                        .lineLimit(1)
+                    Text("Style favori")
+                        .font(.system(size: 12))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+            }
+        }
+        .padding(20)
+        .cleanCard(cornerRadius: 18)
     }
 }
 

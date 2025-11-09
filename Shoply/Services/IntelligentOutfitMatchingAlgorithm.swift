@@ -42,7 +42,7 @@ class IntelligentOutfitMatchingAlgorithm: ObservableObject {
     
     // MARK: - Génération principale
     
-    func generateOutfits() async -> [MatchedOutfit] {
+    func generateOutfits(selectedCollection: WardrobeCollection? = nil) async -> [MatchedOutfit] {
         guard let morningWeather = weatherService.morningWeather,
               let afternoonWeather = weatherService.afternoonWeather else {
             return []
@@ -59,14 +59,25 @@ class IntelligentOutfitMatchingAlgorithm: ObservableObject {
         )
         
         // Filtrer les items adaptés à la météo (mais ne pas être trop strict)
+        var itemsToFilter = wardrobeService.items
+        
+        // Si une collection est sélectionnée, utiliser uniquement les items de cette collection
+        if let selectedCollection = selectedCollection, !selectedCollection.itemIds.isEmpty {
+            let collectionService = WardrobeCollectionService.shared
+            let collectionItems = collectionService.getItemsForCollection(selectedCollection)
+            if !collectionItems.isEmpty {
+                itemsToFilter = collectionItems
+            }
+        }
+        
         let suitableItems = filterItemsIntelligently(
-            items: wardrobeService.items,
+            items: itemsToFilter,
             temperature: avgTemperature,
             condition: dominantCondition
         )
         
         // Si le filtrage est trop strict, utiliser tous les items disponibles
-        let itemsToUse = suitableItems.isEmpty ? wardrobeService.items : suitableItems
+        let itemsToUse = suitableItems.isEmpty ? itemsToFilter : suitableItems
         
         guard !itemsToUse.isEmpty else {
             return []

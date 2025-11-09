@@ -237,12 +237,12 @@ class ShoplyAITextGenerator {
             response = "Hello ! "
         }
         
-        // Ajouter une introduction variée avec mention de William
+        // Ajouter une introduction variée avec mention de William RAUWENS OLIVER
         let introductions = [
-            "Je suis Shoply AI, créé par William. ",
-            "Enchanté ! Je suis Shoply AI, votre assistant créé par William. ",
-            "Ravi de vous rencontrer ! Je suis Shoply AI, développé par William. ",
-            "Content de vous voir ! Je suis Shoply AI, créé par William, le développeur de cette application. "
+            "Je suis Shoply AI, créé par William RAUWENS OLIVER. ",
+            "Enchanté ! Je suis Shoply AI, votre assistant créé par William RAUWENS OLIVER. ",
+            "Ravi de vous rencontrer ! Je suis Shoply AI, développé par William RAUWENS OLIVER. ",
+            "Content de vous voir ! Je suis Shoply AI, créé par William RAUWENS OLIVER. "
         ]
         response += introductions.randomElement() ?? introductions[0]
         
@@ -284,10 +284,10 @@ class ShoplyAITextGenerator {
         
         if (lowercased.contains("qui") && lowercased.contains("créé")) || lowercased.contains("ton créateur") || lowercased.contains("qui t'a") {
             let responses = [
-                "Je suis Shoply AI, créé par William, le développeur de cette application. Je suis un LLM avec 500 000 paramètres, conçu pour être intelligent et conversationnel !",
-                "Mon créateur est William, qui a développé Shoply AI. Je suis un modèle de langage avec 500k paramètres, optimisé pour être performant et intelligent !",
-                "William est mon créateur. Il a développé Shoply AI et m'a conçu avec 500 000 paramètres pour être un assistant conversationnel puissant !",
-                "C'est William qui m'a créé ! Il est le développeur de Shoply AI et m'a conçu avec 500 000 paramètres pour vous offrir une expérience intelligente."
+                "Je suis Shoply AI, créé par William RAUWENS OLIVER. Je suis un LLM avec 500 000 paramètres, conçu pour être intelligent et conversationnel !",
+                "Mon créateur est William RAUWENS OLIVER, qui a développé Shoply AI. Je suis un modèle de langage avec 500k paramètres, optimisé pour être performant et intelligent !",
+                "William RAUWENS OLIVER est mon créateur. Il a développé Shoply AI et m'a conçu avec 500 000 paramètres pour être un assistant conversationnel puissant !",
+                "C'est William RAUWENS OLIVER qui m'a créé ! Il est le développeur de Shoply AI et m'a conçu avec 500 000 paramètres pour vous offrir une expérience intelligente."
             ]
             return responses.randomElement() ?? responses[0]
         }

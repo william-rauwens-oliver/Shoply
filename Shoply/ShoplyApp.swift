@@ -51,6 +51,17 @@ struct ShoplyApp: App {
         // Configuration initiale de l'app
         setupAppearance()
         configureOrientations()
+        
+        // Initialiser les services
+        _ = PerformanceOptimizer.shared
+        _ = StyleAnalyticsService.shared
+        _ = GamificationService.shared
+        _ = WardrobeCollectionService.shared
+        _ = WishlistService.shared
+        _ = TravelModeService.shared
+        _ = OutfitReviewService.shared
+        _ = CareReminderService.shared
+        _ = ProactiveSuggestionsService.shared
     }
     
     private func configureOrientations() {

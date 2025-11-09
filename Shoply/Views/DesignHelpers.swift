@@ -11,32 +11,29 @@ import UIKit
 // Palette de couleurs noir et blanc épurée et moderne
 // Supporte le mode sombre avec ColorScheme
 struct AppColors {
-    // Utilise Color.primary et Color.secondary qui s'adaptent automatiquement au mode sombre
-    // Pour une compatibilité maximale, on utilise les couleurs adaptatives du système
-    
-    // Fond - Utilise les couleurs adaptatives
+    // Fond - Noir et blanc pur
     static let background = Color(light: .white, dark: .black)
     
-    // Textes - Utilise les couleurs adaptatives
+    // Textes - Noir et blanc pur
     static let primaryText = Color(light: .black, dark: .white)
-    static let secondaryText = Color(light: Color.gray.opacity(0.7), dark: Color.gray.opacity(0.6))
-    static let tertiaryText = Color(light: Color.gray.opacity(0.5), dark: Color.gray.opacity(0.4))
+    static let secondaryText = Color(light: Color(white: 0.3), dark: Color(white: 0.7))
+    static let tertiaryText = Color(light: Color(white: 0.5), dark: Color(white: 0.5))
     
-    // Cartes
-    static let cardBackground = Color(light: .white, dark: Color(white: 0.1))
-    static let cardBorder = Color(light: Color.gray.opacity(0.15), dark: Color.gray.opacity(0.3))
-    static let separator = Color(light: Color.gray.opacity(0.12), dark: Color.gray.opacity(0.2))
+    // Cartes - Minimalistes
+    static let cardBackground = Color(light: .white, dark: Color(white: 0.05))
+    static let cardBorder = Color(light: Color(white: 0.2), dark: Color(white: 0.2))
+    static let separator = Color(light: Color(white: 0.1), dark: Color(white: 0.1))
     
-    // Boutons
+    // Boutons - Noir et blanc pur
     static let buttonPrimary = Color(light: .black, dark: .white)
     static let buttonPrimaryText = Color(light: .white, dark: .black)
-    static let buttonSecondary = Color(light: Color.gray.opacity(0.08), dark: Color(white: 0.15))
+    static let buttonSecondary = Color(light: Color(white: 0.05), dark: Color(white: 0.1))
     static let buttonSecondaryText = Color(light: .black, dark: .white)
     
-    // Accents et ombres - Ultra-opaques pour meilleure visibilité
-    static let accent = Color(light: Color.gray.opacity(0.25), dark: Color.gray.opacity(0.4))
-    static let shadow = Color(light: Color.black.opacity(0.5), dark: Color.black.opacity(0.6))
-    static let hoverShadow = Color(light: Color.black.opacity(0.6), dark: Color.black.opacity(0.8))
+    // Accents - Gris uniquement
+    static let accent = Color(light: Color(white: 0.2), dark: Color(white: 0.8))
+    static let shadow = Color(light: Color.black.opacity(0.1), dark: Color.black.opacity(0.3))
+    static let hoverShadow = Color(light: Color.black.opacity(0.15), dark: Color.black.opacity(0.4))
 }
 
 // Extension pour créer des couleurs adaptatives
@@ -59,82 +56,21 @@ extension Color {
     }
 }
 
-// Modificateur Liquid Glass avec coins arrondis iOS
-struct LiquidGlassCardModifier: ViewModifier {
-    let cornerRadius: CGFloat
-    @State private var isHovered = false
-    @Environment(\.colorScheme) var colorScheme
-    
-    func body(content: Content) -> some View {
-        content
-            .background {
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(
-                        // Effet liquid glass avec blur
-                        Material.regularMaterial
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: cornerRadius)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        AppColors.cardBorder.opacity(0.3),
-                                        AppColors.cardBorder.opacity(0.1)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 0.5
-                            )
-                    )
-                    .shadow(
-                        color: isHovered ? AppColors.hoverShadow.opacity(0.3) : AppColors.shadow.opacity(0.2),
-                        radius: isHovered ? 16 : 12,
-                        x: 0,
-                        y: isHovered ? 6 : 4
-                    )
-            }
-            .animation(.easeInOut(duration: 0.3), value: isHovered)
-            .onHover { hovering in
-                isHovered = hovering
-            }
-    }
-}
-
-// Modificateur de carte épurée avec animations modernes (pour compatibilité)
+// Modificateur de carte épurée minimaliste
 struct CleanCardModifier: ViewModifier {
     let cornerRadius: CGFloat
-    @State private var isHovered = false
     
     func body(content: Content) -> some View {
         content
             .background {
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(
-                        Material.regularMaterial
-                    )
+                    .fill(AppColors.cardBackground)
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        AppColors.cardBorder.opacity(0.3),
-                                        AppColors.cardBorder.opacity(0.1)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 0.5
-                            )
+                            .stroke(AppColors.cardBorder, lineWidth: 1)
                     )
-                    .shadow(
-                        color: isHovered ? AppColors.hoverShadow.opacity(0.3) : AppColors.shadow.opacity(0.2),
-                        radius: isHovered ? 16 : 12,
-                        x: 0,
-                        y: isHovered ? 6 : 4
-                    )
+                    .shadow(color: AppColors.shadow, radius: 4, x: 0, y: 2)
             }
-            .animation(.easeInOut(duration: 0.3), value: isHovered)
     }
 }
 
@@ -172,13 +108,8 @@ struct PulseModifier: ViewModifier {
 // View extension pour faciliter l'utilisation
 extension View {
     @ViewBuilder
-    func cleanCard(cornerRadius: CGFloat = 24) -> some View {
-        self.modifier(LiquidGlassCardModifier(cornerRadius: cornerRadius))
-    }
-    
-    @ViewBuilder
-    func liquidGlass(cornerRadius: CGFloat = 24) -> some View {
-        self.modifier(LiquidGlassCardModifier(cornerRadius: cornerRadius))
+    func cleanCard(cornerRadius: CGFloat = 16) -> some View {
+        self.modifier(CleanCardModifier(cornerRadius: cornerRadius))
     }
     
     @ViewBuilder
@@ -191,9 +122,9 @@ extension View {
         self.modifier(PulseModifier())
     }
     
-    // Extension pour coins arrondis iOS par défaut
+    // Extension pour coins arrondis
     @ViewBuilder
-    func roundedCorner(_ radius: CGFloat = 24) -> some View {
+    func roundedCorner(_ radius: CGFloat = 16) -> some View {
         self.clipShape(RoundedRectangle(cornerRadius: radius))
     }
 }

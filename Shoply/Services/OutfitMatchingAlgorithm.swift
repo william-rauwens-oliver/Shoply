@@ -38,7 +38,8 @@ class OutfitMatchingAlgorithm: ObservableObject {
     /// - Parameters:
     ///   - forceLocal: Si true, force l'utilisation de l'algorithme local même si ChatGPT est disponible
     ///   - userRequest: Demande spécifique de l'utilisateur (ex: "je veux mon short rouge")
-    func generateOutfitsWithProgress(forceLocal: Bool = false, userRequest: String? = nil, progressCallback: @escaping (Double) async -> Void) async -> [MatchedOutfit] {
+    ///   - selectedCollection: Collection sélectionnée pour limiter les vêtements utilisés
+    func generateOutfitsWithProgress(forceLocal: Bool = false, userRequest: String? = nil, selectedCollection: WardrobeCollection? = nil, progressCallback: @escaping (Double) async -> Void) async -> [MatchedOutfit] {
         guard let morningWeather = weatherService.morningWeather,
               let afternoonWeather = weatherService.afternoonWeather else {
             return []
@@ -68,6 +69,16 @@ class OutfitMatchingAlgorithm: ObservableObject {
             }
         }
         
+        // Filtrer les items selon la collection sélectionnée
+        var itemsToUse = wardrobeService.items
+        if let selectedCollection = selectedCollection, !selectedCollection.itemIds.isEmpty {
+            let collectionService = WardrobeCollectionService.shared
+            let collectionItems = collectionService.getItemsForCollection(selectedCollection)
+            if !collectionItems.isEmpty {
+                itemsToUse = collectionItems
+            }
+        }
+        
         if !forceLocal && aiServiceType != .local {
             await progressCallback(0.2) // 20% - Préparation
             
@@ -78,7 +89,7 @@ class OutfitMatchingAlgorithm: ObservableObject {
                 if #available(iOS 18.0, *), aiServiceType == .appleIntelligence {
                     // Utiliser Apple Intelligence
                     suggestions = try await AppleIntelligenceServiceWrapper.shared.generateOutfitSuggestions(
-                        wardrobeItems: wardrobeService.items,
+                        wardrobeItems: itemsToUse,
                         weather: WeatherData(
                             temperature: avgTemperature,
                             condition: dominantCondition,
@@ -92,7 +103,7 @@ class OutfitMatchingAlgorithm: ObservableObject {
                 } else {
                     // Utiliser Gemini
                     suggestions = try await GeminiService.shared.generateOutfitSuggestions(
-                    wardrobeItems: wardrobeService.items,
+                    wardrobeItems: itemsToUse,
                     weather: WeatherData(
                         temperature: avgTemperature,
                         condition: dominantCondition,
@@ -112,8 +123,8 @@ class OutfitMatchingAlgorithm: ObservableObject {
                 
                 // Limiter à 3 outfits max
                 for suggestion in suggestions.prefix(3) {
-                    // Utiliser TOUS les items pour le parsing
-                    if let outfit = parseAISuggestion(suggestion, from: wardrobeService.items) {
+                    // Utiliser les items filtrés pour le parsing
+                    if let outfit = parseAISuggestion(suggestion, from: itemsToUse) {
                         outfits.append(outfit)
                     }
                 }
@@ -125,13 +136,13 @@ class OutfitMatchingAlgorithm: ObservableObject {
                         weatherService: weatherService,
                         userProfile: userProfile
                     )
-                    let localOutfits = await localAlgorithm.generateOutfits()
+                    let localOutfits = await localAlgorithm.generateOutfits(selectedCollection: selectedCollection)
                     outfits.append(contentsOf: localOutfits)
                 }
                 
                 // Si toujours rien, créer un outfit basique avec haut + bas
                 if outfits.isEmpty {
-                    let basicOutfit = createBasicOutfit(from: wardrobeService.items)
+                    let basicOutfit = createBasicOutfit(from: itemsToUse)
                     if let basicOutfit = basicOutfit {
                         outfits.append(basicOutfit)
                     }
@@ -165,11 +176,11 @@ class OutfitMatchingAlgorithm: ObservableObject {
                     userProfile: userProfile
                 )
                 await progressCallback(0.8) // 80% - Génération locale
-                var outfits = await intelligentAlgorithm.generateOutfits()
+                var outfits = await intelligentAlgorithm.generateOutfits(selectedCollection: selectedCollection)
                 
                 // Si toujours rien, créer un outfit basique avec haut + bas
                 if outfits.isEmpty {
-                    let basicOutfit = createBasicOutfit(from: wardrobeService.items)
+                    let basicOutfit = createBasicOutfit(from: itemsToUse)
                     if let basicOutfit = basicOutfit {
                         outfits.append(basicOutfit)
                     }
@@ -187,11 +198,11 @@ class OutfitMatchingAlgorithm: ObservableObject {
                 userProfile: userProfile
             )
             await progressCallback(0.7) // 70% - Génération locale
-                var outfits = await intelligentAlgorithm.generateOutfits()
+                var outfits = await intelligentAlgorithm.generateOutfits(selectedCollection: selectedCollection)
                 
                 // Si toujours rien, créer un outfit basique avec haut + bas
                 if outfits.isEmpty {
-                    let basicOutfit = createBasicOutfit(from: wardrobeService.items)
+                    let basicOutfit = createBasicOutfit(from: itemsToUse)
                     if let basicOutfit = basicOutfit {
                         outfits.append(basicOutfit)
                     }

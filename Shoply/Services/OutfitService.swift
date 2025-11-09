@@ -86,6 +86,11 @@ class OutfitService: ObservableObject {
             favoritesCount: favorites
         )
     }
+    
+    /// Retourne tous les outfits
+    func getAllOutfits() -> [Outfit] {
+        return outfits
+    }
 }
 
 /// Structure pour les statistiques
