@@ -36,25 +36,25 @@ struct ChatAIScreen: View {
     
     init(conversationId: UUID? = nil, initialMessages: [ChatMessage] = [], initialAIMode: AIMode? = nil) {
         self.initialMessages = initialMessages
-        // Utiliser Apple Intelligence par défaut si disponible, sinon le premier mode disponible
+        
+        // Protection contre les crashes lors de l'initialisation
+        // Utiliser un mode par défaut sûr
         let defaultMode: AIMode
-        if #available(iOS 18.0, *) {
-            if AppleIntelligenceServiceWrapper.shared.isEnabled {
-                defaultMode = .appleIntelligence
-            } else if GeminiService.shared.isEnabled {
-                defaultMode = .gemini
-            } else {
-                defaultMode = .shoplyAI
-            }
-        } else {
-            if GeminiService.shared.isEnabled {
-                defaultMode = .gemini
-            } else {
-                defaultMode = .shoplyAI
-            }
+        
+        // Si un mode est fourni, l'utiliser
+        if let providedMode = initialAIMode {
+            self.initialAIMode = providedMode
+            _aiMode = State(initialValue: providedMode)
+            _conversationId = State(initialValue: conversationId ?? UUID())
+            return
         }
-        self.initialAIMode = initialAIMode ?? defaultMode
-        _aiMode = State(initialValue: self.initialAIMode)
+        
+        // Sinon, utiliser Shoply AI par défaut (toujours disponible et sûr)
+        // La détection des autres modes se fera dans onAppear pour éviter les crashes
+        defaultMode = .shoplyAI
+        
+        self.initialAIMode = defaultMode
+        _aiMode = State(initialValue: defaultMode)
         _conversationId = State(initialValue: conversationId ?? UUID())
     }
     
@@ -364,14 +364,17 @@ struct ChatAIScreen: View {
                         )
                     }
                 } else if aiMode == .gemini {
-                    // Gemini sélectionné
+                    // Gemini sélectionné - LLM conversationnel polyvalent
                     if geminiService.isEnabled {
+                        // Passer l'historique de conversation pour un dialogue naturel
+                        let conversationHistory = messages.filter { !$0.isSystemMessage }
                         response = try await geminiService.askAboutClothing(
                             question: questionText,
                             userProfile: userProfile,
                             currentWeather: currentWeather,
                             wardrobeItems: wardrobeItems,
-                            image: currentImage
+                            image: currentImage,
+                            conversationHistory: conversationHistory
                         )
                     } else {
                         // Gemini non disponible - utiliser Shoply AI sans message (silencieux)
@@ -384,39 +387,10 @@ struct ChatAIScreen: View {
                         )
                     }
                 } else {
-                    // Shoply AI sélectionnée : utiliser avec restrictions
-                    let isRelated = isClothingRelated(question) || isGeneralQuestion(question) || currentImage != nil
-                    
-                    if !isRelated && !isGreeting(question) {
-                        await MainActor.run {
-                            let responseMessage = ChatMessage(
-                                content: "Je peux vous aider avec des conseils sur vos vêtements, outfits, la météo, le style et la mode. Posez-moi une question sur ces sujets !".localized,
-                                isUser: false
-                            )
-                            messages.append(responseMessage)
-                            saveConversation()
-                            isSending = false
-                        }
-                        return
-                    }
-                    
-                    // Pour les salutations avec Shoply AI, répondre poliment
-                    if isGreeting(question) {
-                        await MainActor.run {
-                            let responseMessage = ChatMessage(
-                                content: "Salut ! Je suis là pour vous aider avec vos questions sur la mode, les outfits et les vêtements. Que souhaitez-vous savoir ?".localized,
-                                isUser: false
-                            )
-                            messages.append(responseMessage)
-                            saveConversation()
-                            isSending = false
-                        }
-                        return
-                    }
-                    
-                    // Utiliser Shoply AI
+                    // Shoply AI sélectionnée - LLM avec 500k paramètres créé par William
+                    // Utiliser le LLM Shoply AI (pas Gemini)
                     response = await answerWithLocalAI(
-                        question: question,
+                        question: questionText,
                         userProfile: userProfile,
                         currentWeather: currentWeather,
                         wardrobeItems: wardrobeItems,
@@ -572,57 +546,45 @@ struct ChatAIScreen: View {
     }
     
     private func getSuggestions() -> [String] {
-        // Liste complète de suggestions possibles
-        let allSuggestions = [
-            "Quels vêtements mettre par temps pluvieux ?",
-            "Comment assortir cette tenue ?",
-            "Quel style pour une soirée élégante ?",
-            "Quels accessoires vont avec mon look ?",
-            "Comment adapter ma tenue à la météo ?",
-            "Quels couleurs se marient bien ensemble ?",
-            "Quel type de chaussures pour aujourd'hui ?",
-            "Comment créer un look décontracté ?",
-            "Quelle matière choisir selon la saison ?",
-            "Comment optimiser ma garde-robe ?",
-            "Quel outfit pour un dîner romantique ?",
-            "Comment porter une veste en cuir ?",
-            "Quels vêtements pour une sortie en ville ?",
-            "Comment créer un look minimaliste ?",
-            "Quels chaussures pour une tenue décontractée ?",
-            "Comment mélanger les textures dans un outfit ?",
-            "Quel style pour une journée à la plage ?",
-            "Comment porter une combinaison ?",
-            "Quels vêtements pour un entretien d'embauche ?",
-            "Comment créer un look bohème ?",
-            "Quels accessoires pour un look sportif ?",
-            "Comment assortir les couleurs dans une tenue ?",
-            "Quels vêtements pour une soirée entre amis ?",
-            "Comment créer un look rétro ?",
-            "Quels chaussures assortir avec un jean ?",
-            "Comment porter une robe d'été ?",
-            "Quels vêtements pour le printemps ?",
-            "Comment créer un look sophistiqué ?",
-            "Quels accessoires pour un look casual ?",
-            "Comment habiller pour une soirée cocktail ?",
-            "Quels vêtements pour une journée shopping ?",
-            "Comment créer un look androgynous ?",
-            "Quels chaussures pour une tenue formelle ?",
-            "Comment porter une chemise blanche ?",
-            "Quels vêtements pour un week-end à la campagne ?",
-            "Comment créer un look coloré ?",
-            "Quels accessoires pour un look professionnel ?",
-            "Comment adapter mon style selon l'occasion ?",
-            "Quels vêtements pour l'hiver ?",
-            "Comment créer un look streetwear ?",
-            "Quels couleurs éviter ensemble ?",
-            "Comment porter un blazer ?",
-            "Quels vêtements pour un événement sportif ?",
-            "Comment créer un look monochrome ?",
-            "Quels accessoires pour un look élégant ?"
-        ]
+        let patternAnalyzer = UserMessagePatternAnalyzer.shared
+        let patterns = patternAnalyzer.analyzeUserPatterns()
+        let language = settingsManager.selectedLanguage.rawValue
         
-        // Retourner 4 suggestions aléatoires à chaque appel
-        return allSuggestions.shuffled().prefix(4).map { $0 }
+        // Générer des suggestions personnalisées basées sur l'historique
+        let personalizedSuggestions = patternAnalyzer.generatePersonalizedSuggestions(
+            patterns: patterns,
+            language: language
+        )
+        
+        // Si l'utilisateur n'a pas encore d'historique, utiliser des suggestions génériques
+        if personalizedSuggestions.isEmpty {
+            return getDefaultSuggestions(language: language)
+        }
+        
+        return personalizedSuggestions
+    }
+    
+    /// Retourne des suggestions par défaut si l'utilisateur n'a pas d'historique
+    private func getDefaultSuggestions(language: String) -> [String] {
+        if language == "fr" {
+            return [
+                "Quel outfit me conseilles-tu ?",
+                "Comment créer un look stylé ?",
+                "Quelle tenue pour aujourd'hui ?",
+                "Peux-tu m'aider à choisir mes vêtements ?",
+                "Quel style me correspond ?",
+                "Comment s'habiller selon la météo ?"
+            ]
+        } else {
+            return [
+                "What outfit do you recommend?",
+                "How to create a stylish look?",
+                "What to wear today?",
+                "Can you help me choose my clothes?",
+                "What style suits me?",
+                "How to dress according to the weather?"
+            ]
+        }
     }
     
     private func loadMessages() {
@@ -653,7 +615,7 @@ struct ChatAIScreen: View {
     
     // MARK: - Shoply AI
     
-    private let intelligentAI = IntelligentLocalAI.shared
+    private let shoplyAI = ShoplyAILLM.shared
     
     private func answerWithLocalAI(
         question: String,
@@ -662,15 +624,32 @@ struct ChatAIScreen: View {
         wardrobeItems: [WardrobeItem],
         image: UIImage? = nil
     ) async -> String {
-        // Utiliser la nouvelle IA intelligente
-        return intelligentAI.generateIntelligentResponse(
-            question: question,
+        // Utiliser Shoply AI LLM (500k paramètres créé par William)
+        // Protection contre les crashes
+        let conversationHistory = messages.filter { !$0.isUser && !$0.isSystemMessage }
+        let response = await shoplyAI.generateResponse(
+            input: question,
             userProfile: userProfile,
             currentWeather: currentWeather,
             wardrobeItems: wardrobeItems,
-            conversationHistory: messages.filter { !$0.isUser },
-            image: image
+            conversationHistory: conversationHistory
         )
+        
+        // Vérifier que la réponse n'est pas vide
+        if response.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            // Fallback si réponse vide
+            let intelligentAI = IntelligentLocalAI.shared
+            return intelligentAI.generateIntelligentResponse(
+                question: question,
+                userProfile: userProfile,
+                currentWeather: currentWeather,
+                wardrobeItems: wardrobeItems,
+                conversationHistory: [],
+                image: image
+            )
+        }
+        
+        return response
     }
     
     private func fallbackToLocalAI(question: String) {
@@ -791,7 +770,7 @@ private struct WelcomeMessageView: View {
                     .font(.playfairDisplayBold(size: isIPad ? 36 : 30))
                     .foregroundColor(AppColors.primaryText)
                 
-                Text("Je suis là pour répondre à toutes vos questions mode et style".localized)
+                Text("Je suis là pour discuter de tout avec vous !".localized)
                     .font(.system(size: isIPad ? 19 : 16, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
                     .multilineTextAlignment(.center)

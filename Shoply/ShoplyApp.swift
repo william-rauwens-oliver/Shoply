@@ -10,6 +10,7 @@ import Combine
 #if !WIDGET_EXTENSION
 import Foundation
 import UIKit
+import UserNotifications
 #endif
 
 @main
@@ -92,6 +93,9 @@ struct ShoplyApp: App {
                             // Vérifier si on doit afficher le tutoriel au démarrage
                             checkTutorialNeeded()
                             
+                            // Réinitialiser le badge de notification au démarrage
+                            clearApplicationBadge()
+                            
                             // Initialiser les notifications motivationnelles
                             initializeMotivationNotifications()
                             
@@ -136,6 +140,23 @@ struct ShoplyApp: App {
         // La synchronisation iCloud peut être faite manuellement depuis SettingsScreen
         #if !WIDGET_EXTENSION
         // Synchronisation automatique désactivée
+        #endif
+    }
+    
+    private func clearApplicationBadge() {
+        #if !WIDGET_EXTENSION
+        // Réinitialiser le badge de notification au démarrage de l'app
+        if #available(iOS 16.0, *) {
+            UNUserNotificationCenter.current().setBadgeCount(0) { error in
+                if let error = error {
+                    print("⚠️ Erreur lors de la réinitialisation du badge: \(error.localizedDescription)")
+                }
+            }
+        } else {
+            DispatchQueue.main.async {
+                UIApplication.shared.applicationIconBadgeNumber = 0
+            }
+        }
         #endif
     }
     

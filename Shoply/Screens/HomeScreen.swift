@@ -8,6 +8,10 @@
 import SwiftUI
 import Combine
 import CoreLocation
+#if !WIDGET_EXTENSION
+import UserNotifications
+import UIKit
+#endif
 
 struct HomeScreen: View {
     @StateObject private var wardrobeService = WardrobeService()
@@ -98,10 +102,33 @@ struct HomeScreen: View {
                 }
             }
         }
+        .onAppear {
+            // Réinitialiser le badge de notification à chaque fois qu'on arrive sur l'écran d'accueil
+            clearApplicationBadge()
+        }
         .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
             currentTime = Date()
         }
     }
+    
+    #if !WIDGET_EXTENSION
+    private func clearApplicationBadge() {
+        // Réinitialiser le badge de notification
+        if #available(iOS 16.0, *) {
+            UNUserNotificationCenter.current().setBadgeCount(0) { error in
+                if let error = error {
+                    print("⚠️ Erreur lors de la réinitialisation du badge: \(error.localizedDescription)")
+                }
+            }
+        } else {
+            // Fallback pour iOS < 16 uniquement
+            DispatchQueue.main.async {
+                // Ancienne méthode pour iOS < 16
+                UIApplication.shared.applicationIconBadgeNumber = 0
+            }
+        }
+    }
+    #endif
 }
 
 // En-tête minimaliste
@@ -293,6 +320,7 @@ struct SimpleHistoryCard: View {
 }
 
 // Carte calendrier - Design simple
+
 struct SimpleCalendarCard: View {
     var body: some View {
         HStack(spacing: 20) {

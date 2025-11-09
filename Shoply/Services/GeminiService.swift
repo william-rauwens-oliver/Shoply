@@ -340,61 +340,97 @@ class GeminiService: ObservableObject {
     
     // MARK: - Chat Conversation
     
-    /// Répond à une question de l'utilisateur concernant les vêtements, outfits, météo, etc.
+    /// Répond à une question de l'utilisateur - LLM conversationnel polyvalent
+    /// Supporte l'historique de conversation pour un dialogue naturel
     func askAboutClothing(
         question: String,
         userProfile: UserProfile,
         currentWeather: WeatherData?,
         wardrobeItems: [WardrobeItem],
-        image: UIImage? = nil
+        image: UIImage? = nil,
+        conversationHistory: [ChatMessage] = []
     ) async throws -> String {
         guard isEnabled else {
             throw GeminiError.apiKeyMissing
         }
         
-        // Construire le contexte
-        var contextPrompt = """
-        Tu es un assistant intelligent et utile. Tu peux répondre à toutes sortes de questions sur n'importe quel sujet. Réponds librement et de manière naturelle à ce que l'utilisateur te demande.
+        // Construire l'historique de conversation pour un dialogue naturel
+        var contents: [[String: Any]] = []
         
-        PROFIL UTILISATEUR (informations optionnelles si la question concerne la mode):
-        - Genre: \(userProfile.gender.rawValue)
-        - Âge: \(userProfile.age)
-        """
-        
-        if let weather = currentWeather {
-            contextPrompt += """
+        // Ajouter le contexte système uniquement au début de la conversation
+        if conversationHistory.isEmpty {
+            var systemContext = """
+            Tu es Shoply AI, un assistant intelligent et conversationnel. Tu peux discuter de TOUS les sujets sans restriction : mode, technologie, science, histoire, cuisine, sport, culture, actualités, etc.
             
-            MÉTÉO ACTUELLE (informations optionnelles si la question concerne la mode ou la météo):
-            - Température: \(Int(weather.temperature))°C
-            - Conditions: \(weather.condition.rawValue)
+            Tu es amical, naturel, et tu adaptes ton style de réponse au contexte. Tu peux avoir des conversations longues et détaillées.
             """
+            
+            // Ajouter le contexte utilisateur seulement si pertinent
+            if !wardrobeItems.isEmpty || currentWeather != nil {
+                systemContext += "\n\nCONTEXTE UTILISATEUR (utilise seulement si pertinent à la conversation):"
+                
+                if !wardrobeItems.isEmpty {
+                    let itemsDescription = wardrobeItems.prefix(10).map { item in
+                        "- \(item.name) (\(item.category.rawValue), \(item.color))"
+                    }.joined(separator: "\n")
+                    systemContext += "\nGarde-robe: \(itemsDescription)"
+                }
+                
+                if let weather = currentWeather {
+                    systemContext += "\nMétéo: \(Int(weather.temperature))°C, \(weather.condition.rawValue)"
+                }
+            }
+            
+            contents.append([
+                "role": "user",
+                "parts": [["text": systemContext]]
+            ])
+            
+            contents.append([
+                "role": "model",
+                "parts": [["text": "Bonjour ! Je suis Shoply AI, votre assistant conversationnel. Je peux discuter de tout avec vous. Comment puis-je vous aider aujourd'hui ?"]]
+            ])
         }
         
-        if !wardrobeItems.isEmpty {
-            let itemsDescription = wardrobeItems.prefix(10).map { item in
-                "- \(item.name) (\(item.category.rawValue), \(item.color))"
-            }.joined(separator: "\n")
+        // Ajouter l'historique de conversation (derniers 10 messages pour garder le contexte)
+        let recentHistory = conversationHistory.suffix(10)
+        for message in recentHistory {
+            let role = message.isUser ? "user" : "model"
+            var parts: [[String: Any]] = [["text": message.content]]
             
-            contextPrompt += """
+            // Ajouter l'image si disponible
+            if let image = message.image, let base64Image = imageToBase64(image) {
+                parts.append([
+                    "inline_data": [
+                        "mime_type": "image/jpeg",
+                        "data": base64Image
+                    ]
+                ])
+            }
             
-            GARDE-ROBE DE L'UTILISATEUR (informations optionnelles, utilise seulement si la question concerne la mode):
-            \(itemsDescription)
-            """
+            contents.append([
+                "role": role,
+                "parts": parts
+            ])
         }
         
-        contextPrompt += """
+        // Ajouter la nouvelle question
+        var questionParts: [[String: Any]] = [["text": question]]
         
-        QUESTION DE L'UTILISATEUR:
-        \(question)
+        // Ajouter l'image si disponible
+        if let image = image, let base64Image = imageToBase64(image) {
+            questionParts.append([
+                "inline_data": [
+                    "mime_type": "image/jpeg",
+                    "data": base64Image
+                ]
+            ])
+        }
         
-        INSTRUCTIONS:
-        1. Réponds librement à la question de l'utilisateur, quelle qu'elle soit
-        2. N'aie aucune restriction de sujet - tu peux parler de tout
-        3. Sois naturel, amical et utile dans ta réponse
-        4. Si la question concerne la mode/vêtements, utilise les informations du profil et de la météo si pertinentes
-        5. Si la question concerne un autre sujet, réponds simplement et librement sans te limiter
-        6. Réponds de manière concise mais complète (maximum 300 mots)
-        """
+        contents.append([
+            "role": "user",
+            "parts": questionParts
+        ])
         
         // Utiliser gemini-2.5-flash avec v1beta selon la documentation officielle
         // Construire l'URL - utiliser la clé API intégrée ou stockée
@@ -416,30 +452,13 @@ class GeminiService: ObservableObject {
             throw GeminiError.invalidURL
         }
         
-        // Construire les parts du message (texte + image si disponible)
-        var parts: [[String: Any]] = [
-            ["text": contextPrompt]
-        ]
-        
-        // Ajouter l'image si disponible
-        if let image = image, let base64Image = imageToBase64(image) {
-            parts.append([
-                "inline_data": [
-                    "mime_type": "image/jpeg",
-                    "data": base64Image
-                ]
-            ])
-        }
-        
         let requestBody: [String: Any] = [
-            "contents": [
-                [
-                    "parts": parts
-                ]
-            ],
+            "contents": contents,
             "generationConfig": [
-                "temperature": 0.7,
-                "maxOutputTokens": 300
+                "temperature": 0.9, // Plus créatif et conversationnel
+                "maxOutputTokens": 2000, // Réponses plus longues et détaillées
+                "topP": 0.95,
+                "topK": 40
             ]
         ]
         

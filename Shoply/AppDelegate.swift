@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import UserNotifications
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
@@ -17,6 +18,34 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         } else {
             // iPhone : uniquement portrait
             return .portrait
+        }
+    }
+    
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        // Réinitialiser le badge de notification quand l'app devient active
+        clearApplicationBadge()
+    }
+    
+    func applicationWillEnterForeground(_ application: UIApplication) {
+        // Réinitialiser le badge de notification quand l'app entre au premier plan
+        clearApplicationBadge()
+    }
+    
+    private func clearApplicationBadge() {
+        // Méthode moderne avec UNUserNotificationCenter (iOS 16+)
+        if #available(iOS 16.0, *) {
+            UNUserNotificationCenter.current().setBadgeCount(0) { error in
+                if let error = error {
+                    print("⚠️ Erreur lors de la réinitialisation du badge: \(error.localizedDescription)")
+                } else {
+                    print("✅ Badge de notification réinitialisé")
+                }
+            }
+        } else {
+            // Méthode de fallback pour iOS < 16
+            DispatchQueue.main.async {
+                UIApplication.shared.applicationIconBadgeNumber = 0
+            }
         }
     }
 }

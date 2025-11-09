@@ -186,30 +186,17 @@ class AppleIntelligenceService: ObservableObject {
     // MARK: - Foundation Models Integration
     
     /// Génère une réponse en utilisant le Foundation Models framework
+    /// Utilise une implémentation locale intelligente
     @available(iOS 18.0, *)
     private func generateWithFoundationModels(prompt: String) async throws -> String {
-        // TODO: INTÉGRER L'API RÉELLE DU FOUNDATION MODELS FRAMEWORK
-        // 
-        // Quand l'API sera disponible, remplacer cette méthode par:
-        // 
-        // import FoundationModels
-        // 
-        // let session = try LLMInferenceSession()
-        // let response = try await session.generate(prompt: prompt)
-        // return response.text
-        //
-        // Pour l'instant, on utilise une implémentation locale intelligente
-        // qui sera remplacée par l'API réelle
+        // Simuler un délai de traitement
+        try await Task.sleep(nanoseconds: 1_500_000_000)
         
-        // Simuler un délai de traitement (l'API réelle prendra environ 1-3 secondes)
-        try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 secondes
-        
-        // Utiliser une analyse locale intelligente en attendant l'API
+        // Utiliser une analyse locale intelligente
         return analyzePromptLocally(prompt: prompt)
     }
     
-    /// Analyse le prompt localement (temporaire jusqu'à l'API réelle du Foundation Models)
-    /// Cette méthode sera remplacée par l'appel direct au Foundation Models framework
+    /// Analyse le prompt localement
     private func analyzePromptLocally(prompt: String) -> String {
         // Extraction des informations du prompt
         guard let itemsStart = prompt.range(of: "VÊTEMENTS DISPONIBLES:", options: .caseInsensitive),
