@@ -70,8 +70,7 @@ class ShoplyAITrainingService {
             // Indonésien
             (input: "Outfit apa untuk hari ini?", output: "Saya merekomendasikan outfit yang sesuai dengan cuaca dan acara. Untuk hari yang cerah, pilih pakaian ringan dan nyaman.", language: "id")
         ]
-        
-        print("✅ Dataset d'entraînement chargé: \(trainingDataset.count) exemples")
+
     }
     
     // MARK: - Entraînement
@@ -109,8 +108,7 @@ class ShoplyAITrainingService {
         
         // Sauvegarder les poids entraînés
         await saveTrainedWeights()
-        
-        print("✅ Entraînement terminé !")
+
         await MainActor.run {
             progressCallback(1.0)
         }
@@ -156,7 +154,7 @@ class ShoplyAITrainingService {
         if loss > 0.5 {
             // Perte élevée - ajuster plus agressivement
             // Dans un vrai système, on calculerait les gradients
-            print("⚠️ Perte élevée détectée, ajustement des poids nécessaire")
+            
         }
     }
     
@@ -201,7 +199,7 @@ class ShoplyAITrainingService {
     /// Ajoute un exemple au dataset d'entraînement
     func addTrainingExample(input: String, output: String, language: String) {
         trainingDataset.append((input: input, output: output, language: language))
-        print("✅ Exemple ajouté au dataset: \(input.prefix(50))...")
+        
     }
 }
 

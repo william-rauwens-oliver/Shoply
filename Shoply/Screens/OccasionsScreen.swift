@@ -81,11 +81,16 @@ struct OccasionsScreen: View {
             }
             .navigationTitle("Occasions".localized)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Occasions".localized)
                         .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
                 }
             }
             .sheet(item: $selectedProfessionalOccasion) { occasion in

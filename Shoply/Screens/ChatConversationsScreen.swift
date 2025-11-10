@@ -44,16 +44,14 @@ struct ChatConversationsScreen: View {
                                 switch conversation.aiMode {
                                 case "Apple Intelligence":
                                     mode = .appleIntelligence
-                                case "Shoply AI":
+                                case "Shoply AI", "Gemini", "Advanced", "ChatGPT":
                                     mode = .shoplyAI
-                                case "Gemini", "Advanced", "ChatGPT":
-                                    mode = .gemini
                                 default:
                                     // Utiliser Apple Intelligence par défaut si disponible
                                     if #available(iOS 18.0, *), AppleIntelligenceServiceWrapper.shared.isEnabled {
                                         mode = .appleIntelligence
                                     } else {
-                                        mode = .gemini
+                                        mode = .shoplyAI
                                     }
                                 }
                                 return mode

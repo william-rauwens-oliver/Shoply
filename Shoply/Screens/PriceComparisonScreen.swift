@@ -52,11 +52,16 @@ struct PriceComparisonScreen: View {
             }
             .navigationTitle("Comparateur de Prix".localized)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Comparateur de Prix".localized)
                         .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {

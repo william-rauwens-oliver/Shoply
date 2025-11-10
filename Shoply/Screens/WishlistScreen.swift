@@ -65,11 +65,16 @@ struct WishlistScreen: View {
             }
             .navigationTitle("Wishlist".localized)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Wishlist".localized)
                         .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {

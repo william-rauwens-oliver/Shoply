@@ -311,7 +311,7 @@ class OutfitMatchingAlgorithm: ObservableObject {
         // Mais on essaie d'en avoir si possible
         if !selectedItems.contains(where: { $0.category == .shoes }) {
             // Pas de chaussures, mais on peut quand même créer l'outfit
-            print("⚠️ Outfit créé sans chaussures")
+            
         }
         
         let avgTemp = ((weatherService.morningWeather?.temperature ?? 20.0) + (weatherService.afternoonWeather?.temperature ?? 20.0)) / 2

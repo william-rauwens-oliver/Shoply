@@ -287,9 +287,7 @@ class TravelModeService: ObservableObject {
             )
             
             // Parser la réponse de Gemini pour créer les items de checklist
-            print("🔍 Réponse Gemini pour \(plan.destination):\n\(checklistText)")
             let checklistItems = parseGeminiChecklist(checklistText)
-            print("✅ Items parsés: \(checklistItems.count)")
             
             if !checklistItems.isEmpty {
                 await MainActor.run {
@@ -298,14 +296,11 @@ class TravelModeService: ObservableObject {
                     var updatedPlan = travelPlans[planIndex]
                     updatedPlan.checklist = checklistItems
                     travelPlans[planIndex] = updatedPlan
-        saveTravelPlans()
-                    print("✅ Checklist mise à jour pour \(updatedPlan.destination)")
+                    saveTravelPlans()
                 }
-            } else {
-                print("⚠️ Aucun item parsé de la réponse Gemini")
             }
         } catch {
-            print("❌ Erreur lors de la génération de la checklist Gemini: \(error)")
+            // Erreur silencieuse - la checklist restera vide
         }
     }
     

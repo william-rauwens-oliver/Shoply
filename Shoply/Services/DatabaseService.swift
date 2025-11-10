@@ -24,7 +24,7 @@ class SQLDatabaseService {
         dbPath = documentsPath.appendingPathComponent("shoply.db").path
         
         if sqlite3_open(dbPath, &db) != SQLITE_OK {
-            print("❌ Erreur d'ouverture de la base de données SQLite")
+            
         } else {
             createTables()
         }
@@ -83,8 +83,8 @@ class SQLDatabaseService {
             }
         }
         
-        if let error = String(validatingUTF8: sqlite3_errmsg(db)) {
-            print("❌ Erreur SQL: \(error)")
+        if String(validatingUTF8: sqlite3_errmsg(db)) != nil {
+            // Erreur silencieuse
         }
         sqlite3_finalize(statement)
         return false

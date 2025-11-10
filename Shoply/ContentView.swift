@@ -50,8 +50,8 @@ struct ContentView: View {
         // Réinitialiser le badge de notification
         if #available(iOS 16.0, *) {
             UNUserNotificationCenter.current().setBadgeCount(0) { error in
-                if let error = error {
-                    print("⚠️ Erreur lors de la réinitialisation du badge: \(error.localizedDescription)")
+                if error != nil {
+                    // Erreur silencieuse
                 }
             }
         } else {

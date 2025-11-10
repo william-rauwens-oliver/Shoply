@@ -38,11 +38,16 @@ struct TravelModeScreen: View {
             }
             .navigationTitle("Mode Voyage".localized)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Mode Voyage".localized)
                         .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -484,7 +489,7 @@ struct ChecklistSection: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Checklist Shoply".localized)
+                        Text("Checklist Shoply AI".localized)
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(AppColors.primaryText)
                         
@@ -530,16 +535,16 @@ struct ChecklistSection: View {
             
             if plan.checklist.isEmpty {
                 VStack(spacing: 20) {
-                    AIThinkingAnimation(message: "Génération de la checklist par Shoply...".localized)
+                    AIThinkingAnimation(message: "Génération de la checklist par Shoply AI".localized)
                         .frame(height: 100)
                     
                     VStack(spacing: 8) {
-                        Text("Shoply analyse votre destination".localized)
+                        Text("Shoply AI analyse votre destination".localized)
                             .font(DesignSystem.Typography.body())
                             .foregroundColor(AppColors.primaryText)
                             .fontWeight(.medium)
                         
-                        Text("Les dates, la météo et votre profil sont analysés pour créer une checklist personnalisée".localized)
+                        Text("Les dates, la météo et votre profil sont analysés par Shoply AI pour créer une checklist personnalisée".localized)
                             .font(DesignSystem.Typography.caption())
                             .foregroundColor(AppColors.secondaryText)
                             .multilineTextAlignment(.center)
@@ -757,7 +762,7 @@ struct AddTravelPlanScreen: View {
                     VStack(spacing: 24) {
                         AIThinkingAnimation(message: "Création du plan de voyage...".localized)
                         
-                        Text("Shoply génère votre checklist personnalisée".localized)
+                        Text("Shoply AI génère votre checklist personnalisée".localized)
                             .font(DesignSystem.Typography.body())
                             .foregroundColor(AppColors.secondaryText)
                             .multilineTextAlignment(.center)

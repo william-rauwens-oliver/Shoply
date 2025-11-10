@@ -190,8 +190,7 @@ struct AppleSignInScreen: View {
             }
         }
     }
-    
-    
+
     private func syncWithiCloud() async {
         do {
             // Vérifier si des données existent dans iCloud pour cet email
@@ -296,7 +295,7 @@ struct AppleSignInScreen: View {
                 }
             }
         } catch {
-            print("⚠️ Erreur restauration iCloud: \(error)")
+            
         }
     }
     

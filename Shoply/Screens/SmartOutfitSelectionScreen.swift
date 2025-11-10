@@ -23,7 +23,7 @@ struct SmartOutfitSelectionScreen: View {
     @State private var showingResults = false
     @State private var weatherError: String?
     @State private var generationProgress: Double = 0.0
-    @State private var useAdvancedAI: Bool = true
+    @State private var useAdvancedAI: Bool = true // Toujours activé maintenant
     @State private var showingArticleError = false
     @State private var selectedStyle: OutfitType? = nil
     @State private var customStylePrompt: String = ""
@@ -141,11 +141,16 @@ struct SmartOutfitSelectionScreen: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Sélection intelligente".localized)
                         .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
                 }
             }
             .onAppear {
@@ -654,7 +659,7 @@ struct AlgorithmSection: View {
                 return "Apple Intelligence"
             }
         }
-        return "Gemini"
+        return "Shoply AI"
     }
     
     private var isAppleIntelligence: Bool {
@@ -684,35 +689,16 @@ struct AlgorithmSection: View {
             }
             
             VStack(spacing: DesignSystem.Spacing.md) {
-                // Option IA avancée
+                // Option Shoply AI (IA avancée)
                 AIOptionCard(
                     icon: isAppleIntelligence ? "applelogo" : "star.circle.fill",
-                    title: "\(providerDisplayName) (IA avancée)",
-                    description: isAppleIntelligence ? "Plus puissant • Données restent sur votre appareil • Privé et sécurisé" : "Plus puissant • Plus de chances de trouver • Données envoyées à \(providerDisplayName)",
-                    isSelected: useAdvancedAI && isAdvancedAIAvailable,
+                    title: "Shoply AI",
+                    description: isAppleIntelligence ? "Intelligence artificielle avancée • Données restent sur votre appareil • Privé et sécurisé" : "Intelligence artificielle avancée • Suggestions personnalisées et intelligentes • Optimisé pour vos préférences",
+                    isSelected: true,
                     color: advancedAIColor,
                     isEnabled: isAdvancedAIAvailable,
                     action: {
-                        if isAdvancedAIAvailable {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                useAdvancedAI = true
-                            }
-                        }
-                    }
-                )
-                
-                // Option Shoply AI
-                AIOptionCard(
-                    icon: "sparkles",
-                    title: "Shoply AI",
-                    description: "Moins puissant • Données restent sur votre appareil",
-                    isSelected: !useAdvancedAI,
-                    color: AppColors.buttonPrimary,
-                    isEnabled: true,
-                    action: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            useAdvancedAI = false
-                        }
+                        // Toujours activé
                     }
                 )
             }
@@ -870,7 +856,7 @@ struct ModernLoadingView: View {
     @State private var currentStep = 0
     
     private var aiSteps: [(message: String, threshold: Double)] {
-        let providerName = "Gemini"
+        let providerName = "Shoply AI"
         return [
             ("Préparation de vos vêtements...", 0.1),
             ("Chargement de \(wardrobeService.items.count) article(s)...", 0.2),
@@ -1097,7 +1083,7 @@ struct ModernOutfitCard: View {
                 }
                 
                 if outfit.reason.contains("ChatGPT") || outfit.reason.contains("Gemini") || outfit.reason.contains("Suggestion") {
-                    let providerName = "Gemini"
+                    let providerName = "Shoply AI"
                     HStack(spacing: 6) {
                         Image(systemName: "sparkles")
                             .font(.system(size: 12))
@@ -1117,7 +1103,7 @@ struct ModernOutfitCard: View {
                 .background(AppColors.separator)
             
             VStack(spacing: 0) {
-                let providerName = "Gemini"
+                let providerName = "Shoply AI"
                 Text("Vêtements sélectionnés par".localized + " \(providerName):")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(AppColors.secondaryText)

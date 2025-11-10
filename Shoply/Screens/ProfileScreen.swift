@@ -134,7 +134,12 @@ struct ProfileScreen: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if isEditing {
                         HStack(spacing: DesignSystem.Spacing.md) {

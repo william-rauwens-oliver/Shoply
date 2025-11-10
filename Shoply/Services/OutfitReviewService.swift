@@ -83,7 +83,7 @@ class OutfitReviewService: ObservableObject {
             try photoData.write(to: fileURL)
             return fileURL.path
         } catch {
-            print("⚠️ Erreur sauvegarde photo: \(error)")
+            
             return nil
         }
     }

@@ -145,8 +145,8 @@ struct HomeScreen: View {
     private func clearApplicationBadge() {
         if #available(iOS 16.0, *) {
             UNUserNotificationCenter.current().setBadgeCount(0) { error in
-                if let error = error {
-                    print("⚠️ Erreur badge: \(error.localizedDescription)")
+                if error != nil {
+                    // Erreur silencieuse
                 }
             }
         } else {

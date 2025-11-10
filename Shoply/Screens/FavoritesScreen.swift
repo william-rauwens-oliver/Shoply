@@ -44,7 +44,12 @@ struct FavoritesScreen: View {
             }
             .navigationTitle("Favoris")
             .navigationBarTitleDisplayMode(.large)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
+                }
+                
                 if !favoriteOutfits.isEmpty {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {

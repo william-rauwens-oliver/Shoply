@@ -221,7 +221,7 @@ class WeatherService: NSObject, ObservableObject {
                 }
             }
         } catch {
-            print("⚠️ Erreur geocoding: \(error.localizedDescription)")
+            
         }
         
         // Fallback si le geocoding échoue

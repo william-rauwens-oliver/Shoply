@@ -91,9 +91,7 @@ class AppleSignInService: NSObject, ObservableObject {
         let provider = ASAuthorizationAppleIDProvider()
         let request = provider.createRequest()
         request.requestedScopes = [.fullName, .email]
-        
-        print("✅ Requête créée avec scopes: fullName, email")
-        
+
         // Créer le contrôleur d'autorisation
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
@@ -101,13 +99,11 @@ class AppleSignInService: NSObject, ObservableObject {
         
         // Conserver une référence pour éviter la libération
         self.authorizationController = controller
-        
-        print("✅ Contrôleur créé avec delegate et presentationContextProvider")
-        
+
         // Lancer la demande immédiatement sur le thread principal
         print("🚀 Lancement de performRequests()...")
         controller.performRequests()
-        print("✅ performRequests() appelé")
+        
     }
     
     func signOut() {
@@ -203,10 +199,9 @@ class AppleSignInService: NSObject, ObservableObject {
                     historyStore.addOutfit(historicalOutfit.outfit, date: historicalOutfit.dateWorn)
                 }
             }
-            
-            print("✅ Données restaurées depuis iCloud")
+
         } catch {
-            print("⚠️ Erreur lors de la restauration depuis iCloud: \(error)")
+            
             // Ne pas faire crasher l'app si la restauration échoue
         }
     }
@@ -215,9 +210,9 @@ class AppleSignInService: NSObject, ObservableObject {
         // Sauvegarder toutes les données locales dans iCloud de manière sécurisée
         do {
             try await cloudKitService.syncAllUserData()
-            print("✅ Données sauvegardées dans iCloud")
+            
         } catch {
-            print("⚠️ Erreur lors de la sauvegarde dans iCloud: \(error)")
+            
             // Ne pas faire crasher l'app si la sauvegarde échoue
             throw error
         }
@@ -228,13 +223,11 @@ class AppleSignInService: NSObject, ObservableObject {
 
 extension AppleSignInService: ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
-        print("✅ Autorisation Apple Sign In réussie")
-        
+
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
             let userIdentifier = appleIDCredential.user
             var email = appleIDCredential.email
-            
-            print("✅ Identifiant utilisateur: \(userIdentifier)")
+
             print("✅ Email: \(email ?? "non fourni")")
             
             // Si l'email n'est pas fourni (première connexion uniquement), récupérer depuis UserDefaults
@@ -254,19 +247,17 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                 self.userEmail = email
                 self.isAuthenticated = true
                 self.isLoading = false
-                
-                print("✅ État mis à jour: authentifié = \(self.isAuthenticated)")
-                
+
                 // Mettre à jour le profil avec l'email si disponible
                 if let email = email, var profile = self.dataManager.loadUserProfile() {
                     profile.email = email
                     self.dataManager.saveUserProfile(profile)
-                    print("✅ Profil mis à jour avec l'email")
+                    
                 } else if let email = email {
                     // Si pas de profil mais email disponible, créer un profil minimal avec l'email
                     let newProfile = UserProfile(email: email)
                     self.dataManager.saveUserProfile(newProfile)
-                    print("✅ Nouveau profil créé avec l'email")
+                    
                 }
                 
                 // Vérifier le statut iCloud
@@ -278,19 +269,18 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                 }
             }
         } else {
-            print("⚠️ Type de credential non reconnu")
+            
         }
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
-        print("❌ Erreur Apple Sign In reçue")
-        
+
         DispatchQueue.main.async {
             self.isLoading = false
             
             // Log détaillé de l'erreur pour le débogage
             let nsError = error as NSError
-            print("❌ Erreur Apple Sign In:")
+            
             print("   Code: \(nsError.code)")
             print("   Domain: \(nsError.domain)")
             print("   Description: \(error.localizedDescription)")
@@ -307,28 +297,28 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                     print("ℹ️ Utilisateur a annulé la connexion")
                 case .failed:
                     self.errorMessage = "Échec de la connexion. Veuillez réessayer.".localized
-                    print("❌ Échec de la connexion")
+                    
                 case .invalidResponse:
                     // Message plus doux pour les comptes gratuits
                     self.errorMessage = "Apple Sign In n'est pas disponible avec un compte développeur gratuit. Vous pouvez continuer sans connexion Apple.".localized
-                    print("❌ Réponse invalide")
+                    
                 case .notHandled:
                     // Message plus doux pour les comptes gratuits
                     self.errorMessage = "Apple Sign In n'est pas disponible avec un compte développeur gratuit. Vous pouvez continuer sans connexion Apple.".localized
-                    print("❌ Connexion non gérée")
+                    
                 case .unknown:
                     // Erreur 1000 - souvent due à une configuration manquante (compte gratuit)
                     self.errorMessage = "Apple Sign In nécessite un compte développeur payant. Vous pouvez continuer sans connexion Apple pour utiliser l'application.".localized
-                    print("❌ Erreur inconnue - probablement compte gratuit")
+                    
                 default:
                     // Gérer tous les autres cas (notInteractive, credentialExport, credentialImport, matchedExcludedCredential, etc.)
                     self.errorMessage = "Erreur d'authentification: \(error.localizedDescription)".localized
-                    print("❌ Erreur: \(authError.code)")
+                    
                 }
             } else {
                 // Erreur 1000 ou autres erreurs
                 let errorCode = nsError.code
-                print("❌ Erreur NSError: Code \(errorCode)")
+                
                 if errorCode == 1000 {
                     // Erreur 1000 = compte gratuit - message plus clair
                     self.errorMessage = "Apple Sign In nécessite un compte développeur payant. Continuez sans connexion pour utiliser l'application normalement.".localized
@@ -354,11 +344,11 @@ extension AppleSignInService: ASAuthorizationControllerPresentationContextProvid
             // Fallback pour versions plus anciennes ou scénarios spéciaux
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                let window = windowScene.windows.first(where: { $0.isKeyWindow }) {
-                print("✅ Fenêtre clé trouvée (fallback)")
+                
                 return window
             }
             // Dernier recours : créer une fenêtre
-            print("⚠️ Création d'une fenêtre de secours")
+            
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
                 let window = UIWindow(windowScene: windowScene)
                 window.makeKeyAndVisible()
@@ -372,18 +362,18 @@ extension AppleSignInService: ASAuthorizationControllerPresentationContextProvid
         
         // Obtenir la fenêtre clé de la scène
         if let keyWindow = windowScene.windows.first(where: { $0.isKeyWindow }) {
-            print("✅ Fenêtre clé trouvée depuis windowScene")
+            
             return keyWindow
         }
         
         // Sinon prendre la première fenêtre de la scène
         if let firstWindow = windowScene.windows.first {
-            print("✅ Première fenêtre trouvée depuis windowScene")
+            
             return firstWindow
         }
         
         // Dernier recours : créer une fenêtre pour cette scène
-        print("⚠️ Création d'une fenêtre pour la scène")
+        
         let window = UIWindow(windowScene: windowScene)
         window.makeKeyAndVisible()
         return window

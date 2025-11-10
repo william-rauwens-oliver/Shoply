@@ -389,7 +389,7 @@ class IntelligentOutfitMatchingAlgorithm: ObservableObject {
             selectedItems.append(shoes)
         } else {
             // Pas de chaussures disponibles, mais on peut quand même créer l'outfit
-            print("⚠️ Outfit créé sans chaussures (pas disponibles dans la garde-robe)")
+            
         }
         
         // 5. Accessoires (optionnel mais recommandé si cohérents)

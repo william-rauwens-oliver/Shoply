@@ -35,10 +35,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Méthode moderne avec UNUserNotificationCenter (iOS 16+)
         if #available(iOS 16.0, *) {
             UNUserNotificationCenter.current().setBadgeCount(0) { error in
-                if let error = error {
-                    print("⚠️ Erreur lors de la réinitialisation du badge: \(error.localizedDescription)")
-                } else {
-                    print("✅ Badge de notification réinitialisé")
+                if error != nil {
+                    // Erreur silencieuse
                 }
             }
         } else {

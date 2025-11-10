@@ -42,7 +42,7 @@ class MotivationNotificationService: NSObject, ObservableObject {
             }
             return granted
         } catch {
-            print("❌ Erreur demande autorisation notifications: \(error)")
+            
             return false
         }
     }
@@ -144,9 +144,9 @@ class MotivationNotificationService: NSObject, ObservableObject {
         
         do {
             try await notificationCenter.add(request)
-            print("✅ Notification programmée pour demain à \(wakeTime)")
+            
         } catch {
-            print("❌ Erreur programmation notification: \(error)")
+            
         }
     }
     
@@ -181,9 +181,9 @@ class MotivationNotificationService: NSObject, ObservableObject {
         
         do {
             try await notificationCenter.add(request)
-            print("✅ Notifications quotidiennes programmées pour \(wakeTime)")
+            
         } catch {
-            print("❌ Erreur programmation notifications quotidiennes: \(error)")
+            
         }
     }
     

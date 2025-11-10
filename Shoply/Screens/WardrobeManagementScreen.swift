@@ -8,7 +8,6 @@
 import SwiftUI
 import PhotosUI
 
-/// Écran de gestion de la garde-robe - Design moderne
 struct WardrobeManagementScreen: View {
     @StateObject private var wardrobeService = WardrobeService()
     @State private var selectedCategory: ClothingCategory = .top
@@ -27,10 +26,6 @@ struct WardrobeManagementScreen: View {
         }
     }
     
-    var hasSelectedItems: Bool {
-        !selectedItems.isEmpty
-    }
-    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -38,19 +33,19 @@ struct WardrobeManagementScreen: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Barre de recherche moderne
+                    // Barre de recherche
                     ModernSearchBar(text: $searchText)
                         .padding(.horizontal, 20)
-                        .padding(.top, 12)
+                        .padding(.top, 16)
                     
-                    // Sélecteur de catégorie moderne
-                    ModernCategoryPicker(selectedCategory: $selectedCategory)
+                    // Sélecteur de catégorie
+                    CategoryPicker(selectedCategory: $selectedCategory)
                         .padding(.horizontal, 20)
-                        .padding(.top, 12)
+                        .padding(.top, 16)
                     
-                    // Barre d'actions si mode sélection
+                    // Barre d'actions en mode sélection
                     if isSelectionMode {
-                        ModernSelectionToolbar(
+                        SelectionToolbar(
                             selectedCount: selectedItems.count,
                             totalCount: filteredItems.count,
                             onSelectAll: {
@@ -69,68 +64,75 @@ struct WardrobeManagementScreen: View {
                         )
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
-                        .background(AppColors.cardBackground)
                     }
                     
-                    // Liste des vêtements
+                    // Contenu
                     if filteredItems.isEmpty {
-                        ModernEmptyWardrobeView(category: selectedCategory)
+                        EmptyWardrobeView(category: selectedCategory)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         ScrollView(showsIndicators: false) {
-                        LazyVGrid(columns: [
+                            LazyVGrid(columns: [
                                 GridItem(.flexible(), spacing: 16),
                                 GridItem(.flexible(), spacing: 16)
                             ], spacing: 16) {
-                            ForEach(filteredItems) { item in
-                                    ModernWardrobeItemCard(
-                                    item: item,
-                                    wardrobeService: wardrobeService,
-                                    isSelectionMode: $isSelectionMode,
-                                    isSelected: Binding(
-                                        get: { selectedItems.contains(item.id) },
-                                        set: { isSelected in
-                                            if isSelected {
-                                                selectedItems.insert(item.id)
-                                            } else {
-                                                selectedItems.remove(item.id)
+                                ForEach(filteredItems) { item in
+                                    WardrobeItemCard(
+                                        item: item,
+                                        wardrobeService: wardrobeService,
+                                        isSelectionMode: $isSelectionMode,
+                                        isSelected: Binding(
+                                            get: { selectedItems.contains(item.id) },
+                                            set: { isSelected in
+                                                if isSelected {
+                                                    selectedItems.insert(item.id)
+                                                } else {
+                                                    selectedItems.remove(item.id)
+                                                }
                                             }
-                                        }
+                                        )
                                     )
-                                )
-                                    .id("card-\(item.id)-\(item.photoURL ?? "nophoto")")
+                                }
                             }
-                        }
                             .padding(20)
-                            .id(wardrobeService.items.count)
                         }
                     }
                 }
             }
             .navigationTitle(isSelectionMode ? "\(selectedItems.count) sélectionné\(selectedItems.count > 1 ? "s" : "")" : "Garde-robe".localized)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
-                if !isSelectionMode {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        if !wardrobeService.items.isEmpty {
-                            Button(action: {
+                ToolbarItem(placement: .principal) {
+                    Text(isSelectionMode ? "\(selectedItems.count) sélectionné\(selectedItems.count > 1 ? "s" : "")" : "Garde-robe".localized)
+                        .font(DesignSystem.Typography.title2())
+                        .foregroundColor(AppColors.primaryText)
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if !isSelectionMode && !wardrobeService.items.isEmpty {
+                        HStack(spacing: 12) {
+                            BackButtonWithLongPress()
+                            Button {
                                 showingDeleteAllAlert = true
-                            }) {
+                            } label: {
                                 Image(systemName: "trash")
                                     .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(.red)
                             }
-                            }
                         }
+                    } else {
+                        BackButtonWithLongPress()
                     }
-                    
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
+                    Button {
                         showingAddItem = true
-                    }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 24, weight: .medium))
-                            .foregroundColor(AppColors.buttonPrimary)
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(AppColors.primaryText)
                     }
                 }
             }
@@ -148,7 +150,7 @@ struct WardrobeManagementScreen: View {
                     deleteAllItems()
                 }
             } message: {
-                Text("Êtes-vous sûr de vouloir supprimer tous les vêtements de votre garde-robe ? Cette action est irréversible.".localized)
+                Text("Êtes-vous sûr de vouloir supprimer tous les vêtements ? Cette action est irréversible.".localized)
             }
             .alert("Supprimer les vêtements sélectionnés".localized, isPresented: $showingDeleteSelectedAlert) {
                 Button("Annuler".localized, role: .cancel) { }
@@ -156,7 +158,7 @@ struct WardrobeManagementScreen: View {
                     deleteSelectedItems()
                 }
             } message: {
-                Text("Êtes-vous sûr de vouloir supprimer \(selectedItems.count) vêtement\(selectedItems.count > 1 ? "s" : "") ? Cette action est irréversible.".localized)
+                Text("Êtes-vous sûr de vouloir supprimer \(selectedItems.count) vêtement\(selectedItems.count > 1 ? "s" : "") ?".localized)
             }
         }
     }
@@ -177,7 +179,7 @@ struct WardrobeManagementScreen: View {
     }
 }
 
-// MARK: - Composants Modernes
+// MARK: - Composants
 
 struct ModernSearchBar: View {
     @Binding var text: String
@@ -195,9 +197,9 @@ struct ModernSearchBar: View {
                 .focused($isFocused)
             
             if !text.isEmpty {
-                Button(action: {
+                Button {
                     text = ""
-                }) {
+                } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(AppColors.secondaryText)
@@ -205,49 +207,48 @@ struct ModernSearchBar: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
         .liquidGlassCard(cornerRadius: DesignSystem.Radius.lg)
     }
 }
 
-struct ModernCategoryPicker: View {
+struct CategoryPicker: View {
     @Binding var selectedCategory: ClothingCategory
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 ForEach(ClothingCategory.allCases) { category in
-                    Button(action: {
+                    Button {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        selectedCategory = category
+                            selectedCategory = category
                         }
-                    }) {
+                    } label: {
                         VStack(spacing: 8) {
                             ZStack {
-                                Circle()
-                                    .fill(selectedCategory == category ? AppColors.buttonPrimary : AppColors.buttonSecondary)
-                                    .frame(width: 48, height: 48)
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(selectedCategory == category ? AppColors.buttonPrimary.opacity(0.2) : AppColors.buttonSecondary.opacity(0.3))
+                                    .frame(width: 52, height: 52)
                                 
-                            Image(systemName: category.icon)
+                                Image(systemName: category.icon)
                                     .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(selectedCategory == category ? AppColors.buttonPrimaryText : AppColors.primaryText)
+                                    .foregroundColor(selectedCategory == category ? AppColors.buttonPrimary : AppColors.primaryText)
                             }
                             
                             Text(category.rawValue)
-                                .font(DesignSystem.Typography.caption())
+                                .font(.system(size: 12, weight: selectedCategory == category ? .semibold : .regular))
                                 .foregroundColor(selectedCategory == category ? AppColors.buttonPrimary : AppColors.secondaryText)
-                                .fontWeight(selectedCategory == category ? .semibold : .regular)
+                        }
+                        .frame(width: 70)
                     }
-                        .frame(width: 80)
+                }
             }
-        }
-    }
             .padding(.horizontal, 4)
         }
     }
 }
 
-struct ModernSelectionToolbar: View {
+struct SelectionToolbar: View {
     let selectedCount: Int
     let totalCount: Int
     let onSelectAll: () -> Void
@@ -290,10 +291,13 @@ struct ModernSelectionToolbar: View {
                     .foregroundColor(AppColors.primaryText)
             }
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
     }
 }
 
-struct ModernWardrobeItemCard: View {
+struct WardrobeItemCard: View {
     let item: WardrobeItem
     @ObservedObject var wardrobeService: WardrobeService
     @Binding var isSelectionMode: Bool
@@ -303,40 +307,48 @@ struct ModernWardrobeItemCard: View {
     
     var body: some View {
         ZStack(alignment: .topTrailing) {
-        Button(action: {
+            Button {
                 if isSelectionMode {
                     withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                    isSelected.toggle()
+                        isSelected.toggle()
                     }
                 } else {
-            showingDetail = true
+                    showingDetail = true
                 }
-        }) {
+            } label: {
                 VStack(alignment: .leading, spacing: 0) {
-                // Photo ou placeholder
-                Group {
+                    // Photo
+                    Group {
                         let firstPhotoURL = item.photoURLs.first ?? item.photoURL
-                        if let photoURL = firstPhotoURL, !photoURL.isEmpty {
-                        if let image = PhotoManager.shared.loadPhoto(at: photoURL) {
+                        if let photoURL = firstPhotoURL, !photoURL.isEmpty,
+                           let image = PhotoManager.shared.loadPhoto(at: photoURL) {
                             Image(uiImage: image)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                                    .frame(height: 160)
+                                .frame(height: 180)
                                 .clipped()
-                                    .id("photo-\(item.id)-\(photoURL)")
-                            } else {
-                                ModernPlaceholderView(icon: item.category.icon)
-                                    .frame(height: 160)
-                            }
                         } else {
-                            ModernPlaceholderView(icon: item.category.icon)
-                                .frame(height: 160)
+                            ZStack {
+                                LinearGradient(
+                                    colors: [
+                                        AppColors.buttonSecondary,
+                                        AppColors.buttonSecondary.opacity(0.5)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                                
+                                Image(systemName: item.category.icon)
+                                    .font(.system(size: 48, weight: .light))
+                                    .foregroundColor(AppColors.secondaryText)
+                            }
+                            .frame(height: 180)
                         }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
                     
                     // Informations
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text(item.name)
                             .font(DesignSystem.Typography.headline())
                             .foregroundColor(AppColors.primaryText)
@@ -349,15 +361,15 @@ struct ModernWardrobeItemCard: View {
                             
                             Text(item.color)
                                 .font(DesignSystem.Typography.caption())
-                                    .foregroundColor(AppColors.secondaryText)
+                                .foregroundColor(AppColors.secondaryText)
+                        }
                     }
-                }
-                    .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .liquidGlassCard(cornerRadius: DesignSystem.Radius.lg)
             }
-        .buttonStyle(PlainButtonStyle())
+            .buttonStyle(PlainButtonStyle())
             .scaleEffect(isPressed ? 0.97 : 1.0)
             .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
             .simultaneousGesture(
@@ -371,8 +383,8 @@ struct ModernWardrobeItemCard: View {
                     isSelected = true
                 }
             }
-        .sheet(isPresented: $showingDetail) {
-            WardrobeItemDetailView(item: item, wardrobeService: wardrobeService)
+            .sheet(isPresented: $showingDetail) {
+                WardrobeItemDetailView(item: item, wardrobeService: wardrobeService)
             }
             
             // Indicateurs
@@ -383,12 +395,12 @@ struct ModernWardrobeItemCard: View {
                         Image(systemName: "heart.fill")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.red)
-                            .padding(6)
-                            .background(Circle().fill(Color.white.opacity(0.9)))
+                            .padding(8)
+                            .background(Circle().fill(.ultraThinMaterial))
                             .shadow(color: AppColors.shadow.opacity(0.2), radius: 4, x: 0, y: 2)
                     }
                 }
-                .padding(8)
+                .padding(10)
                 
                 Spacer()
             }
@@ -398,24 +410,24 @@ struct ModernWardrobeItemCard: View {
                 VStack {
                     HStack {
                         Spacer()
-                ZStack {
-                    Circle()
-                        .fill(isSelected ? AppColors.buttonPrimary : Color.white)
-                        .frame(width: 28, height: 28)
+                        ZStack {
+                            Circle()
+                                .fill(isSelected ? AppColors.buttonPrimary : .white)
+                                .frame(width: 28, height: 28)
                                 .shadow(color: AppColors.shadow.opacity(0.3), radius: 6, x: 0, y: 3)
-                    
-                    if isSelected {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(AppColors.buttonPrimaryText)
+                            
+                            if isSelected {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(AppColors.buttonPrimaryText)
+                            }
+                        }
+                        .padding(10)
                     }
-                }
-                .padding(8)
-            }
                     Spacer()
+                }
+            }
         }
-    }
-}
     }
     
     private func colorFromString(_ colorName: String) -> Color {
@@ -435,28 +447,7 @@ struct ModernWardrobeItemCard: View {
     }
 }
 
-struct ModernPlaceholderView: View {
-    let icon: String
-    
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    AppColors.buttonSecondary,
-                    AppColors.buttonSecondary.opacity(0.5)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            
-            Image(systemName: icon)
-                .font(.system(size: 48, weight: .light))
-                .foregroundColor(AppColors.secondaryText)
-        }
-    }
-}
-
-struct ModernEmptyWardrobeView: View {
+struct EmptyWardrobeView: View {
     let category: ClothingCategory
     
     var body: some View {
@@ -466,42 +457,38 @@ struct ModernEmptyWardrobeView: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                AppColors.buttonSecondary,
-                                AppColors.buttonSecondary.opacity(0.7)
+                                AppColors.buttonPrimary.opacity(0.15),
+                                AppColors.buttonPrimary.opacity(0.05)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 120, height: 120)
-                    .overlay {
-                        Circle()
-                            .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 2)
-                    }
                 
-            Image(systemName: category.icon)
-                    .font(.system(size: 52, weight: .light))
-                    .foregroundColor(AppColors.secondaryText)
+                Image(systemName: category.icon)
+                    .font(.system(size: 50, weight: .light))
+                    .foregroundColor(AppColors.buttonPrimary)
             }
-            .shadow(color: AppColors.shadow.opacity(0.15), radius: 16, x: 0, y: 6)
             
             VStack(spacing: 12) {
                 Text("Aucun \(category.rawValue.lowercased()) dans votre garde-robe".localized)
                     .font(DesignSystem.Typography.title2())
                     .foregroundColor(AppColors.primaryText)
-                .multilineTextAlignment(.center)
-            
+                    .multilineTextAlignment(.center)
+                
                 Text("Appuyez sur le bouton + pour ajouter vos premiers vêtements".localized)
                     .font(DesignSystem.Typography.body())
                     .foregroundColor(AppColors.secondaryText)
-                .multilineTextAlignment(.center)
+                    .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
-        }
+            }
         }
     }
 }
 
-// MARK: - Écran d'ajout de vêtement (conservé tel quel)
+// MARK: - Écran d'ajout
+
 struct AddWardrobeItemView: View {
     @ObservedObject var wardrobeService: WardrobeService
     @Environment(\.dismiss) var dismiss
@@ -518,87 +505,158 @@ struct AddWardrobeItemView: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Informations de base") {
-                    TextField("Nom", text: $name)
-                    Picker("Catégorie", selection: $selectedCategory) {
-                        ForEach(ClothingCategory.allCases) { category in
-                            Text(category.rawValue).tag(category)
-                        }
-                    }
-                    TextField("Couleur", text: $color)
-                    TextField("Marque (optionnel)", text: $brand)
-                    TextField("Matière (optionnel)", text: $material)
-                }
+            ZStack {
+                AppColors.background
+                    .ignoresSafeArea()
                 
-                Section("Saisons") {
-                    ForEach(Season.allCases, id: \.rawValue) { season in
-                        Toggle(season.rawValue, isOn: Binding(
-                            get: { selectedSeasons.contains(season) },
-                            set: { isOn in
-                                if isOn {
-                                    selectedSeasons.insert(season)
-                                } else {
-                                    selectedSeasons.remove(season)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
+                        // Informations de base
+                        Card(cornerRadius: DesignSystem.Radius.lg) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Informations de base".localized)
+                                    .font(DesignSystem.Typography.headline())
+                                    .foregroundColor(AppColors.primaryText)
+                                
+                                VStack(spacing: 12) {
+                                    TextField("Nom".localized, text: $name)
+                                        .font(DesignSystem.Typography.body())
+                                        .foregroundColor(AppColors.primaryText)
+                                        .padding(14)
+                                        .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
+                                    
+                                    Picker("Catégorie".localized, selection: $selectedCategory) {
+                                        ForEach(ClothingCategory.allCases) { category in
+                                            Text(category.rawValue).tag(category)
+                                        }
+                                    }
+                                    .padding(14)
+                                    .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
+                                    
+                                    TextField("Couleur".localized, text: $color)
+                                        .font(DesignSystem.Typography.body())
+                                        .foregroundColor(AppColors.primaryText)
+                                        .padding(14)
+                                        .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
+                                    
+                                    TextField("Marque (optionnel)".localized, text: $brand)
+                                        .font(DesignSystem.Typography.body())
+                                        .foregroundColor(AppColors.primaryText)
+                                        .padding(14)
+                                        .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
+                                    
+                                    TextField("Matière (optionnel)".localized, text: $material)
+                                        .font(DesignSystem.Typography.body())
+                                        .foregroundColor(AppColors.primaryText)
+                                        .padding(14)
+                                        .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                                 }
                             }
-                        ))
-                    }
-                }
-                
-                Section("Photos") {
-                    PhotosPicker(
-                        selection: $selectedPhotos,
-                        maxSelectionCount: 10,
-                        matching: .images
-                    ) {
-                        HStack {
-                            Image(systemName: "photo.on.rectangle")
-                            Text("Ajouter des photos (jusqu'à 10)")
+                            .padding(20)
                         }
-                        .foregroundColor(AppColors.primaryText)
-                    }
-                    
-                    if !photoImages.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(Array(photoImages.enumerated()), id: \.offset) { index, image in
-                                    ZStack(alignment: .topTrailing) {
-                                        Image(uiImage: image)
-                                    .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: 120, height: 120)
-                                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                                        
-                                        Button(action: {
-                                            photoImages.remove(at: index)
-                                        }) {
-                                            Image(systemName: "xmark.circle.fill")
-                                                .foregroundColor(.red)
-                                                .background(Color.white.clipShape(Circle()))
-                            }
-                                        .padding(4)
+                        .padding(.horizontal, 20)
+                        
+                        // Saisons
+                        Card(cornerRadius: DesignSystem.Radius.lg) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Saisons".localized)
+                                    .font(DesignSystem.Typography.headline())
+                                    .foregroundColor(AppColors.primaryText)
+                                
+                                VStack(spacing: 12) {
+                                    ForEach(Season.allCases, id: \.rawValue) { season in
+                                        Toggle(season.rawValue, isOn: Binding(
+                                            get: { selectedSeasons.contains(season) },
+                                            set: { isOn in
+                                                if isOn {
+                                                    selectedSeasons.insert(season)
+                                                } else {
+                                                    selectedSeasons.remove(season)
+                                                }
+                                            }
+                                        ))
+                                        .tint(AppColors.buttonPrimary)
                                     }
                                 }
                             }
-                            .padding(.horizontal)
+                            .padding(20)
                         }
+                        .padding(.horizontal, 20)
+                        
+                        // Photos
+                        Card(cornerRadius: DesignSystem.Radius.lg) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Photos".localized)
+                                    .font(DesignSystem.Typography.headline())
+                                    .foregroundColor(AppColors.primaryText)
+                                
+                                PhotosPicker(
+                                    selection: $selectedPhotos,
+                                    maxSelectionCount: 10,
+                                    matching: .images
+                                ) {
+                                    HStack {
+                                        Image(systemName: "photo.on.rectangle")
+                                        Text("Ajouter des photos (jusqu'à 10)".localized)
+                                    }
+                                    .font(DesignSystem.Typography.body())
+                                    .foregroundColor(AppColors.primaryText)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
+                                }
+                                
+                                if !photoImages.isEmpty {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 12) {
+                                            ForEach(Array(photoImages.enumerated()), id: \.offset) { index, image in
+                                                ZStack(alignment: .topTrailing) {
+                                                    Image(uiImage: image)
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fill)
+                                                        .frame(width: 120, height: 120)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                                    
+                                                    Button {
+                                                        photoImages.remove(at: index)
+                                                    } label: {
+                                                        Image(systemName: "xmark.circle.fill")
+                                                            .foregroundColor(.red)
+                                                            .background(Color.white.clipShape(Circle()))
+                                                    }
+                                                    .padding(4)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(20)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
                     }
                 }
             }
             .navigationTitle("Nouvel article".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Annuler".localized) {
-                        dismiss()
-                    }
+                ToolbarItem(placement: .principal) {
+                    Text("Nouvel article".localized)
+                        .font(DesignSystem.Typography.title2())
+                        .foregroundColor(AppColors.primaryText)
                 }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Enregistrer".localized) {
                         saveItem()
                     }
                     .disabled(name.isEmpty || isSaving)
+                    .foregroundColor(name.isEmpty ? AppColors.secondaryText : AppColors.buttonPrimary)
                 }
             }
             .onChange(of: selectedPhotos) { oldValue, newValue in
@@ -636,7 +694,7 @@ struct AddWardrobeItemView: View {
                     let photoPath = try await PhotoManager.shared.savePhoto(photoImage, itemId: item.id)
                     photoPaths.append(photoPath)
                 } catch {
-                    print("Erreur lors de la sauvegarde de la photo: \(error.localizedDescription)")
+                    // Erreur silencieuse
                 }
             }
             
@@ -654,7 +712,8 @@ struct AddWardrobeItemView: View {
     }
 }
 
-// MARK: - Détails d'un vêtement (conservé tel quel)
+// MARK: - Détails d'un vêtement
+
 struct WardrobeItemDetailView: View {
     let item: WardrobeItem
     @ObservedObject var wardrobeService: WardrobeService
@@ -666,83 +725,113 @@ struct WardrobeItemDetailView: View {
         if isEditing {
             EditWardrobeItemView(item: item, wardrobeService: wardrobeService)
         } else {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
+            NavigationStack {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        // Photos
                         if !item.photoURLs.isEmpty || item.photoURL != nil {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 12) {
                                     ForEach(photoURLsToDisplay, id: \.self) { photoURL in
                                         if let image = PhotoManager.shared.loadPhoto(at: photoURL) {
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
+                                            Image(uiImage: image)
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
                                                 .frame(maxWidth: 400, maxHeight: 500)
-                            .roundedCorner(20)
-                            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
-                                                .id("detail-photo-\(item.id)-\(photoURL)")
+                                                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.xl))
                                         }
                                     }
                                 }
-                            .padding(.horizontal)
+                                .padding(.horizontal, 20)
                             }
-                    } else {
-                        VStack(spacing: 16) {
-                            Image(systemName: item.category.icon)
-                                .font(.system(size: 80))
-                                .foregroundColor(AppColors.secondaryText)
-                            
+                        } else {
+                            VStack(spacing: 16) {
+                                Image(systemName: item.category.icon)
+                                    .font(.system(size: 80, weight: .light))
+                                    .foregroundColor(AppColors.secondaryText)
+                                
                                 Text("Aucune photo".localized)
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(AppColors.secondaryText)
+                                    .font(DesignSystem.Typography.body())
+                                    .foregroundColor(AppColors.secondaryText)
+                            }
+                            .frame(height: 300)
+                            .frame(maxWidth: .infinity)
+                            .liquidGlassCard(cornerRadius: DesignSystem.Radius.xl)
+                            .padding(.horizontal, 20)
                         }
-                        .frame(height: 300)
-                        .frame(maxWidth: .infinity)
-                        .background(AppColors.buttonSecondary)
-                        .roundedCorner(20)
-                        .padding(.horizontal)
+                        
+                        // Informations
+                        Card(cornerRadius: DesignSystem.Radius.lg) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                ForEach(detailRows, id: \.label) { row in
+                                    HStack {
+                                        Text(row.label)
+                                            .font(DesignSystem.Typography.caption())
+                                            .foregroundColor(AppColors.secondaryText)
+                                        
+                                        Spacer()
+                                        
+                                        Text(row.value)
+                                            .font(DesignSystem.Typography.body())
+                                            .foregroundColor(AppColors.primaryText)
+                                    }
+                                    
+                                    if row.label != detailRows.last?.label {
+                                        Divider()
+                                            .background(AppColors.separator.opacity(0.3))
+                                    }
+                                }
+                            }
+                            .padding(20)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
+                    }
+                }
+                .navigationTitle(item.name)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        Text(item.name)
+                            .font(DesignSystem.Typography.title2())
+                            .foregroundColor(AppColors.primaryText)
+                            .lineLimit(1)
                     }
                     
-                    VStack(alignment: .leading, spacing: 15) {
-                        DetailRow(label: "Nom".localized, value: item.name)
-                        DetailRow(label: "Catégorie".localized, value: item.category.rawValue)
-                        DetailRow(label: "Couleur".localized, value: item.color)
-                            DetailRow(label: "Marque".localized, value: item.brand ?? "Non renseigné".localized)
-                            DetailRow(label: "Matière".localized, value: item.material ?? "Non renseigné".localized)
-                        DetailRow(label: "Saisons".localized, value: item.season.map { $0.rawValue }.joined(separator: ", "))
-                    }
-                    .padding()
-                    .cleanCard(cornerRadius: 20)
-                    .padding(.horizontal)
-                }
-            }
-            .navigationTitle(item.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Modifier".localized) {
-                            isEditing = true
+                        BackButtonWithLongPress()
+                    }
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        HStack(spacing: 16) {
+                            Button {
+                                isEditing = true
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(AppColors.primaryText)
+                            }
+                            
+                            Button {
+                                showingDeleteAlert = true
+                            } label: {
+                                Image(systemName: "trash")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.red)
+                            }
                         }
                     }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        showingDeleteAlert = true
-                    }) {
-                        Image(systemName: "trash")
-                                .foregroundColor(.red)
+                }
+                .alert("Supprimer".localized, isPresented: $showingDeleteAlert) {
+                    Button("Annuler".localized, role: .cancel) { }
+                    Button("Supprimer".localized, role: .destructive) {
+                        wardrobeService.deleteItem(item)
+                        dismiss()
                     }
+                } message: {
+                    Text("Êtes-vous sûr de vouloir supprimer cet article ?".localized)
                 }
             }
-            .alert("Supprimer".localized, isPresented: $showingDeleteAlert) {
-                Button("Annuler".localized, role: .cancel) { }
-                Button("Supprimer".localized, role: .destructive) {
-                    wardrobeService.deleteItem(item)
-                    dismiss()
-                }
-            } message: {
-                Text("Êtes-vous sûr de vouloir supprimer cet article de votre garde-robe ?".localized)
-            }
-        }
         }
     }
     
@@ -754,27 +843,15 @@ struct WardrobeItemDetailView: View {
         }
         return []
     }
-}
-
-struct DetailRow: View {
-    let label: String
-    let value: String
     
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(AppColors.secondaryText)
-            
-            Spacer()
-            
-            Text(value)
-                .font(.system(size: 16))
-                .foregroundColor(AppColors.primaryText)
-        }
+    private var detailRows: [(label: String, value: String)] {
+        [
+            ("Nom".localized, item.name),
+            ("Catégorie".localized, item.category.rawValue),
+            ("Couleur".localized, item.color),
+            ("Marque".localized, item.brand ?? "Non renseigné".localized),
+            ("Matière".localized, item.material ?? "Non renseigné".localized),
+            ("Saisons".localized, item.season.map { $0.rawValue }.joined(separator: ", "))
+        ]
     }
-}
-
-#Preview {
-    WardrobeManagementScreen()
 }

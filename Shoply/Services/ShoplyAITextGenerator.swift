@@ -44,8 +44,7 @@ class ShoplyAITextGenerator {
             vocabulary[word.lowercased()] = index
             reverseVocabulary[index] = word
         }
-        
-        print("✅ Vocabulaire initialisé: \(vocabulary.count) mots")
+
     }
     
     private func loadCommonWords() -> [String] {

@@ -39,11 +39,16 @@ struct LookbooksScreen: View {
             }
             .navigationTitle("Lookbooks".localized)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Lookbooks".localized)
                         .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {

@@ -80,10 +80,10 @@ struct SettingsScreen: View {
                         
                         // Section IA
                         SettingsSection(title: "Intelligence Artificielle") {
-                            // Statut Gemini
+                            // Statut Shoply AI
                             SettingRow(
                                 icon: "checkmark.circle.fill",
-                                title: "Gemini",
+                                title: "Shoply AI",
                                 subtitle: "Activé et prêt",
                                 iconColor: .green
                             ) {
@@ -100,7 +100,7 @@ struct SettingsScreen: View {
                                     .font(.system(size: 16))
                                     .foregroundColor(AppColors.buttonPrimary.opacity(0.8))
                                 
-                                Text("Gemini est disponible pour créer vos tenues")
+                                Text("Shoply AI est disponible pour créer vos tenues")
                                     .font(.system(size: 13, weight: .regular))
                                     .foregroundColor(AppColors.secondaryText)
                                     .lineSpacing(2)
@@ -222,6 +222,13 @@ struct SettingsScreen: View {
                         importUserDataFromFile(url: url)
                     }
                 )
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
+                }
             }
         }
     }
@@ -579,148 +586,169 @@ struct AboutView: View {
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 32) {
-                        // En-tête avec logo et version
-                        VStack(spacing: 16) {
+                    VStack(spacing: 28) {
+                        // En-tête avec logo
+                        VStack(spacing: 20) {
                             ZStack {
                                 Circle()
                                     .fill(
                                         LinearGradient(
                                             colors: [
-                                                AppColors.buttonPrimary.opacity(0.8),
-                                                AppColors.buttonPrimary.opacity(0.6)
+                                                AppColors.buttonPrimary.opacity(0.2),
+                                                AppColors.buttonPrimary.opacity(0.1)
                                             ],
                                             startPoint: .topLeading,
                                             endPoint: .bottomTrailing
                                         )
                                     )
-                                    .frame(width: 100, height: 100)
-                                    .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
+                                    .frame(width: 120, height: 120)
                                 
                                 Image(systemName: "sparkles")
-                                    .font(.system(size: 50, weight: .light))
-                                    .foregroundColor(AppColors.buttonPrimaryText)
+                                    .font(.system(size: 56, weight: .light))
+                                    .foregroundColor(AppColors.buttonPrimary)
                             }
                             
-                            Text("Shoply")
-                                .font(.system(size: 36, weight: .bold))
-                                .foregroundColor(AppColors.primaryText)
-                            
-                            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-                               let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
-                                Text("Version \(version) (\(build))")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(AppColors.secondaryText)
+                            VStack(spacing: 8) {
+                                Text("Shoply")
+                                    .font(DesignSystem.Typography.largeTitle())
+                                    .foregroundColor(AppColors.primaryText)
+                                
+                                if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+                                   let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+                                    Text("Version \(version) (\(build))")
+                                        .font(DesignSystem.Typography.caption())
+                                        .foregroundColor(AppColors.secondaryText)
+                                }
                             }
                         }
-                        .padding(.top, 20)
+                        .padding(.top, 32)
+                        .padding(.bottom, 8)
                         
-                        VStack(spacing: 24) {
-                            // Description
-                            VStack(alignment: .leading, spacing: 12) {
-                            Text("Description")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(AppColors.primaryText)
-                            
-                                Text("Shoply est votre assistant personnel intelligent pour créer des tenues parfaites selon votre humeur, la météo et votre style personnel. L'application utilise l'intelligence artificielle avancée (Gemini) pour vous proposer des combinaisons d'outfits adaptées à vos préférences et à votre garde-robe.\n\nShoply boosté avec Gemini - Créé uniquement par William RAUWENS OLIVER. Aucune équipe n'a créé cette application, elle a été entièrement développée par une seule personne.")
-                                    .font(.system(size: 15, weight: .regular))
-                                .foregroundColor(AppColors.secondaryText)
-                                .lineSpacing(4)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                            .padding(20)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .liquidGlassCard(cornerRadius: 16)
-                            .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
-                            
-                            // Fonctionnalités
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Fonctionnalités principales")
-                                    .font(.system(size: 20, weight: .semibold))
+                        // Description
+                        Card(cornerRadius: DesignSystem.Radius.lg) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Description".localized)
+                                    .font(DesignSystem.Typography.title2())
                                     .foregroundColor(AppColors.primaryText)
                                 
-                                VStack(spacing: 10) {
-                                    FeatureRow(icon: "photo.fill", text: "Gestion complète de votre garde-robe")
-                                    FeatureRow(icon: "sparkles", text: "Suggestions intelligentes d'outfits avec IA")
-                                    FeatureRow(icon: "cloud.sun.fill", text: "Intégration météo en temps réel")
-                                FeatureRow(icon: "heart.fill", text: "Système de favoris")
-                                    FeatureRow(icon: "calendar", text: "Historique et calendrier des outfits")
-                                    FeatureRow(icon: "message.fill", text: "Assistant IA conversationnel")
-                            }
-                        }
-                            .padding(20)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .liquidGlassCard(cornerRadius: 16)
-                            .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
-                            
-                            // Développement
-                            VStack(alignment: .leading, spacing: 12) {
-                            Text("Développement")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(AppColors.primaryText)
-                            
-                                Text("Développé avec SwiftUI pour iOS et iPadOS par William RAUWENS OLIVER, utilisant les dernières technologies d'intelligence artificielle (Gemini) pour offrir une expérience utilisateur exceptionnelle.\n\nCette application a été créée entièrement par une seule personne, sans équipe. Tous les aspects du développement, du design à l'implémentation, ont été réalisés par William RAUWENS OLIVER.")
-                                    .font(.system(size: 15, weight: .regular))
+                                Text("Shoply est votre assistant personnel intelligent pour gérer votre garde-robe et créer des tenues parfaites. L'application vous permet de gérer vos vêtements, créer des collections, planifier vos outfits, suivre votre historique, et bénéficier de suggestions intelligentes adaptées à la météo, aux occasions et à votre style personnel grâce à Shoply AI.\n\nShoply AI - Créé uniquement par William RAUWENS OLIVER. Aucune équipe n'a créé cette application, elle a été entièrement développée par une seule personne.".localized)
+                                    .font(DesignSystem.Typography.body())
                                     .foregroundColor(AppColors.secondaryText)
-                                    .lineSpacing(4)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                    .lineSpacing(6)
                             }
-                            .padding(20)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .liquidGlassCard(cornerRadius: 16)
-                            .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
-                            
-                            // Contact développeur
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Contact")
-                                    .font(.system(size: 20, weight: .semibold))
+                            .padding(24)
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        // Fonctionnalités
+                        Card(cornerRadius: DesignSystem.Radius.lg) {
+                            VStack(alignment: .leading, spacing: 20) {
+                                Text("Fonctionnalités principales".localized)
+                                    .font(DesignSystem.Typography.title2())
                                     .foregroundColor(AppColors.primaryText)
                                 
-                                Button(action: {
+                                VStack(spacing: 16) {
+                                    FeatureRow(icon: "tshirt.fill", text: "Gestion complète de votre garde-robe".localized)
+                                    FeatureRow(icon: "sparkles", text: "Sélection intelligente d'outfits avec Shoply AI".localized)
+                                    FeatureRow(icon: "folder.fill", text: "Collections personnalisées".localized)
+                                    FeatureRow(icon: "heart.fill", text: "Wishlist et favoris".localized)
+                                    FeatureRow(icon: "airplane", text: "Mode Voyage avec checklist Shoply AI".localized)
+                                    FeatureRow(icon: "briefcase.fill", text: "Suggestions pour occasions professionnelles et romantiques".localized)
+                                    FeatureRow(icon: "calendar", text: "Calendrier et historique des outfits".localized)
+                                    FeatureRow(icon: "message.fill", text: "Chat avec Shoply AI".localized)
+                                    FeatureRow(icon: "star.fill", text: "Gamification avec badges et niveaux".localized)
+                                    FeatureRow(icon: "barcode.viewfinder", text: "Scanner de codes-barres".localized)
+                                    FeatureRow(icon: "chart.line.uptrend.xyaxis", text: "Analyse de tendances mode".localized)
+                                }
+                            }
+                            .padding(24)
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        // Développement
+                        Card(cornerRadius: DesignSystem.Radius.lg) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Développement".localized)
+                                    .font(DesignSystem.Typography.title2())
+                                    .foregroundColor(AppColors.primaryText)
+                                
+                                Text("Développé avec SwiftUI pour iOS et iPadOS par William RAUWENS OLIVER, utilisant Shoply AI, une intelligence artificielle avancée, pour offrir une expérience utilisateur exceptionnelle.\n\nCette application a été créée entièrement par une seule personne, sans équipe. Tous les aspects du développement, du design à l'implémentation, ont été réalisés par William RAUWENS OLIVER.".localized)
+                                    .font(DesignSystem.Typography.body())
+                                    .foregroundColor(AppColors.secondaryText)
+                                    .lineSpacing(6)
+                            }
+                            .padding(24)
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        // Contact
+                        Card(cornerRadius: DesignSystem.Radius.lg) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Contact".localized)
+                                    .font(DesignSystem.Typography.title2())
+                                    .foregroundColor(AppColors.primaryText)
+                                
+                                Button {
                                     if let url = URL(string: "https://urlr.me/5M3nYj") {
                                         UIApplication.shared.open(url)
                                     }
-                                }) {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "link.circle.fill")
-                                            .font(.system(size: 20))
-                                            .foregroundColor(AppColors.buttonPrimary)
+                                } label: {
+                                    HStack(spacing: 14) {
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(AppColors.buttonPrimary.opacity(0.15))
+                                                .frame(width: 44, height: 44)
+                                            
+                                            Image(systemName: "link.circle.fill")
+                                                .font(.system(size: 22, weight: .semibold))
+                                                .foregroundColor(AppColors.buttonPrimary)
+                                        }
                                         
-                                        Text("Me contacter sur LinkedIn")
-                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(AppColors.primaryText)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Me contacter sur LinkedIn".localized)
+                                                .font(DesignSystem.Typography.headline())
+                                                .foregroundColor(AppColors.primaryText)
+                                            
+                                            Text("William RAUWENS OLIVER".localized)
+                                                .font(DesignSystem.Typography.caption())
+                                                .foregroundColor(AppColors.secondaryText)
+                                        }
                                         
                                         Spacer()
                                         
                                         Image(systemName: "arrow.up.right")
-                                            .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(AppColors.secondaryText)
-                        }
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundColor(AppColors.secondaryText)
+                                    }
                                     .padding(16)
-                                    .background(AppColors.buttonSecondary)
-                                    .roundedCorner(12)
-                                    .shadow(color: AppColors.shadow, radius: 6, x: 0, y: 3)
+                                    .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             }
-                            .padding(20)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .liquidGlassCard(cornerRadius: 16)
-                            .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                            .padding(24)
                         }
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, 20)
                         .padding(.bottom, 40)
                     }
                 }
             }
-            .navigationTitle("À propos")
+            .navigationTitle("À propos".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("À propos".localized)
+                        .font(DesignSystem.Typography.title2())
+                        .foregroundColor(AppColors.primaryText)
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Fermer") {
+                    Button {
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundColor(AppColors.primaryText)
                     }
-                    .foregroundColor(AppColors.buttonPrimary)
                 }
             }
         }
@@ -732,13 +760,22 @@ struct FeatureRow: View {
     let text: String
     
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(AppColors.primaryText)
-                .frame(width: 24)
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(AppColors.buttonPrimary.opacity(0.12))
+                    .frame(width: 40, height: 40)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(AppColors.buttonPrimary)
+            }
+            
             Text(text)
-                .font(.system(size: 16, weight: .regular))
-                .foregroundColor(AppColors.secondaryText)
+                .font(DesignSystem.Typography.body())
+                .foregroundColor(AppColors.primaryText)
+            
+            Spacer()
         }
     }
 }

@@ -50,8 +50,7 @@ class CloudKitService: ObservableObject {
             guard let self = self else { return }
             
             // Vérifier s'il y a une erreur
-            if let error = error {
-                print("⚠️ Erreur vérification statut iCloud: \(error.localizedDescription)")
+            if error != nil {
                 DispatchQueue.main.async {
                     self.isSignedIn = false
                 }
@@ -62,22 +61,22 @@ class CloudKitService: ObservableObject {
                 switch status {
                 case .available:
                     self.isSignedIn = true
-                    print("✅ iCloud disponible")
+                    
                 case .noAccount:
                     self.isSignedIn = false
-                    print("⚠️ Aucun compte iCloud")
+                    
                 case .restricted:
                     self.isSignedIn = false
-                    print("⚠️ Compte iCloud restreint")
+                    
                 case .couldNotDetermine:
                     self.isSignedIn = false
-                    print("⚠️ Statut iCloud indéterminé")
+                    
                 case .temporarilyUnavailable:
                     self.isSignedIn = false
-                    print("⚠️ Compte iCloud temporairement indisponible")
+                    
                 @unknown default:
                     self.isSignedIn = false
-                    print("⚠️ Statut iCloud inconnu")
+                    
                 }
             }
         }
@@ -132,7 +131,7 @@ class CloudKitService: ObservableObject {
             await MainActor.run {
                 syncStatus = "Synchronisation terminée".localized
             }
-            print("✅ Toutes les données ont été synchronisées avec succès dans iCloud")
+            
         } catch {
             await MainActor.run {
                 syncStatus = "Erreur de synchronisation: \(error.localizedDescription)".localized
@@ -159,7 +158,7 @@ class CloudKitService: ObservableObject {
         record["preferences"] = try encodeJSON(profile.preferences)
         
         try await privateDatabase.save(record)
-        print("✅ Profil sauvegardé dans iCloud")
+        
     }
     
     func loadUserProfile() async throws -> UserProfile? {
@@ -233,8 +232,7 @@ class CloudKitService: ObservableObject {
             
             try await privateDatabase.save(record)
         }
-        
-        print("✅ \(items.count) vêtements sauvegardés dans iCloud")
+
     }
     
     func loadWardrobe() async throws -> [WardrobeItem] {
@@ -288,11 +286,10 @@ class CloudKitService: ObservableObject {
                 
                 items.append(item)
             } catch {
-                print("⚠️ Erreur chargement item: \(error)")
+                
             }
         }
-        
-        print("✅ \(items.count) vêtements chargés depuis iCloud")
+
         return items
     }
     
@@ -318,15 +315,13 @@ class CloudKitService: ObservableObject {
             record["aiMode"] = conversation.aiMode as CKRecordValue
             
             do {
-                let savedRecord = try await privateDatabase.save(record)
-                print("✅ Conversation sauvegardée: \(savedRecord.recordID)")
+                _ = try await privateDatabase.save(record)
             } catch {
-                print("⚠️ Erreur sauvegarde conversation \(conversation.id): \(error)")
+                
                 // Continuer avec les autres conversations même en cas d'erreur
             }
         }
-        
-        print("✅ \(conversations.count) conversations sauvegardées dans iCloud")
+
     }
     
     func loadConversations() async throws -> [ChatConversation] {
@@ -359,11 +354,10 @@ class CloudKitService: ObservableObject {
                 )
                 conversations.append(conversation)
             } catch {
-                print("⚠️ Erreur chargement conversation: \(error)")
+                
             }
         }
-        
-        print("✅ \(conversations.count) conversations chargées depuis iCloud")
+
         return conversations
     }
     
@@ -385,15 +379,13 @@ class CloudKitService: ObservableObject {
             record["isFavorite"] = historicalOutfit.isFavorite as CKRecordValue
             
             do {
-                let savedRecord = try await privateDatabase.save(record)
-                print("✅ Outfit historique sauvegardé: \(savedRecord.recordID)")
+                _ = try await privateDatabase.save(record)
             } catch {
-                print("⚠️ Erreur sauvegarde outfit historique \(historicalOutfit.id): \(error)")
+                
                 // Continuer avec les autres outfits même en cas d'erreur
             }
         }
-        
-        print("✅ \(history.count) outfits historiques sauvegardés dans iCloud")
+
     }
     
     func loadOutfitHistory() async throws -> [HistoricalOutfit] {
@@ -423,7 +415,7 @@ class CloudKitService: ObservableObject {
                 )
                 outfits.append(historicalOutfit)
             } catch {
-                print("⚠️ Erreur chargement historique: \(error)")
+                
             }
         }
         
@@ -435,7 +427,7 @@ class CloudKitService: ObservableObject {
     private func saveFavorites() async throws {
         let favorites = DataManager.shared.getAllFavorites()
         guard !favorites.isEmpty else {
-            print("⚠️ Aucun favori à sauvegarder")
+            
             return
         }
         
@@ -445,10 +437,9 @@ class CloudKitService: ObservableObject {
         record["outfitIds"] = favorites.map { $0.uuidString } as CKRecordValue
         
         do {
-            let savedRecord = try await privateDatabase.save(record)
-            print("✅ Favoris sauvegardés dans iCloud: \(savedRecord.recordID)")
+            _ = try await privateDatabase.save(record)
         } catch {
-            print("❌ Erreur sauvegarde favoris: \(error)")
+            
             throw error
         }
     }
@@ -493,8 +484,7 @@ class CloudKitService: ObservableObject {
         } catch {
             // Pas de favoris sauvegardés, ce n'est pas grave
         }
-        
-        print("✅ Toutes les données restaurées depuis iCloud")
+
     }
     
     // MARK: - Helpers

@@ -48,11 +48,16 @@ struct CollectionsScreen: View {
             }
             .navigationTitle("Collections".localized)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Collections".localized)
                         .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {

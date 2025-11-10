@@ -580,7 +580,11 @@ struct ScheduledOutfitDetailView: View {
             }
             .background(AppColors.background)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButtonWithLongPress()
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Fermer") {
                         dismiss()

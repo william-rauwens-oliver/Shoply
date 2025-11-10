@@ -29,7 +29,7 @@ class DataManager: ObservableObject {
         let container = NSPersistentContainer(name: "ShoplyDataModel")
         container.loadPersistentStores { description, error in
             if let error = error {
-                print("⚠️ Erreur de chargement Core Data: \(error.localizedDescription)")
+                
                 // L'app continuera sans Core Data
             }
         }
@@ -61,9 +61,8 @@ class DataManager: ObservableObject {
         do {
             try context.save()
         } catch {
-            let nsError = error as NSError
             // Ne pas crasher l'app, juste logger l'erreur
-            print("⚠️ Erreur de sauvegarde Core Data: \(nsError), \(nsError.userInfo)")
+            _ = error as NSError
         }
     }
     

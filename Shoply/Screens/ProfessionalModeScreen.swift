@@ -228,13 +228,13 @@ struct ProfessionalSuggestionsScreen: View {
                 await MainActor.run {
                     switch error {
                     case .apiKeyMissing:
-                        self.error = "Clé API Gemini manquante. Veuillez la configurer dans les paramètres.".localized
+                        self.error = "Clé API Shoply AI manquante. Veuillez la configurer dans les paramètres.".localized
                     case .apiError:
-                        self.error = "Erreur lors de la communication avec Gemini. Veuillez réessayer plus tard.".localized
+                        self.error = "Erreur lors de la communication avec Shoply AI. Veuillez réessayer plus tard.".localized
                     case .apiErrorWithMessage(let message):
-                        self.error = "Erreur Gemini: \(message)".localized
+                        self.error = "Erreur Shoply AI: \(message)".localized
                     case .noResponse:
-                        self.error = "Aucune réponse de Gemini. Veuillez réessayer.".localized
+                        self.error = "Aucune réponse de Shoply AI. Veuillez réessayer.".localized
                     case .invalidURL:
                         self.error = "Erreur de configuration. Veuillez contacter le support.".localized
                     case .noItems:

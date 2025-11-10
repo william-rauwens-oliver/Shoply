@@ -67,14 +67,14 @@ class PhotoManager {
         
         // Vérifier que le fichier existe
         guard FileManager.default.fileExists(atPath: url.path) else {
-            print("⚠️ Photo non trouvée à: \(url.path)")
+            
             return nil
         }
         
         // Charger l'image
         guard let imageData = try? Data(contentsOf: url),
               let image = UIImage(data: imageData) else {
-            print("⚠️ Impossible de charger l'image depuis: \(url.path)")
+            
             return nil
         }
         

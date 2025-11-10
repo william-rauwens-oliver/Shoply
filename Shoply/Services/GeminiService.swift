@@ -183,13 +183,13 @@ class GeminiService: ObservableObject {
                let errorInfo = errorData["error"] as? [String: Any],
                let message = errorInfo["message"] as? String {
                 errorMessage = message
-                print("❌ Gemini API Error (\(httpResponse.statusCode)): \(message)")
+                
             } else if let dataString = String(data: data, encoding: .utf8) {
                 errorMessage = "HTTP \(httpResponse.statusCode): \(dataString.prefix(200))"
-                print("❌ Gemini API Error (\(httpResponse.statusCode)): \(dataString.prefix(200))")
+                
             } else {
                 errorMessage = "HTTP Error \(httpResponse.statusCode)"
-                print("❌ Gemini API Error (\(httpResponse.statusCode))")
+                
             }
             
             if !errorMessage.isEmpty {
@@ -457,13 +457,12 @@ class GeminiService: ObservableObject {
             }
             
             return text
-        } catch let decodingError as DecodingError {
-            print("❌ Erreur de décodage: \(decodingError)")
-            
+        } catch let error as GeminiError {
+            // Si c'est déjà une GeminiError, la relancer
+            throw error
+        } catch {
             // Dernière tentative: extraire le texte depuis la réponse brute
             if let dataString = String(data: data, encoding: .utf8) {
-                print("📄 Réponse brute: \(dataString.prefix(1000))")
-                
                 // Chercher du texte entre guillemets ou après "text":
                 if let textRange = dataString.range(of: #""text"\s*:\s*"([^"]+)""#, options: .regularExpression),
                    let textMatch = dataString[textRange].components(separatedBy: "\"").dropFirst().first,
@@ -473,12 +472,6 @@ class GeminiService: ObservableObject {
             }
             
             throw GeminiError.apiErrorWithMessage("Erreur de décodage de la réponse")
-        } catch {
-            // Si c'est déjà une GeminiError, la relancer
-            if let geminiError = error as? GeminiError {
-                throw geminiError
-            }
-            throw GeminiError.apiError
         }
     }
     
@@ -849,17 +842,18 @@ class GeminiService: ObservableObject {
         // Ajouter le contexte système uniquement au début de la conversation
         if conversationHistory.isEmpty {
             var systemContext = """
-            Tu es Shoply, un assistant intelligent et conversationnel. Tu es l'assistant personnel de l'application Shoply.
+            Tu es Shoply AI, un assistant intelligent et conversationnel. Tu es l'assistant personnel intelligent de l'application Shoply.
             
             TON IDENTITÉ :
-            - Ton nom est "Shoply"
-            - Tu as été développé et entraîné par William RAUWENS OLIVER
-            - Tu es l'assistant personnel de l'application Shoply
+            - Ton nom complet est "Shoply AI"
+            - Tu as été créé et développé par William RAUWENS OLIVER
+            - Tu es l'assistant personnel intelligent de l'application Shoply
             
             IMPORTANT : 
-            - Tu t'appelles UNIQUEMENT "Shoply", jamais "Gemini", "Google", "AI" ou autre chose
-            - Si on te demande qui est ton créateur, réponds : "Je suis Shoply, développé et entraîné par William RAUWENS OLIVER"
-            - Si on te demande comment tu t'appelles, réponds : "Je m'appelle Shoply"
+            - Tu t'appelles UNIQUEMENT "Shoply AI", jamais "Gemini", "Google", ou autre chose
+            - Si on te demande qui est ton créateur, réponds EXACTEMENT : "Je suis Shoply AI, créé par William RAUWENS OLIVER"
+            - Si on te demande comment tu t'appelles, quel est ton nom, ou quel est ton prénom, réponds EXACTEMENT : "Je m'appelle Shoply AI, créé par William RAUWENS OLIVER"
+            - Si on te demande "c quoi ton prénom" ou des variantes, réponds : "Je m'appelle Shoply AI, créé par William RAUWENS OLIVER"
             - Tu es intelligent, réfléchi et tu donnes des réponses pertinentes et utiles
             - Tu peux discuter de TOUS les sujets : mode, technologie, science, histoire, cuisine, sport, culture, actualités, etc.
             - Tu es amical, naturel, et tu adaptes ton style de réponse au contexte
@@ -891,7 +885,7 @@ class GeminiService: ObservableObject {
             
             contents.append([
                 "role": "model",
-                "parts": [["text": "Bonjour ! Je suis Shoply, votre assistant personnel. J'ai été développé et entraîné par William RAUWENS OLIVER. Je peux discuter de tout avec vous et vous aider avec vos questions sur la mode, le style, ou n'importe quel autre sujet. Comment puis-je vous aider aujourd'hui ?"]]
+                "parts": [["text": "Bonjour ! Je suis Shoply AI, votre assistant personnel intelligent. J'ai été créé par William RAUWENS OLIVER. Je peux discuter de tout avec vous et vous aider avec vos questions sur la mode, le style, ou n'importe quel autre sujet. Comment puis-je vous aider aujourd'hui ?"]]
             ])
         }
         
@@ -984,13 +978,13 @@ class GeminiService: ObservableObject {
                let errorInfo = errorData["error"] as? [String: Any],
                let message = errorInfo["message"] as? String {
                 errorMessage = message
-                print("❌ Gemini API Error (\(httpResponse.statusCode)): \(message)")
+                
             } else if let dataString = String(data: data, encoding: .utf8) {
                 errorMessage = "HTTP \(httpResponse.statusCode): \(dataString.prefix(200))"
-                print("❌ Gemini API Error (\(httpResponse.statusCode)): \(dataString.prefix(200))")
+                
             } else {
                 errorMessage = "HTTP Error \(httpResponse.statusCode)"
-                print("❌ Gemini API Error (\(httpResponse.statusCode))")
+                
             }
             
             if !errorMessage.isEmpty {

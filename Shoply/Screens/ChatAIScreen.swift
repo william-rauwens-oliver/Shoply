@@ -31,8 +31,19 @@ struct ChatAIScreen: View {
     
     enum AIMode: String, CaseIterable {
         case appleIntelligence = "Apple Intelligence"
-        case gemini = "Gemini"
+        case gemini = "gemini" // Utilisé en interne, affiché comme "Shoply AI"
         case shoplyAI = "Shoply AI"
+        
+        var displayName: String {
+            switch self {
+            case .appleIntelligence:
+                return "Apple Intelligence"
+            case .gemini:
+                return "Shoply AI"
+            case .shoplyAI:
+                return "Shoply AI"
+            }
+        }
     }
     
     init(conversationId: UUID? = nil, initialMessages: [ChatMessage] = [], initialAIMode: AIMode? = nil) {
@@ -53,16 +64,19 @@ struct ChatAIScreen: View {
     }
     
     private var availableAIModes: [AIMode] {
-        var modes: [AIMode] = [.shoplyAI]
+        var modes: [AIMode] = []
         
         if #available(iOS 18.0, *) {
             if appleIntelligenceWrapper.isEnabled {
-                modes.insert(.appleIntelligence, at: 0)
+                modes.append(.appleIntelligence)
             }
         }
         
+        // Utiliser .gemini (qui s'affiche comme "Shoply AI") si disponible, sinon .shoplyAI
         if geminiService.isEnabled {
             modes.append(.gemini)
+        } else {
+            modes.append(.shoplyAI)
         }
         
         return modes
@@ -201,7 +215,7 @@ struct ChatAIScreen: View {
                         
                         Picker("Mode", selection: $aiMode) {
                             ForEach(availableAIModes, id: \.self) { mode in
-                                Text(mode.rawValue).tag(mode)
+                                Text(mode.displayName).tag(mode)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -261,7 +275,7 @@ struct ChatAIScreen: View {
                 let modeMessage: String
                 switch newValue {
                 case .gemini:
-                    modeMessage = "Mode changé : Gemini".localized
+                    modeMessage = "Mode changé : Shoply AI".localized
                 case .shoplyAI:
                     modeMessage = "Mode changé : Shoply AI".localized
                 case .appleIntelligence:
@@ -346,7 +360,7 @@ struct ChatAIScreen: View {
             if geminiService.isEnabled {
                 return await answerWithGemini(question: questionText, image: message.image)
             }
-            return ChatMessage(content: "Gemini non disponible".localized, isUser: false, aiModeString: AIMode.gemini.rawValue)
+            return ChatMessage(content: "Shoply AI non disponible".localized, isUser: false, aiModeString: AIMode.shoplyAI.rawValue)
             
         case .shoplyAI:
             return await answerWithLocalAI(question: questionText, image: message.image)
@@ -374,9 +388,9 @@ struct ChatAIScreen: View {
                 conversationHistory: conversationHistory
             )
             
-            return ChatMessage(content: response, isUser: false, aiModeString: AIMode.gemini.rawValue)
+            return ChatMessage(content: response, isUser: false, aiModeString: AIMode.shoplyAI.rawValue)
         } catch {
-            return ChatMessage(content: "Erreur: \(error.localizedDescription)".localized, isUser: false, aiModeString: AIMode.gemini.rawValue)
+            return ChatMessage(content: "Erreur: \(error.localizedDescription)".localized, isUser: false, aiModeString: AIMode.shoplyAI.rawValue)
         }
     }
     
@@ -559,7 +573,7 @@ struct ChatMessageBubble: View {
     private func modeLabel(_ mode: ChatAIScreen.AIMode) -> String {
         switch mode {
         case .gemini:
-            return "Gemini"
+            return "Shoply AI"
         case .shoplyAI:
             return "Shoply AI"
         case .appleIntelligence:
@@ -760,7 +774,7 @@ struct LoadingView: View {
         guard let mode = aiMode else { return "Shoply AI" }
         switch mode {
         case .gemini:
-            return "Gemini"
+            return "Shoply AI"
         case .shoplyAI:
             return "Shoply AI"
         case .appleIntelligence:

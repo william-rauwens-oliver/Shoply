@@ -108,8 +108,8 @@ class CareReminderService: ObservableObject {
     
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if let error = error {
-                print("⚠️ Erreur permission notifications: \(error)")
+            if error != nil {
+                // Erreur silencieuse
             }
         }
     }
@@ -138,8 +138,8 @@ class CareReminderService: ObservableObject {
         )
         
         UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("⚠️ Erreur planification rappel: \(error)")
+            if error != nil {
+                // Erreur silencieuse
             }
         }
     }

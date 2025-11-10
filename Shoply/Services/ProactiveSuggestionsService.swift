@@ -121,8 +121,8 @@ class ProactiveSuggestionsService: ObservableObject {
         let request = UNNotificationRequest(identifier: "daily_outfit_suggestion", content: content, trigger: trigger)
         
         UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("⚠️ Erreur planification suggestion quotidienne: \(error)")
+            if error != nil {
+                // Erreur silencieuse
             }
         }
     }
@@ -137,16 +137,16 @@ class ProactiveSuggestionsService: ObservableObject {
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
         
         UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("⚠️ Erreur envoi notification: \(error)")
+            if error != nil {
+                // Erreur silencieuse
             }
         }
     }
     
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if let error = error {
-                print("⚠️ Erreur permission notifications: \(error)")
+            if error != nil {
+                // Erreur silencieuse
             }
         }
     }

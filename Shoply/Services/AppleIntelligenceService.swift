@@ -38,7 +38,7 @@ class AppleIntelligenceService: ObservableObject {
             
             // Debug: Afficher les informations de détection
             let deviceModel = UIDevice.current.modelIdentifier ?? "unknown"
-            print("🔍 Apple Intelligence Detection:")
+            
             print("   Device Model: \(deviceModel)")
             print("   iOS Version: \(iosVersion) (major: \(iosMajorVersion))")
             print("   Supported: \(isSupportedDevice)")
@@ -48,7 +48,7 @@ class AppleIntelligenceService: ObservableObject {
                 print("   ✅ isEnabled set to: \(self.isEnabled)")
             }
         } else {
-            print("🔍 Apple Intelligence: iOS 18+ required, current: \(iosVersion) (major: \(iosMajorVersion))")
+            
             DispatchQueue.main.async {
                 self.isEnabled = false
             }
@@ -59,8 +59,7 @@ class AppleIntelligenceService: ObservableObject {
     private func isAppleIntelligenceSupported() -> Bool {
         // Méthode 1: Vérifier via UIDevice (plus fiable sur iOS)
         if let deviceModel = UIDevice.current.modelIdentifier {
-            print("🔍 Device Model Identifier: \(deviceModel)")
-            
+
             // iPhone 15 Pro (A17 Pro) commence par "iPhone17"
             // iPhone 16 (A18) commence par "iPhone18"
             // iPhone 17 Pro (A19 Pro ou similaire) pourrait être "iPhone19" ou "iPhone20"
@@ -68,7 +67,7 @@ class AppleIntelligenceService: ObservableObject {
             let modelPrefixes = ["iPhone17", "iPhone18", "iPhone19", "iPhone20", "iPhone21"]
             for prefix in modelPrefixes {
                 if deviceModel.hasPrefix(prefix) {
-                    print("✅ Device model \(deviceModel) matches prefix \(prefix) - Apple Intelligence supported")
+                    
                     return true
                 }
             }
@@ -96,7 +95,7 @@ class AppleIntelligenceService: ObservableObject {
         let modelPrefixes = ["iPhone17", "iPhone18", "iPhone19", "iPhone20", "iPhone21"]
         for prefix in modelPrefixes {
             if deviceModel.hasPrefix(prefix) {
-                print("✅ Device model \(deviceModel) matches prefix \(prefix) via sysctlbyname - Apple Intelligence supported")
+                
                 return true
             }
         }
@@ -490,8 +489,7 @@ class AppleIntelligenceServiceWrapper: ObservableObject {
             if #available(iOS 18.0, *) {
                 let service = AppleIntelligenceService.shared
                 isEnabled = service.isEnabled
-                
-                print("🔍 AppleIntelligenceServiceWrapper init:")
+
                 print("   iOS Version: \(iosVersion) (major: \(iosMajorVersion))")
                 print("   Service isEnabled: \(service.isEnabled)")
                 print("   Wrapper isEnabled initial: \(isEnabled)")
@@ -507,7 +505,7 @@ class AppleIntelligenceServiceWrapper: ObservableObject {
                 isEnabled = false
             }
         } else {
-            print("🔍 AppleIntelligenceServiceWrapper: iOS 18+ required, current: \(iosVersion)")
+            
             isEnabled = false
         }
     }

@@ -175,8 +175,7 @@ class ShoplyAIAdvancedLLM {
         }
         weights["dense"] = denseWeights
         biases["dense"] = [Float](repeating: 0.0, count: vocabSize)
-        
-        print("✅ Shoply AI Advanced LLM Boosted initialisé - \(parameterCount) paramètres")
+
         print("   Créé par: \(creator)")
         print("   Version: \(version)")
         print("   Boosté avec Gemini: \(geminiBoostEnabled)")
@@ -208,7 +207,7 @@ class ShoplyAIAdvancedLLM {
         }
         
         // Compléter avec des hashs pour les mots inconnus
-        print("✅ Vocabulaire initialisé: \(vocabulary.count) mots")
+        
     }
     
     // MARK: - Base de Connaissances Étendue
@@ -337,8 +336,7 @@ class ShoplyAIAdvancedLLM {
                 relatedTopics: ["éducation", "apprentissage", "développement"]
             )
         ]
-        
-        print("✅ Base de connaissances étendue initialisée: \(extendedKnowledgeBase.count) domaines")
+
     }
     
     // MARK: - Chargement des Poids
@@ -347,7 +345,7 @@ class ShoplyAIAdvancedLLM {
         if let weightsData = UserDefaults.standard.data(forKey: "shoply_ai_advanced_weights"),
            let loadedWeights = try? JSONDecoder().decode([String: [[Float]]].self, from: weightsData) {
             weights = loadedWeights
-            print("✅ Poids du modèle Shoply AI Advanced chargés")
+            
         }
         
         if let biasesData = UserDefaults.standard.data(forKey: "shoply_ai_advanced_biases"),
@@ -429,11 +427,9 @@ class ShoplyAIAdvancedLLM {
                     geminiBase: refinedResponse,
                     shoplyEnrichment: shoplyEnrichment
                 )
-                
-                print("✅ Réponse générée avec succès (Gemini + Shoply AI Boosted 1.5M)")
-                
+
             } catch {
-                print("⚠️ Erreur Gemini (utilisation de Shoply AI seul): \(error.localizedDescription)")
+                
                 // Fallback : utiliser Shoply AI seul
                 finalResponse = generateAdvancedResponse(
                     input: input,
@@ -467,8 +463,7 @@ class ShoplyAIAdvancedLLM {
         
         // Si confiance faible, chercher aussi sur internet
         if confidence < 0.6 {
-            print("🔍 Confiance moyenne (\(confidence)), recherche sur internet...")
-            
+
             do {
                 // Chercher sur internet
                 let searchResults = try await webSearchService.searchAndExtract(
@@ -485,7 +480,7 @@ class ShoplyAIAdvancedLLM {
                     )
                 }
             } catch {
-                print("⚠️ Erreur de recherche web: \(error.localizedDescription)")
+                
             }
         }
         
@@ -1022,8 +1017,7 @@ class ShoplyAIAdvancedLLM {
         
         return refined.isEmpty ? geminiResponse : refined
     }
-    
-    
+
     /// Personnalise la réponse selon le profil utilisateur (seulement si pertinent)
     private func personalizeResponse(
         response: String,
@@ -1206,10 +1200,13 @@ class ShoplyAIAdvancedLLM {
             }
         }
         
-        // Si on demande le nom, s'assurer que la réponse dit "Shoply"
-        if lowercased.contains("comment tu t'appelles") || lowercased.contains("quel est ton nom") || lowercased.contains("ton nom") {
-            if !cleaned.contains("Shoply") && !cleaned.contains("shoply") {
-                cleaned = "Je m'appelle Shoply. " + cleaned
+        // Si on demande le nom ou le prénom, s'assurer que la réponse dit "Shoply AI" et mentionne le créateur
+        if lowercased.contains("comment tu t'appelles") || lowercased.contains("quel est ton nom") || lowercased.contains("ton nom") || lowercased.contains("ton prénom") || lowercased.contains("c quoi ton prénom") || lowercased.contains("quel est ton prénom") {
+            if !cleaned.contains("Shoply AI") && !cleaned.contains("shoply ai") {
+                cleaned = "Je m'appelle Shoply AI, créé par William RAUWENS OLIVER. " + cleaned
+            } else if !cleaned.contains("William RAUWENS OLIVER") && !cleaned.contains("William RAUWENS") {
+                // Si Shoply AI est mentionné mais pas le créateur, l'ajouter
+                cleaned = cleaned.replacingOccurrences(of: "Shoply AI", with: "Shoply AI, créé par William RAUWENS OLIVER", options: .caseInsensitive)
             }
         }
         
