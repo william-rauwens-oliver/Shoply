@@ -8,7 +8,7 @@
 import SwiftUI
 import PhotosUI
 
-/// Écran de gestion de la garde-robe
+/// Écran de gestion de la garde-robe - Design moderne
 struct WardrobeManagementScreen: View {
     @StateObject private var wardrobeService = WardrobeService()
     @State private var selectedCategory: ClothingCategory = .top
@@ -34,24 +34,23 @@ struct WardrobeManagementScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Fond opaque simple
                 AppColors.background
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Barre de recherche
-                    SearchBar(text: $searchText)
-                        .padding(.horizontal)
-                        .padding(.top, 10)
+                    // Barre de recherche moderne
+                    ModernSearchBar(text: $searchText)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 12)
                     
-                    // Sélecteur de catégorie
-                    CategoryPicker(selectedCategory: $selectedCategory)
-                        .padding(.horizontal)
-                        .padding(.top, 10)
+                    // Sélecteur de catégorie moderne
+                    ModernCategoryPicker(selectedCategory: $selectedCategory)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 12)
                     
                     // Barre d'actions si mode sélection
                     if isSelectionMode {
-                        SelectionToolbar(
+                        ModernSelectionToolbar(
                             selectedCount: selectedItems.count,
                             totalCount: filteredItems.count,
                             onSelectAll: {
@@ -68,19 +67,23 @@ struct WardrobeManagementScreen: View {
                                 selectedItems.removeAll()
                             }
                         )
-                        .padding(.horizontal)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
                         .background(AppColors.cardBackground)
                     }
                     
                     // Liste des vêtements
-                    ScrollView {
+                    if filteredItems.isEmpty {
+                        ModernEmptyWardrobeView(category: selectedCategory)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        ScrollView(showsIndicators: false) {
                         LazyVGrid(columns: [
-                            GridItem(.flexible(), spacing: 15),
-                            GridItem(.flexible(), spacing: 15)
-                        ], spacing: 15) {
+                                GridItem(.flexible(), spacing: 16),
+                                GridItem(.flexible(), spacing: 16)
+                            ], spacing: 16) {
                             ForEach(filteredItems) { item in
-                                WardrobeItemCard(
+                                    ModernWardrobeItemCard(
                                     item: item,
                                     wardrobeService: wardrobeService,
                                     isSelectionMode: $isSelectionMode,
@@ -98,18 +101,14 @@ struct WardrobeManagementScreen: View {
                                     .id("card-\(item.id)-\(item.photoURL ?? "nophoto")")
                             }
                         }
-                        .padding()
-                        .id(wardrobeService.items.count) // Force le rafraîchissement quand la liste change
-                        
-                        if filteredItems.isEmpty {
-                            EmptyWardrobeView(category: selectedCategory)
-                                .padding(.top, 50)
+                            .padding(20)
+                            .id(wardrobeService.items.count)
                         }
                     }
                 }
             }
-            .navigationTitle(isSelectionMode ? "\(selectedItems.count) sélectionné\(selectedItems.count > 1 ? "s" : "")" : "Garde-robe")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle(isSelectionMode ? "\(selectedItems.count) sélectionné\(selectedItems.count > 1 ? "s" : "")" : "Garde-robe".localized)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if !isSelectionMode {
                     ToolbarItem(placement: .navigationBarLeading) {
@@ -118,7 +117,9 @@ struct WardrobeManagementScreen: View {
                                 showingDeleteAllAlert = true
                             }) {
                                 Image(systemName: "trash")
+                                    .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(.red)
+                            }
                             }
                         }
                     }
@@ -128,9 +129,8 @@ struct WardrobeManagementScreen: View {
                         showingAddItem = true
                     }) {
                         Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(AppColors.primaryText)
-                        }
+                            .font(.system(size: 24, weight: .medium))
+                            .foregroundColor(AppColors.buttonPrimary)
                     }
                 }
             }
@@ -138,7 +138,6 @@ struct WardrobeManagementScreen: View {
                 AddWardrobeItemView(wardrobeService: wardrobeService)
             }
             .onChange(of: selectedCategory) { oldValue, newValue in
-                // Réinitialiser la sélection quand on change de catégorie
                 if isSelectionMode {
                     selectedItems.removeAll()
                 }
@@ -163,45 +162,55 @@ struct WardrobeManagementScreen: View {
     }
     
     private func deleteAllItems() {
-        // Supprimer tous les items de la garde-robe
         for item in wardrobeService.items {
             wardrobeService.deleteItem(item)
         }
     }
     
     private func deleteSelectedItems() {
-        // Supprimer les items sélectionnés
         let itemsToDelete = wardrobeService.items.filter { selectedItems.contains($0.id) }
         for item in itemsToDelete {
             wardrobeService.deleteItem(item)
         }
-        // Réinitialiser la sélection
         selectedItems.removeAll()
         isSelectionMode = false
     }
 }
 
-// MARK: - Barre de recherche
-struct SearchBar: View {
+// MARK: - Composants Modernes
+
+struct ModernSearchBar: View {
     @Binding var text: String
+    @FocusState private var isFocused: Bool
     
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
+                .font(.system(size: 18, weight: .medium))
                 .foregroundColor(AppColors.secondaryText)
             
             TextField("Rechercher...".localized, text: $text)
-                .font(.system(size: 16))
+                .font(DesignSystem.Typography.body())
                 .foregroundColor(AppColors.primaryText)
+                .focused($isFocused)
+            
+            if !text.isEmpty {
+                Button(action: {
+                    text = ""
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+            }
         }
-        .padding()
-        .background(AppColors.buttonSecondary)
-        .roundedCorner(20)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .liquidGlassCard(cornerRadius: DesignSystem.Radius.lg)
     }
 }
 
-// MARK: - Sélecteur de catégorie
-struct CategoryPicker: View {
+struct ModernCategoryPicker: View {
     @Binding var selectedCategory: ClothingCategory
     
     var body: some View {
@@ -209,31 +218,36 @@ struct CategoryPicker: View {
             HStack(spacing: 12) {
                 ForEach(ClothingCategory.allCases) { category in
                     Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         selectedCategory = category
+                        }
                     }) {
                         VStack(spacing: 8) {
+                            ZStack {
+                                Circle()
+                                    .fill(selectedCategory == category ? AppColors.buttonPrimary : AppColors.buttonSecondary)
+                                    .frame(width: 48, height: 48)
+                                
                             Image(systemName: category.icon)
-                                .font(.system(size: 24))
+                                    .font(.system(size: 22, weight: .semibold))
                                 .foregroundColor(selectedCategory == category ? AppColors.buttonPrimaryText : AppColors.primaryText)
+                            }
                             
                             Text(category.rawValue)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(selectedCategory == category ? AppColors.buttonPrimaryText : AppColors.primaryText)
-                        }
-                        .frame(width: 80, height: 80)
-                        .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(selectedCategory == category ? AppColors.buttonPrimary : AppColors.buttonSecondary)
-                        )
+                                .font(DesignSystem.Typography.caption())
+                                .foregroundColor(selectedCategory == category ? AppColors.buttonPrimary : AppColors.secondaryText)
+                                .fontWeight(selectedCategory == category ? .semibold : .regular)
                     }
-                }
+                        .frame(width: 80)
             }
+        }
+    }
+            .padding(.horizontal, 4)
         }
     }
 }
 
-// MARK: - Barre d'outils de sélection
-struct SelectionToolbar: View {
+struct ModernSelectionToolbar: View {
     let selectedCount: Int
     let totalCount: Int
     let onSelectAll: () -> Void
@@ -244,11 +258,12 @@ struct SelectionToolbar: View {
     var body: some View {
         HStack(spacing: 16) {
             Button(action: selectedCount == totalCount ? onDeselectAll : onSelectAll) {
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Image(systemName: selectedCount == totalCount ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 16))
-                    Text(selectedCount == totalCount ? "Tout désélectionner" : "Tout sélectionner")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 18, weight: .medium))
+                    Text(selectedCount == totalCount ? "Tout désélectionner".localized : "Tout sélectionner".localized)
+                        .font(DesignSystem.Typography.footnote())
+                        .fontWeight(.semibold)
                 }
                 .foregroundColor(AppColors.buttonPrimary)
             }
@@ -257,44 +272,47 @@ struct SelectionToolbar: View {
             
             if selectedCount > 0 {
                 Button(action: onDeleteSelected) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 8) {
                         Image(systemName: "trash")
-                            .font(.system(size: 16))
-                        Text("Supprimer (\(selectedCount))")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 18, weight: .medium))
+                        Text("Supprimer (\(selectedCount))".localized)
+                            .font(DesignSystem.Typography.footnote())
+                            .fontWeight(.semibold)
                     }
                     .foregroundColor(.red)
                 }
             }
             
             Button(action: onCancel) {
-                Text("Annuler")
-                    .font(.system(size: 14, weight: .semibold))
+                Text("Annuler".localized)
+                    .font(DesignSystem.Typography.footnote())
+                    .fontWeight(.semibold)
                     .foregroundColor(AppColors.primaryText)
             }
         }
-        .padding(.horizontal, 4)
     }
 }
 
-// MARK: - Carte de vêtement
-struct WardrobeItemCard: View {
+struct ModernWardrobeItemCard: View {
     let item: WardrobeItem
     @ObservedObject var wardrobeService: WardrobeService
     @Binding var isSelectionMode: Bool
     @Binding var isSelected: Bool
     @State private var showingDetail = false
+    @State private var isPressed = false
     
     var body: some View {
         ZStack(alignment: .topTrailing) {
         Button(action: {
                 if isSelectionMode {
+                    withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
                     isSelected.toggle()
+                    }
                 } else {
             showingDetail = true
                 }
         }) {
-            VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 0) {
                 // Photo ou placeholder
                 Group {
                         let firstPhotoURL = item.photoURLs.first ?? item.photoURL
@@ -303,111 +321,51 @@ struct WardrobeItemCard: View {
                             Image(uiImage: image)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                                .frame(height: 150)
+                                    .frame(height: 160)
                                 .clipped()
-                                .id("photo-\(item.id)-\(photoURL)") // Force le rafraîchissement
-                        } else {
-                            // Si le chemin existe mais l'image ne charge pas
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color.gray.opacity(0.3), Color.gray.opacity(0.1)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(height: 150)
-                                .overlay(
-                                    VStack(spacing: 8) {
-                                        Image(systemName: "exclamationmark.triangle")
-                                            .foregroundColor(AppColors.secondaryText)
-                                        Text("Photo introuvable")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(AppColors.secondaryText)
-                                    }
-                                )
-                        }
-                    } else {
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.gray.opacity(0.3), Color.gray.opacity(0.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(height: 150)
-                            .overlay(
-                                Image(systemName: item.category.icon)
-                                    .font(.system(size: 40))
-                                    .foregroundColor(AppColors.secondaryText)
-                            )
-                        }
-                    }
-                }
-                .frame(height: 150)
-                .roundedCorner(20)
-                .overlay(
-                    VStack {
-                        HStack {
-                            Spacer()
-                            if item.isFavorite {
-                                Image(systemName: "heart.fill")
-                                    .foregroundColor(.red)
-                                    .font(.system(size: 16))
-                                    .padding(8)
-                                    .background(Circle().fill(Color.white.opacity(0.9)))
+                                    .id("photo-\(item.id)-\(photoURL)")
+                            } else {
+                                ModernPlaceholderView(icon: item.category.icon)
+                                    .frame(height: 160)
                             }
+                        } else {
+                            ModernPlaceholderView(icon: item.category.icon)
+                                .frame(height: 160)
                         }
-                        Spacer()
                     }
-                    .padding(8)
-                )
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(item.name)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
                     
-                    Text(item.color)
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 18)
-                    .fill(Material.regularMaterial)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 18)
-                            .stroke(
-                                isSelected
-                                    ? LinearGradient(
-                                        colors: [
-                                            AppColors.buttonPrimary.opacity(0.8),
-                                            AppColors.buttonPrimary.opacity(0.5)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                    : LinearGradient(
-                                        colors: [
-                                            AppColors.cardBorder.opacity(0.4),
-                                            AppColors.cardBorder.opacity(0.2)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                lineWidth: isSelected ? 2.5 : 1
-                            )
+                    // Informations
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(item.name)
+                            .font(DesignSystem.Typography.headline())
+                            .foregroundColor(AppColors.primaryText)
+                            .lineLimit(1)
+                        
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(colorFromString(item.color))
+                                .frame(width: 12, height: 12)
+                            
+                            Text(item.color)
+                                .font(DesignSystem.Typography.caption())
+                                    .foregroundColor(AppColors.secondaryText)
                     }
-            )
-            .roundedCorner(18)
-            .shadow(color: AppColors.shadow.opacity(isSelected ? 0.25 : 0.15), radius: isSelected ? 12 : 8, x: 0, y: isSelected ? 5 : 3)
+                }
+                    .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .liquidGlassCard(cornerRadius: DesignSystem.Radius.lg)
+            }
         .buttonStyle(PlainButtonStyle())
+            .scaleEffect(isPressed ? 0.97 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in isPressed = true }
+                    .onEnded { _ in isPressed = false }
+            )
             .onLongPressGesture(minimumDuration: 0.5) {
-                // Activer le mode sélection au long press
                 if !isSelectionMode {
                     isSelectionMode = true
                     isSelected = true
@@ -417,13 +375,34 @@ struct WardrobeItemCard: View {
             WardrobeItemDetailView(item: item, wardrobeService: wardrobeService)
             }
             
+            // Indicateurs
+            VStack {
+                HStack {
+                    Spacer()
+                    if item.isFavorite {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.red)
+                            .padding(6)
+                            .background(Circle().fill(Color.white.opacity(0.9)))
+                            .shadow(color: AppColors.shadow.opacity(0.2), radius: 4, x: 0, y: 2)
+                    }
+                }
+                .padding(8)
+                
+                Spacer()
+            }
+            
             // Indicateur de sélection
             if isSelectionMode {
+                VStack {
+                    HStack {
+                        Spacer()
                 ZStack {
                     Circle()
                         .fill(isSelected ? AppColors.buttonPrimary : Color.white)
                         .frame(width: 28, height: 28)
-                        .shadow(color: AppColors.shadow, radius: 4, x: 0, y: 2)
+                                .shadow(color: AppColors.shadow.opacity(0.3), radius: 6, x: 0, y: 3)
                     
                     if isSelected {
                         Image(systemName: "checkmark")
@@ -433,16 +412,55 @@ struct WardrobeItemCard: View {
                 }
                 .padding(8)
             }
+                    Spacer()
+        }
+    }
+}
+    }
+    
+    private func colorFromString(_ colorName: String) -> Color {
+        switch colorName.lowercased() {
+        case "rouge", "red": return .red
+        case "bleu", "blue": return .blue
+        case "vert", "green": return .green
+        case "jaune", "yellow": return .yellow
+        case "noir", "black": return .black
+        case "blanc", "white": return .white
+        case "gris", "gray", "grey": return .gray
+        case "rose", "pink": return .pink
+        case "orange": return .orange
+        case "violet", "purple": return .purple
+        default: return .gray
         }
     }
 }
 
-// MARK: - Vue vide
-struct EmptyWardrobeView: View {
+struct ModernPlaceholderView: View {
+    let icon: String
+    
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    AppColors.buttonSecondary,
+                    AppColors.buttonSecondary.opacity(0.5)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            
+            Image(systemName: icon)
+                .font(.system(size: 48, weight: .light))
+                .foregroundColor(AppColors.secondaryText)
+        }
+    }
+}
+
+struct ModernEmptyWardrobeView: View {
     let category: ClothingCategory
     
     var body: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 24) {
             ZStack {
                 Circle()
                     .fill(
@@ -455,46 +473,35 @@ struct EmptyWardrobeView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 100, height: 100)
+                    .frame(width: 120, height: 120)
                     .overlay {
                         Circle()
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        AppColors.cardBorder.opacity(0.3),
-                                        AppColors.cardBorder.opacity(0.15)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
+                            .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 2)
                     }
                 
             Image(systemName: category.icon)
-                    .font(.system(size: 44, weight: .light))
+                    .font(.system(size: 52, weight: .light))
                     .foregroundColor(AppColors.secondaryText)
             }
-            .shadow(color: AppColors.shadow.opacity(0.15), radius: 12, x: 0, y: 4)
+            .shadow(color: AppColors.shadow.opacity(0.15), radius: 16, x: 0, y: 6)
             
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
                 Text("Aucun \(category.rawValue.lowercased()) dans votre garde-robe".localized)
-                    .font(.playfairDisplayBold(size: 24))
+                    .font(DesignSystem.Typography.title2())
                     .foregroundColor(AppColors.primaryText)
                 .multilineTextAlignment(.center)
             
                 Text("Appuyez sur le bouton + pour ajouter vos premiers vêtements".localized)
-                    .font(.system(size: 16, weight: .regular))
+                    .font(DesignSystem.Typography.body())
                     .foregroundColor(AppColors.secondaryText)
                 .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
         }
-        .padding(.horizontal, 40)
         }
-        .padding(.vertical, 40)
     }
 }
 
-// MARK: - Écran d'ajout de vêtement
+// MARK: - Écran d'ajout de vêtement (conservé tel quel)
 struct AddWardrobeItemView: View {
     @ObservedObject var wardrobeService: WardrobeService
     @Environment(\.dismiss) var dismiss
@@ -579,16 +586,16 @@ struct AddWardrobeItemView: View {
                     }
                 }
             }
-            .navigationTitle("Nouvel article")
+            .navigationTitle("Nouvel article".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Annuler") {
+                    Button("Annuler".localized) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Enregistrer") {
+                    Button("Enregistrer".localized) {
                         saveItem()
                     }
                     .disabled(name.isEmpty || isSaving)
@@ -614,7 +621,6 @@ struct AddWardrobeItemView: View {
         isSaving = true
         
         Task {
-            // Créer l'item d'abord
             var item = WardrobeItem(
                 name: name,
                 category: selectedCategory,
@@ -624,7 +630,6 @@ struct AddWardrobeItemView: View {
                 material: material.isEmpty ? nil : material
             )
             
-            // Sauvegarder les photos AVANT d'ajouter l'item si disponibles
             var photoPaths: [String] = []
             for photoImage in photoImages {
                 do {
@@ -637,10 +642,9 @@ struct AddWardrobeItemView: View {
             
             if !photoPaths.isEmpty {
                 item.photoURLs = photoPaths
-                item.photoURL = photoPaths.first // Compatibilité backward
+                item.photoURL = photoPaths.first
             }
             
-            // Ajouter l'item avec le photoURL mis à jour
             await MainActor.run {
                 wardrobeService.addItem(item)
                 isSaving = false
@@ -650,7 +654,7 @@ struct AddWardrobeItemView: View {
     }
 }
 
-// MARK: - Détails d'un vêtement
+// MARK: - Détails d'un vêtement (conservé tel quel)
 struct WardrobeItemDetailView: View {
     let item: WardrobeItem
     @ObservedObject var wardrobeService: WardrobeService
@@ -665,7 +669,6 @@ struct WardrobeItemDetailView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                        // Photos - Support multi-photos
                         if !item.photoURLs.isEmpty || item.photoURL != nil {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 12) {
@@ -684,13 +687,12 @@ struct WardrobeItemDetailView: View {
                             .padding(.horizontal)
                             }
                     } else {
-                        // Afficher un placeholder si pas de photo
                         VStack(spacing: 16) {
                             Image(systemName: item.category.icon)
                                 .font(.system(size: 80))
                                 .foregroundColor(AppColors.secondaryText)
                             
-                            Text("Aucune photo")
+                                Text("Aucune photo".localized)
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(AppColors.secondaryText)
                         }
@@ -701,7 +703,6 @@ struct WardrobeItemDetailView: View {
                         .padding(.horizontal)
                     }
                     
-                    // Informations
                     VStack(alignment: .leading, spacing: 15) {
                         DetailRow(label: "Nom".localized, value: item.name)
                         DetailRow(label: "Catégorie".localized, value: item.category.rawValue)
@@ -777,4 +778,3 @@ struct DetailRow: View {
 #Preview {
     WardrobeManagementScreen()
 }
-

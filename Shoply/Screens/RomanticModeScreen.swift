@@ -1,5 +1,5 @@
 //
-//  ProfessionalModeScreen.swift
+//  RomanticModeScreen.swift
 //  Shoply - Outfit Selector
 //
 //  Created by William on 01/11/2025.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct ProfessionalModeScreen: View {
-    @State private var selectedOccasion: ProfessionalOutfit.ProfessionalOccasion?
+struct RomanticModeScreen: View {
+    @State private var selectedOccasion: RomanticOutfit.RomanticOccasion?
     
     var body: some View {
         NavigationStack {
@@ -19,7 +19,7 @@ struct ProfessionalModeScreen: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
                         // En-tête moderne
-                        ModernProfessionalHeader()
+                        ModernRomanticHeader()
                             .padding(.horizontal, 20)
                             .padding(.top, 20)
                         
@@ -28,10 +28,10 @@ struct ProfessionalModeScreen: View {
                             GridItem(.flexible(), spacing: 16),
                             GridItem(.flexible(), spacing: 16)
                         ], spacing: 16) {
-                            ForEach(ProfessionalOutfit.ProfessionalOccasion.allCases, id: \.self) { occasion in
-                                ModernOccasionCard(occasion: occasion) {
+                            ForEach(RomanticOutfit.RomanticOccasion.allCases, id: \.self) { occasion in
+                                ModernRomanticOccasionCard(occasion: occasion) {
                                     withAnimation {
-                                    selectedOccasion = occasion
+                                        selectedOccasion = occasion
                                     }
                                 }
                             }
@@ -41,32 +41,32 @@ struct ProfessionalModeScreen: View {
                     .padding(.bottom, 20)
                 }
             }
-            .navigationTitle("Mode Professionnel".localized)
+            .navigationTitle("Dates & Occasions".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Mode Professionnel".localized)
+                    Text("Dates & Occasions".localized)
                         .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
                 }
             }
             .sheet(item: $selectedOccasion) { occasion in
-                    ProfessionalSuggestionsScreen(occasion: occasion)
-                }
+                RomanticSuggestionsScreen(occasion: occasion)
             }
         }
     }
+}
 
-extension ProfessionalOutfit.ProfessionalOccasion: Identifiable {
+extension RomanticOutfit.RomanticOccasion: Identifiable {
     public var id: String { rawValue }
 }
 
 // MARK: - Composants Modernes
 
-struct ModernProfessionalHeader: View {
+struct ModernRomanticHeader: View {
     var body: some View {
         VStack(spacing: 12) {
-            Text("Sélectionnez une occasion professionnelle pour obtenir des suggestions d'outfits adaptés".localized)
+            Text("Sélectionnez une occasion pour obtenir des suggestions d'outfits adaptés".localized)
                 .font(DesignSystem.Typography.body())
                 .foregroundColor(AppColors.secondaryText)
                 .multilineTextAlignment(.center)
@@ -74,8 +74,8 @@ struct ModernProfessionalHeader: View {
     }
 }
 
-struct ModernOccasionCard: View {
-    let occasion: ProfessionalOutfit.ProfessionalOccasion
+struct ModernRomanticOccasionCard: View {
+    let occasion: RomanticOutfit.RomanticOccasion
     let onTap: () -> Void
     @State private var isPressed = false
     
@@ -83,10 +83,10 @@ struct ModernOccasionCard: View {
         Button(action: {
             onTap()
         }) {
-        Card(cornerRadius: DesignSystem.Radius.lg) {
+            Card(cornerRadius: DesignSystem.Radius.lg) {
                 VStack(spacing: 16) {
-                ZStack {
-                    Circle()
+                    ZStack {
+                        Circle()
                             .fill(
                                 LinearGradient(
                                     colors: [
@@ -98,19 +98,19 @@ struct ModernOccasionCard: View {
                                 )
                             )
                             .frame(width: 64, height: 64)
-                    
-                    Image(systemName: iconForOccasion(occasion))
+                        
+                        Image(systemName: iconForOccasion(occasion))
                             .font(.system(size: 28, weight: .semibold))
-                        .foregroundColor(AppColors.buttonPrimary)
+                            .foregroundColor(AppColors.buttonPrimary)
+                    }
+                    
+                    Text(occasion.rawValue.localized)
+                        .font(DesignSystem.Typography.headline())
+                        .foregroundColor(AppColors.primaryText)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
                 }
-                
-                Text(occasion.rawValue.localized)
-                    .font(DesignSystem.Typography.headline())
-                    .foregroundColor(AppColors.primaryText)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-            }
-            .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity)
                 .frame(height: 140)
                 .padding(20)
             }
@@ -125,21 +125,26 @@ struct ModernOccasionCard: View {
         )
     }
     
-    private func iconForOccasion(_ occasion: ProfessionalOutfit.ProfessionalOccasion) -> String {
+    private func iconForOccasion(_ occasion: RomanticOutfit.RomanticOccasion) -> String {
         switch occasion {
-        case .jobInterview: return "person.badge.plus"
-        case .presentation: return "person.wave.2"
-        case .meeting: return "person.2"
-        case .networking: return "person.3"
-        case .conference: return "person.2.badge.gearshape"
-        case .clientMeeting: return "handshake"
+        case .firstDate: return "heart.fill"
+        case .romanticDinner: return "fork.knife"
+        case .anniversary: return "gift.fill"
+        case .wedding: return "heart.circle.fill"
+        case .party: return "party.popper.fill"
+        case .dateNight: return "moon.stars.fill"
+        case .brunch: return "sunrise.fill"
+        case .cinema: return "film.fill"
+        case .concert: return "music.note"
+        case .beach: return "beach.umbrella.fill"
+        case .casualDate: return "tshirt.fill"
         }
     }
 }
 
-struct ProfessionalSuggestionsScreen: View {
+struct RomanticSuggestionsScreen: View {
     @Environment(\.dismiss) var dismiss
-    let occasion: ProfessionalOutfit.ProfessionalOccasion
+    let occasion: RomanticOutfit.RomanticOccasion
     @StateObject private var wardrobeService = WardrobeService()
     @StateObject private var geminiService = GeminiService.shared
     @State private var geminiRecommendations: String?
@@ -158,7 +163,7 @@ struct ProfessionalSuggestionsScreen: View {
                 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
-                        ModernOccasionHeader(occasion: occasion)
+                        ModernRomanticOccasionHeader(occasion: occasion)
                             .padding(.horizontal, 20)
                             .padding(.top, 20)
                         
@@ -167,14 +172,14 @@ struct ProfessionalSuggestionsScreen: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(40)
                         } else if let error = error {
-                            ModernErrorCard(error: error) {
+                            ModernRomanticErrorCard(error: error) {
                                 loadGeminiRecommendations()
                             }
                             .padding(.horizontal, 20)
                         } else if let recommendations = geminiRecommendations {
-                            ModernRecommendationsCard(recommendations: recommendations)
+                            ModernRomanticRecommendationsCard(recommendations: recommendations)
                                 .padding(.horizontal, 20)
-                                    }
+                        }
                     }
                     .padding(.bottom, 20)
                 }
@@ -215,7 +220,7 @@ struct ProfessionalSuggestionsScreen: View {
         
         Task {
             do {
-                let recommendations = try await geminiService.generateProfessionalRecommendations(
+                let recommendations = try await geminiService.generateRomanticRecommendations(
                     occasion: occasion,
                     userProfile: userProfile,
                     wardrobeItems: wardrobeService.items
@@ -247,7 +252,7 @@ struct ProfessionalSuggestionsScreen: View {
                     if error.localizedDescription.contains("GeminiError") {
                         self.error = "Erreur lors de la génération des recommandations. Veuillez vérifier votre connexion et réessayer.".localized
                     } else {
-                    self.error = error.localizedDescription
+                        self.error = error.localizedDescription
                     }
                     isLoading = false
                 }
@@ -256,8 +261,8 @@ struct ProfessionalSuggestionsScreen: View {
     }
 }
 
-struct ModernOccasionHeader: View {
-    let occasion: ProfessionalOutfit.ProfessionalOccasion
+struct ModernRomanticOccasionHeader: View {
+    let occasion: RomanticOutfit.RomanticOccasion
     
     var body: some View {
         Card(cornerRadius: DesignSystem.Radius.lg) {
@@ -294,19 +299,24 @@ struct ModernOccasionHeader: View {
         }
     }
     
-    private func iconForOccasion(_ occasion: ProfessionalOutfit.ProfessionalOccasion) -> String {
+    private func iconForOccasion(_ occasion: RomanticOutfit.RomanticOccasion) -> String {
         switch occasion {
-        case .jobInterview: return "person.badge.plus"
-        case .presentation: return "person.wave.2"
-        case .meeting: return "person.2"
-        case .networking: return "person.3"
-        case .conference: return "person.2.badge.gearshape"
-        case .clientMeeting: return "handshake"
+        case .firstDate: return "heart.fill"
+        case .romanticDinner: return "fork.knife"
+        case .anniversary: return "gift.fill"
+        case .wedding: return "heart.circle.fill"
+        case .party: return "party.popper.fill"
+        case .dateNight: return "moon.stars.fill"
+        case .brunch: return "sunrise.fill"
+        case .cinema: return "film.fill"
+        case .concert: return "music.note"
+        case .beach: return "beach.umbrella.fill"
+        case .casualDate: return "tshirt.fill"
         }
     }
 }
 
-struct ModernRecommendationsCard: View {
+struct ModernRomanticRecommendationsCard: View {
     let recommendations: String
     
     private var parsedSections: (clothes: String, colors: String?, materials: String?) {
@@ -446,7 +456,7 @@ struct ModernRecommendationsCard: View {
     }
 }
 
-struct ModernErrorCard: View {
+struct ModernRomanticErrorCard: View {
     let error: String
     let onRetry: () -> Void
     
@@ -479,3 +489,4 @@ struct ModernErrorCard: View {
         }
     }
 }
+

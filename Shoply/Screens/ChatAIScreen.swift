@@ -27,7 +27,6 @@ struct ChatAIScreen: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var selectedImage: UIImage?
     @State private var showingConversations = false
-    @State private var showingMenu = false
     @Environment(\.dismiss) var dismiss
     
     enum AIMode: String, CaseIterable {
@@ -211,8 +210,20 @@ struct ChatAIScreen: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingMenu = true
+                    Menu {
+                        Button(action: {
+                            messages = []
+                            conversationId = UUID()
+                            inputText = ""
+                        }) {
+                            Label("Nouvelle conversation".localized, systemImage: "square.and.pencil")
+                        }
+                        
+                        Button(action: {
+                            showingConversations = true
+                        }) {
+                            Label("Historique".localized, systemImage: "clock.arrow.circlepath")
+                        }
                     } label: {
                         Image(systemName: "ellipsis.circle")
                             .font(.system(size: 18, weight: .medium))
@@ -235,22 +246,6 @@ struct ChatAIScreen: View {
             NavigationStack {
                 ChatConversationsScreen()
             }
-        }
-        .sheet(isPresented: $showingMenu) {
-            ChatMenuView(
-                onNewConversation: {
-                    showingMenu = false
-                    messages = []
-                    conversationId = UUID()
-                    inputText = ""
-                },
-                onShowHistory: {
-                    showingMenu = false
-                    showingConversations = true
-                }
-            )
-            .presentationDetents([.height(140)])
-            .presentationDragIndicator(.visible)
         }
         .id("chat-\(settingsManager.selectedLanguage)")
         .onAppear {
@@ -774,9 +769,8 @@ struct LoadingView: View {
     }
     
     var body: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            ProgressView()
-                .scaleEffect(0.8)
+        HStack(spacing: DesignSystem.Spacing.md) {
+            AIThinkingAnimationCompact()
             Text("\(aiModeLabel) réfléchit...".localized)
                 .font(DesignSystem.Typography.footnote())
                 .foregroundColor(AppColors.secondaryText)
@@ -799,12 +793,7 @@ struct SuggestionsView: View {
                             .foregroundColor(AppColors.primaryText)
                             .padding(.horizontal, DesignSystem.Spacing.md)
                             .padding(.vertical, DesignSystem.Spacing.sm)
-                            .background(AppColors.cardBackground)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: DesignSystem.Radius.md)
-                                    .stroke(AppColors.cardBorder, lineWidth: 1)
-                            }
-                            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+                            .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                     }
                 }
             }
@@ -846,8 +835,7 @@ struct ChatInputArea: View {
                     }
                 }
                 .padding(DesignSystem.Spacing.sm)
-                .background(AppColors.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+                .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                 .padding(.horizontal, DesignSystem.Spacing.md)
             }
             
@@ -866,12 +854,7 @@ struct ChatInputArea: View {
                     .lineLimit(1...5)
                     .padding(.horizontal, DesignSystem.Spacing.md)
                     .padding(.vertical, DesignSystem.Spacing.sm)
-                    .background(AppColors.cardBackground)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: DesignSystem.Radius.md)
-                            .stroke(AppColors.cardBorder, lineWidth: 1)
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+                    .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                 
                 Button(action: onSend) {
                     Image(systemName: "arrow.up.circle.fill")

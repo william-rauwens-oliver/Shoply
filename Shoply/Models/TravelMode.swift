@@ -8,7 +8,7 @@
 import Foundation
 
 /// Mode voyage avec checklist
-struct TravelPlan: Codable, Identifiable {
+struct TravelPlan: Codable, Identifiable, Equatable {
     let id: UUID
     var destination: String
     var startDate: Date
@@ -34,7 +34,7 @@ struct TravelPlan: Codable, Identifiable {
     }
 }
 
-struct DayWeather: Codable, Identifiable {
+struct DayWeather: Codable, Identifiable, Equatable {
     let id: UUID
     let date: Date
     let temperature: Double
@@ -50,7 +50,7 @@ struct DayWeather: Codable, Identifiable {
     }
 }
 
-struct PlannedOutfit: Codable, Identifiable {
+struct PlannedOutfit: Codable, Identifiable, Equatable {
     let id: UUID
     let date: Date
     var itemIds: [UUID]
@@ -66,7 +66,7 @@ struct PlannedOutfit: Codable, Identifiable {
     }
 }
 
-struct TravelChecklistItem: Codable, Identifiable {
+struct TravelChecklistItem: Codable, Identifiable, Equatable {
     let id: UUID
     var item: String
     var category: ChecklistCategory

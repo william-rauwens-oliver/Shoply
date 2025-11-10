@@ -20,51 +20,20 @@ struct LookbooksScreen: View {
                     .ignoresSafeArea()
                 
                 if lookbooks.isEmpty {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
-                        Image(systemName: "book.fill")
-                            .font(.system(size: 60, weight: .light))
-                            .foregroundColor(AppColors.secondaryText)
-                        
-                        Text("Aucun lookbook".localized)
-                            .font(DesignSystem.Typography.title2())
-                            .foregroundColor(AppColors.primaryText)
-                        
-                        Text("Créez un lookbook PDF de vos meilleurs outfits".localized)
-                            .font(DesignSystem.Typography.body())
-                            .foregroundColor(AppColors.secondaryText)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, DesignSystem.Spacing.lg)
-                        
-                        Button {
+                    ModernEmptyLookbooksView {
                             showingCreateLookbook = true
-                        } label: {
-                            Text("Créer un lookbook".localized)
-                                .font(DesignSystem.Typography.headline())
-                                .foregroundColor(AppColors.buttonPrimaryText)
-                                .padding(.horizontal, DesignSystem.Spacing.lg)
-                                .padding(.vertical, DesignSystem.Spacing.md)
-                                .background(AppColors.buttonPrimary)
-                                .cornerRadius(DesignSystem.Radius.md)
-                        }
                     }
                 } else {
                     ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: DesignSystem.Spacing.md) {
+                        LazyVStack(spacing: 16) {
                             ForEach(lookbooks) { lookbook in
                                 NavigationLink(destination: LookbookDetailScreen(lookbook: lookbook)) {
-                                    LookbookCard(lookbook: lookbook)
+                                    ModernLookbookCard(lookbook: lookbook)
                                 }
                                 .buttonStyle(PlainButtonStyle())
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    Button(role: .destructive) {
-                                        lookbooks.removeAll { $0.id == lookbook.id }
-                                    } label: {
-                                        Label("Supprimer".localized, systemImage: "trash")
-                                    }
-                                }
                             }
                         }
-                        .padding(DesignSystem.Spacing.md)
+                        .padding(20)
                     }
                 }
             }
@@ -94,23 +63,93 @@ struct LookbooksScreen: View {
     }
 }
 
-struct LookbookCard: View {
+// MARK: - Composants Modernes
+
+struct ModernEmptyLookbooksView: View {
+    let onCreate: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppColors.buttonSecondary,
+                                AppColors.buttonSecondary.opacity(0.7)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 120, height: 120)
+                    .overlay {
+                        Circle()
+                            .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 2)
+                    }
+                
+                Image(systemName: "book.fill")
+                    .font(.system(size: 52, weight: .light))
+                    .foregroundColor(AppColors.secondaryText)
+            }
+            .shadow(color: AppColors.shadow.opacity(0.15), radius: 16, x: 0, y: 6)
+            
+            VStack(spacing: 12) {
+                Text("Aucun lookbook".localized)
+                    .font(DesignSystem.Typography.title2())
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text("Créez un lookbook PDF de vos meilleurs outfits".localized)
+                    .font(DesignSystem.Typography.body())
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            Button(action: onCreate) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 18, weight: .medium))
+                    Text("Créer un lookbook".localized)
+                        .font(DesignSystem.Typography.headline())
+                }
+                .foregroundColor(AppColors.buttonPrimaryText)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 14)
+                .background(AppColors.buttonPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+            }
+        }
+    }
+}
+
+struct ModernLookbookCard: View {
     let lookbook: Lookbook
+    @State private var isPressed = false
     
     var body: some View {
         Card(cornerRadius: DesignSystem.Radius.lg) {
-            HStack(spacing: DesignSystem.Spacing.md) {
+            HStack(spacing: 16) {
                 ZStack {
-                    Circle()
-                        .fill(AppColors.buttonPrimary.opacity(0.15))
-                        .frame(width: 50, height: 50)
+                    RoundedRectangle(cornerRadius: DesignSystem.Radius.md)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    AppColors.buttonPrimary.opacity(0.2),
+                                    AppColors.buttonPrimary.opacity(0.1)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 64, height: 64)
                     
                     Image(systemName: "book.fill")
-                        .font(.system(size: 24, weight: .medium))
+                        .font(.system(size: 28, weight: .semibold))
                         .foregroundColor(AppColors.buttonPrimary)
                 }
                 
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(lookbook.title)
                         .font(DesignSystem.Typography.headline())
                         .foregroundColor(AppColors.primaryText)
@@ -126,8 +165,15 @@ struct LookbookCard: View {
                     .font(.system(size: 20, weight: .medium))
                     .foregroundColor(AppColors.buttonPrimary)
             }
-            .padding(DesignSystem.Spacing.sm)
+            .padding(20)
         }
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 }
 
@@ -142,23 +188,10 @@ struct LookbookDetailScreen: View {
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
-                        Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                                Text(lookbook.title)
-                                    .font(DesignSystem.Typography.title2())
-                                    .foregroundColor(AppColors.primaryText)
-                                
-                                if let description = lookbook.description {
-                                    Text(description)
-                                        .font(DesignSystem.Typography.body())
-                                        .foregroundColor(AppColors.secondaryText)
-                                }
-                            }
-                            .padding(DesignSystem.Spacing.md)
-                        }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
-                        .padding(.top, DesignSystem.Spacing.md)
+                    VStack(spacing: 20) {
+                        ModernLookbookHeader(lookbook: lookbook)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
                         
                         Button {
                             showingExport = true
@@ -171,13 +204,13 @@ struct LookbookDetailScreen: View {
                             }
                             .foregroundColor(AppColors.buttonPrimaryText)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, DesignSystem.Spacing.md)
+                            .padding(.vertical, 16)
                             .background(AppColors.buttonPrimary)
-                            .cornerRadius(DesignSystem.Radius.md)
+                            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
                         }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 20)
                     }
-                    .padding(.bottom, DesignSystem.Spacing.xl)
+                    .padding(.bottom, 20)
                 }
             }
             .navigationTitle("Lookbook".localized)
@@ -192,6 +225,54 @@ struct LookbookDetailScreen: View {
             .sheet(isPresented: $showingExport) {
                 ExportPDFScreen(lookbook: lookbook)
             }
+        }
+    }
+}
+
+struct ModernLookbookHeader: View {
+    let lookbook: Lookbook
+    
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        AppColors.buttonPrimary.opacity(0.2),
+                                        AppColors.buttonPrimary.opacity(0.1)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 64, height: 64)
+                        
+                        Image(systemName: "book.fill")
+                            .font(.system(size: 30, weight: .semibold))
+                            .foregroundColor(AppColors.buttonPrimary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(lookbook.title)
+                            .font(DesignSystem.Typography.title2())
+                            .foregroundColor(AppColors.primaryText)
+                            .fontWeight(.bold)
+                        
+                        if let description = lookbook.description {
+                            Text(description)
+                                .font(DesignSystem.Typography.body())
+                                .foregroundColor(AppColors.secondaryText)
+                                .lineLimit(2)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+            }
+            .padding(20)
         }
     }
 }
@@ -218,9 +299,9 @@ struct CreateLookbookScreen: View {
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
+                    VStack(spacing: 20) {
                         Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                            VStack(alignment: .leading, spacing: 12) {
                                 Text("Titre".localized)
                                     .font(DesignSystem.Typography.headline())
                                     .foregroundColor(AppColors.primaryText)
@@ -228,16 +309,15 @@ struct CreateLookbookScreen: View {
                                 TextField("Titre du lookbook".localized, text: $title)
                                     .font(DesignSystem.Typography.body())
                                     .foregroundColor(AppColors.primaryText)
-                                    .padding(DesignSystem.Spacing.md)
-                                    .background(AppColors.cardBackground)
-                                    .cornerRadius(DesignSystem.Radius.sm)
+                                    .padding(16)
+                                    .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                             }
-                            .padding(DesignSystem.Spacing.md)
+                            .padding(20)
                         }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 20)
                         
                         Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                            VStack(alignment: .leading, spacing: 12) {
                                 Text("Description".localized)
                                     .font(DesignSystem.Typography.headline())
                                     .foregroundColor(AppColors.primaryText)
@@ -245,17 +325,16 @@ struct CreateLookbookScreen: View {
                                 TextField("Description (optionnel)".localized, text: $description, axis: .vertical)
                                     .font(DesignSystem.Typography.body())
                                     .foregroundColor(AppColors.primaryText)
-                                    .padding(DesignSystem.Spacing.md)
-                                    .background(AppColors.cardBackground)
-                                    .cornerRadius(DesignSystem.Radius.sm)
+                                    .padding(16)
+                                    .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                                     .frame(minHeight: 80)
                             }
-                            .padding(DesignSystem.Spacing.md)
+                            .padding(20)
                         }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 20)
                         
                         Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                            VStack(alignment: .leading, spacing: 12) {
                                 Text("Thème".localized)
                                     .font(DesignSystem.Typography.headline())
                                     .foregroundColor(AppColors.primaryText)
@@ -267,51 +346,11 @@ struct CreateLookbookScreen: View {
                                 }
                                 .pickerStyle(.menu)
                             }
-                            .padding(DesignSystem.Spacing.md)
+                            .padding(20)
                         }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
-                        
-                        Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                                Text("Génération avec Gemini".localized)
-                                    .font(DesignSystem.Typography.headline())
-                                    .foregroundColor(AppColors.primaryText)
-                                
-                                if isGenerating {
-                                    ProgressView()
-                                        .frame(maxWidth: .infinity)
-                                } else if let geminiDesc = geminiDescription {
-                                    Text(geminiDesc)
-                                        .font(DesignSystem.Typography.body())
-                                        .foregroundColor(AppColors.primaryText)
-                                    
-                                    Button("Utiliser cette description".localized) {
-                                        description = geminiDesc
-                                    }
-                                    .font(DesignSystem.Typography.headline())
-                                    .foregroundColor(AppColors.buttonPrimaryText)
-                                    .padding(.vertical, DesignSystem.Spacing.sm)
-                                    .frame(maxWidth: .infinity)
-                                    .background(AppColors.buttonPrimary)
-                                    .cornerRadius(DesignSystem.Radius.sm)
-                                } else {
-                                    Button("Générer avec Gemini".localized) {
-                                        generateWithGemini()
-                                    }
-                                    .disabled(title.isEmpty || historyStore.outfits.isEmpty)
-                                    .font(DesignSystem.Typography.headline())
-                                    .foregroundColor((title.isEmpty || historyStore.outfits.isEmpty) ? AppColors.secondaryText : AppColors.buttonPrimaryText)
-                                    .padding(.vertical, DesignSystem.Spacing.sm)
-                                    .frame(maxWidth: .infinity)
-                                    .background((title.isEmpty || historyStore.outfits.isEmpty) ? AppColors.cardBackground : AppColors.buttonPrimary)
-                                    .cornerRadius(DesignSystem.Radius.sm)
-                                }
-                            }
-                            .padding(DesignSystem.Spacing.md)
-                        }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 20)
                     }
-                    .padding(.vertical, DesignSystem.Spacing.lg)
+                    .padding(.vertical, 20)
                 }
             }
             .navigationTitle("Nouveau lookbook".localized)
@@ -364,29 +403,6 @@ struct CreateLookbookScreen: View {
             }
         }
     }
-    
-    private func generateWithGemini() {
-        isGenerating = true
-        
-        Task {
-            do {
-                let description = try await geminiService.generateLookbook(
-                    title: title,
-                    description: nil,
-                    outfits: Array(historyStore.outfits.prefix(10)),
-                    userProfile: userProfile
-                )
-                await MainActor.run {
-                    geminiDescription = description
-                    isGenerating = false
-                }
-            } catch {
-                await MainActor.run {
-                    isGenerating = false
-                }
-            }
-        }
-    }
 }
 
 struct ExportPDFScreen: View {
@@ -399,7 +415,7 @@ struct ExportPDFScreen: View {
                 AppColors.background
                     .ignoresSafeArea()
                 
-                VStack(spacing: DesignSystem.Spacing.lg) {
+                VStack(spacing: 24) {
                     Image(systemName: "doc.fill")
                         .font(.system(size: 60, weight: .light))
                         .foregroundColor(AppColors.secondaryText)
@@ -412,10 +428,9 @@ struct ExportPDFScreen: View {
                         .font(DesignSystem.Typography.body())
                         .foregroundColor(AppColors.secondaryText)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, DesignSystem.Spacing.lg)
+                        .padding(.horizontal, 40)
                     
                     Button {
-                        // Exporter en PDF
                         dismiss()
                     } label: {
                         HStack {
@@ -425,13 +440,13 @@ struct ExportPDFScreen: View {
                                 .font(DesignSystem.Typography.headline())
                         }
                         .foregroundColor(AppColors.buttonPrimaryText)
-                        .padding(.horizontal, DesignSystem.Spacing.lg)
-                        .padding(.vertical, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
                         .background(AppColors.buttonPrimary)
-                        .cornerRadius(DesignSystem.Radius.md)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
                     }
                 }
-                .padding(DesignSystem.Spacing.lg)
+                .padding(40)
             }
             .navigationTitle("Export".localized)
             .navigationBarTitleDisplayMode(.inline)

@@ -50,18 +50,15 @@ struct SettingsScreen: View {
                         // Section Apparence
                         SettingsSection(title: "Apparence") {
                             // Mode sombre
-                            SettingRow(
+                            ColorSchemeSettingRow(
                                 icon: "moon.fill",
                                 title: "Mode sombre",
-                                subtitle: getColorSchemeDescription()
-                            ) {
-                                ColorSchemePickerView(
+                                subtitle: getColorSchemeDescription(),
                                     selectedScheme: Binding(
                                         get: { settingsManager.colorScheme },
                                         set: { settingsManager.setColorScheme($0) }
                                     )
                                 )
-                            }
                             
                             Divider()
                                 .background(AppColors.separator)
@@ -71,17 +68,13 @@ struct SettingsScreen: View {
                             SettingRow(
                                 icon: "globe",
                                 title: "Langue",
-                                subtitle: settingsManager.selectedLanguage.displayName + " " + settingsManager.selectedLanguage.flag
-                            ) {
-                                Button(action: {
+                                subtitle: settingsManager.selectedLanguage.displayName + " " + settingsManager.selectedLanguage.flag,
+                                action: {
                                     showingLanguagePicker = true
-                                }) {
-                                    HStack {
-                                        Spacer()
+                                }
+                            ) {
                                         Image(systemName: "chevron.right")
                                             .foregroundColor(AppColors.secondaryText)
-                                    }
-                                }
                             }
                         }
                         
@@ -123,17 +116,13 @@ struct SettingsScreen: View {
                             SettingRow(
                                 icon: "square.and.arrow.up",
                                 title: "Exporter",
-                                subtitle: "Télécharger toutes vos données"
-                            ) {
-                                Button(action: {
+                                subtitle: "Télécharger toutes vos données",
+                                action: {
                                     exportUserData()
-                                }) {
-                                    HStack {
-                                        Spacer()
+                                }
+                            ) {
                                         Image(systemName: "chevron.right")
                                             .foregroundColor(AppColors.secondaryText)
-                                    }
-                                }
                             }
                             
                             Divider()
@@ -143,17 +132,13 @@ struct SettingsScreen: View {
                             SettingRow(
                                 icon: "square.and.arrow.down",
                                 title: "Importer",
-                                subtitle: "Restaurer vos données"
-                            ) {
-                                Button(action: {
+                                subtitle: "Restaurer vos données",
+                                action: {
                                     importUserData()
-                                }) {
-                                    HStack {
-                                        Spacer()
+                                }
+                            ) {
                                         Image(systemName: "chevron.right")
                                             .foregroundColor(AppColors.secondaryText)
-                                    }
-                                }
                             }
                             
                             Divider()
@@ -164,17 +149,13 @@ struct SettingsScreen: View {
                                 icon: "trash.fill",
                                 title: "Supprimer tout",
                                 subtitle: "Action irréversible",
-                                iconColor: .red
-                            ) {
-                                Button(action: {
+                                iconColor: .red,
+                                action: {
                                     showingDeleteConfirmation = true
-                                }) {
-                                    HStack {
-                                        Spacer()
+                                }
+                            ) {
                                         Image(systemName: "chevron.right")
                                             .foregroundColor(AppColors.secondaryText)
-                                    }
-                                }
                             }
                         }
                         
@@ -184,17 +165,13 @@ struct SettingsScreen: View {
                             SettingRow(
                                 icon: "info.circle.fill",
                                 title: "Shoply",
-                                subtitle: "Version \(getAppVersion())"
-                            ) {
-                                Button(action: {
+                                subtitle: "Version \(getAppVersion())",
+                                action: {
                                     showingAbout = true
-                                }) {
-                                    HStack {
-                                        Spacer()
+                                }
+                            ) {
                                         Image(systemName: "chevron.right")
                                             .foregroundColor(AppColors.secondaryText)
-                                    }
-                                }
                             }
                         }
                         
@@ -414,16 +391,21 @@ struct SettingRow<Content: View>: View {
     let subtitle: String
     var iconColor: Color = AppColors.primaryText
     let accessory: Content
+    var action: (() -> Void)? = nil
     
-    init(icon: String, title: String, subtitle: String, iconColor: Color = AppColors.primaryText, @ViewBuilder accessory: () -> Content) {
+    init(icon: String, title: String, subtitle: String, iconColor: Color = AppColors.primaryText, action: (() -> Void)? = nil, @ViewBuilder accessory: () -> Content) {
         self.icon = icon
         self.title = title
         self.subtitle = subtitle
         self.iconColor = iconColor
+        self.action = action
         self.accessory = accessory()
     }
     
     var body: some View {
+        Button(action: {
+            action?()
+        }) {
         HStack(spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 20, weight: .regular))
@@ -445,6 +427,63 @@ struct SettingRow<Content: View>: View {
             accessory
         }
         .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct ColorSchemeSettingRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    @Binding var selectedScheme: ColorScheme?
+    @State private var showingPicker = false
+    
+    var body: some View {
+        Button(action: {
+            showingPicker = true
+        }) {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: .regular))
+                    .foregroundColor(AppColors.primaryText)
+                    .frame(width: 28, height: 28)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    Text(subtitle)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .foregroundColor(AppColors.secondaryText)
+            }
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PlainButtonStyle())
+        .confirmationDialog("Choisir le thème", isPresented: $showingPicker, titleVisibility: .visible) {
+            Button("Clair") {
+                selectedScheme = .light
+            }
+            
+            Button("Sombre") {
+                selectedScheme = .dark
+            }
+            
+            Button("Système") {
+                selectedScheme = nil
+            }
+            
+            Button("Annuler", role: .cancel) { }
+        }
     }
 }
 
@@ -457,11 +496,8 @@ struct ColorSchemePickerView: View {
         Button(action: {
             showingPicker = true
         }) {
-            HStack {
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .foregroundColor(AppColors.secondaryText)
-            }
+            Image(systemName: "chevron.right")
+                .foregroundColor(AppColors.secondaryText)
         }
             .confirmationDialog("Choisir le thème", isPresented: $showingPicker, titleVisibility: .visible) {
             Button("Clair") {
@@ -586,7 +622,7 @@ struct AboutView: View {
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(AppColors.primaryText)
                             
-                                Text("Shoply est votre assistant personnel intelligent pour créer des tenues parfaites selon votre humeur, la météo et votre style personnel. L'application utilise l'intelligence artificielle avancée (Gemini) pour vous proposer des combinaisons d'outfits adaptées à vos préférences et à votre garde-robe.")
+                                Text("Shoply est votre assistant personnel intelligent pour créer des tenues parfaites selon votre humeur, la météo et votre style personnel. L'application utilise l'intelligence artificielle avancée (Gemini) pour vous proposer des combinaisons d'outfits adaptées à vos préférences et à votre garde-robe.\n\nShoply boosté avec Gemini - Créé uniquement par William RAUWENS OLIVER. Aucune équipe n'a créé cette application, elle a été entièrement développée par une seule personne.")
                                     .font(.system(size: 15, weight: .regular))
                                 .foregroundColor(AppColors.secondaryText)
                                 .lineSpacing(4)
@@ -594,8 +630,7 @@ struct AboutView: View {
                             }
                             .padding(20)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(AppColors.cardBackground)
-                            .roundedCorner(16)
+                            .liquidGlassCard(cornerRadius: 16)
                             .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
                             
                             // Fonctionnalités
@@ -615,8 +650,7 @@ struct AboutView: View {
                         }
                             .padding(20)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(AppColors.cardBackground)
-                            .roundedCorner(16)
+                            .liquidGlassCard(cornerRadius: 16)
                             .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
                             
                             // Développement
@@ -625,7 +659,7 @@ struct AboutView: View {
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(AppColors.primaryText)
                             
-                                Text("Développé avec SwiftUI pour iOS et iPadOS, utilisant les dernières technologies d'intelligence artificielle pour offrir une expérience utilisateur exceptionnelle.")
+                                Text("Développé avec SwiftUI pour iOS et iPadOS par William RAUWENS OLIVER, utilisant les dernières technologies d'intelligence artificielle (Gemini) pour offrir une expérience utilisateur exceptionnelle.\n\nCette application a été créée entièrement par une seule personne, sans équipe. Tous les aspects du développement, du design à l'implémentation, ont été réalisés par William RAUWENS OLIVER.")
                                     .font(.system(size: 15, weight: .regular))
                                     .foregroundColor(AppColors.secondaryText)
                                     .lineSpacing(4)
@@ -633,8 +667,7 @@ struct AboutView: View {
                             }
                             .padding(20)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(AppColors.cardBackground)
-                            .roundedCorner(16)
+                            .liquidGlassCard(cornerRadius: 16)
                             .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
                             
                             // Contact développeur
@@ -672,8 +705,7 @@ struct AboutView: View {
                             }
                             .padding(20)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(AppColors.cardBackground)
-                            .roundedCorner(16)
+                            .liquidGlassCard(cornerRadius: 16)
                             .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
                         }
                         .padding(.horizontal, 24)

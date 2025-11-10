@@ -24,7 +24,7 @@ final class OutfitHistoryStore: ObservableObject {
             outfit: outfit,
             dateWorn: date
         )
-        outfits.insert(historical, at: 0) // Ajouter au début
+        outfits.insert(historical, at: 0)
         saveHistory()
     }
     
@@ -49,7 +49,6 @@ final class OutfitHistoryStore: ObservableObject {
             outfits[index].isFavorite.toggle()
             saveHistory()
             
-            // Synchroniser avec le système de favoris
             if outfits[index].isFavorite {
                 dataManager.addFavorite(outfitId: outfit.id)
             } else {
@@ -78,7 +77,6 @@ final class OutfitHistoryStore: ObservableObject {
             return
         }
         outfits = decoded
-        // Synchroniser les favoris
         let favoriteIds = dataManager.getAllFavorites()
         for (index, outfit) in outfits.enumerated() {
             outfits[index].isFavorite = favoriteIds.contains(outfit.id)
@@ -101,7 +99,7 @@ struct HistoricalOutfit: Identifiable, Codable {
     }
 }
 
-/// Écran d'historique des outfits portés
+/// Écran d'historique des outfits portés - Design moderne
 struct OutfitHistoryScreen: View {
     @StateObject private var historyStore = OutfitHistoryStore()
     @State private var showingDeleteAllAlert = false
@@ -109,26 +107,28 @@ struct OutfitHistoryScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Fond opaque simple
                 AppColors.background
                     .ignoresSafeArea()
                 
                 if historyStore.outfits.isEmpty {
-                    EmptyHistoryView()
+                    ModernEmptyHistoryView()
                 } else {
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: 20) {
-                            // Statistiques
-                            HistoryStatsCard(historyStore: historyStore)
-                                .padding(.horizontal, 24)
-                                .padding(.top, 24)
+                            // Statistiques modernes
+                            ModernHistoryStatsCard(historyStore: historyStore)
+                                .padding(.horizontal, 20)
+                                .padding(.top, 20)
                             
-                            LazyVStack(spacing: 20) {
+                            // Liste des outfits
+                            LazyVStack(spacing: 16) {
                                 ForEach(historyStore.outfits) { historicalOutfit in
-                                    HistoricalOutfitCard(
+                                    ModernHistoricalOutfitCard(
                                         historicalOutfit: historicalOutfit,
                                         onToggleFavorite: {
+                                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                             historyStore.toggleFavorite(outfit: historicalOutfit)
+                                            }
                                         },
                                         onDelete: {
                                             if let index = historyStore.outfits.firstIndex(where: { $0.id == historicalOutfit.id }) {
@@ -138,21 +138,28 @@ struct OutfitHistoryScreen: View {
                                     )
                                 }
                             }
-                            .padding(.horizontal, 24)
-                            .padding(.bottom, 24)
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 20)
                         }
                     }
                 }
             }
-            .navigationTitle("Historique")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle("Historique".localized)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Historique".localized)
+                        .font(DesignSystem.Typography.title2())
+                        .foregroundColor(AppColors.primaryText)
+                }
+                
                 if !historyStore.outfits.isEmpty {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {
                             showingDeleteAllAlert = true
                         }) {
                             Image(systemName: "trash")
+                                .font(.system(size: 18, weight: .medium))
                                 .foregroundColor(.red)
                         }
                     }
@@ -170,188 +177,9 @@ struct OutfitHistoryScreen: View {
     }
 }
 
-struct HistoricalOutfitCard: View {
-    let historicalOutfit: HistoricalOutfit
-    let onToggleFavorite: () -> Void
-    let onDelete: () -> Void
-    @State private var showingDeleteAlert = false
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            // Header épuré
-            HStack(spacing: 14) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(historicalOutfit.outfit.displayName)
-                        .font(.playfairDisplayBold(size: 20))
-                        .foregroundColor(AppColors.primaryText)
-                    
-                    Text(historicalOutfit.dateWorn, style: .date)
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundColor(AppColors.secondaryText)
-                }
-                
-                Spacer()
-                
-                HStack(spacing: 8) {
-                Button(action: onToggleFavorite) {
-                    Image(systemName: historicalOutfit.isFavorite ? "heart.fill" : "heart")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundColor(historicalOutfit.isFavorite ? .red : AppColors.secondaryText)
-                        .frame(width: 36, height: 36)
-                        .background(Circle().fill(AppColors.buttonSecondary))
-                }
-                    
-                    Button(action: {
-                        showingDeleteAlert = true
-                    }) {
-                        Image(systemName: "trash")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.red)
-                            .frame(width: 36, height: 36)
-                            .background(Circle().fill(AppColors.buttonSecondary))
-                    }
-                }
-            }
-            .padding(24)
-            .alert("Supprimer cet outfit".localized, isPresented: $showingDeleteAlert) {
-                Button("Annuler".localized, role: .cancel) { }
-                Button("Supprimer".localized, role: .destructive) {
-                    onDelete()
-                }
-            } message: {
-                Text("Êtes-vous sûr de vouloir supprimer cet outfit de l'historique ?".localized)
-            }
-            
-            Rectangle()
-                .fill(AppColors.separator.opacity(0.6))
-                .frame(height: 0.5)
-                .padding(.horizontal, 24)
-            
-            // Items de l'outfit
-            VStack(spacing: 16) {
-                ForEach(historicalOutfit.outfit.items) { item in
-                    HistoricalOutfitItemRow(item: item)
-                }
-            }
-            .padding(24)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22)
-                .fill(Material.regularMaterial)
-        .overlay {
-                    RoundedRectangle(cornerRadius: 22)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    AppColors.cardBorder.opacity(0.4),
-                                    AppColors.cardBorder.opacity(0.2)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-        }
-        )
-        .roundedCorner(22)
-        .shadow(color: AppColors.shadow.opacity(0.2), radius: 14, x: 0, y: 6)
-    }
-}
+// MARK: - Composants Modernes
 
-struct HistoricalOutfitItemRow: View {
-    let item: WardrobeItem
-    
-    var body: some View {
-        HStack(spacing: 14) {
-            // Photo
-            if let photoURL = item.photoURL,
-               let image = PhotoManager.shared.loadPhoto(at: photoURL) {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 56, height: 56)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            } else {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(AppColors.buttonSecondary)
-                    .frame(width: 56, height: 56)
-                    .overlay(
-                        Image(systemName: item.category.icon)
-                            .font(.system(size: 20))
-                            .foregroundColor(AppColors.secondaryText)
-                    )
-            }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.name)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(AppColors.primaryText)
-                
-                Text(item.category.rawValue)
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(AppColors.secondaryText)
-            }
-            
-            Spacer()
-        }
-    }
-}
-
-struct EmptyHistoryView: View {
-    var body: some View {
-        VStack(spacing: 32) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                AppColors.buttonSecondary,
-                                AppColors.buttonSecondary.opacity(0.7)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 120, height: 120)
-                    .overlay {
-                        Circle()
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        AppColors.cardBorder.opacity(0.3),
-                                        AppColors.cardBorder.opacity(0.15)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
-                    }
-                
-                Image(systemName: "clock")
-                    .font(.system(size: 44, weight: .light))
-                    .foregroundColor(AppColors.secondaryText)
-            }
-            .shadow(color: AppColors.shadow.opacity(0.15), radius: 12, x: 0, y: 4)
-            
-            VStack(spacing: 16) {
-                Text("Aucun historique".localized)
-                    .font(.playfairDisplayBold(size: 30))
-                    .foregroundColor(AppColors.primaryText)
-                
-                Text("Générez vos premiers outfits pour commencer votre historique de tenues".localized)
-                    .font(.system(size: 17, weight: .regular))
-                    .foregroundColor(AppColors.secondaryText)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-                    .lineLimit(3)
-            }
-        }
-    }
-}
-
-struct HistoryStatsCard: View {
+struct ModernHistoryStatsCard: View {
     @ObservedObject var historyStore: OutfitHistoryStore
     
     private var totalOutfits: Int {
@@ -359,17 +187,13 @@ struct HistoryStatsCard: View {
     }
     
     private var averageComfort: Double {
-        // Calculer le confort moyen basé sur les reviews si disponibles
-        // Pour l'instant, utiliser un calcul basé sur le score de l'outfit
         let scores = historyStore.outfits.map { $0.outfit.score }
         guard !scores.isEmpty else { return 0 }
         return scores.reduce(0, +) / Double(scores.count)
     }
     
     private var mostWornStyle: String {
-        // Analyser les styles les plus portés
         let styles = historyStore.outfits.compactMap { outfit -> String? in
-            // Extraire le style du reason ou des items
             if outfit.outfit.reason.contains("casual") || outfit.outfit.reason.contains("décontracté") {
                 return "Décontracté"
             } else if outfit.outfit.reason.contains("business") || outfit.outfit.reason.contains("professionnel") {
@@ -388,47 +212,228 @@ struct HistoryStatsCard: View {
     }
     
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Statistiques")
-                .font(.playfairDisplayBold(size: 20))
-                .foregroundColor(AppColors.primaryText)
-            
-            HStack(spacing: 20) {
-                VStack(spacing: 4) {
-                    Text("\(totalOutfits)")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(AppColors.accent)
-                    Text("Outfits portés")
-                        .font(.system(size: 12))
-                        .foregroundColor(AppColors.secondaryText)
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(spacing: 20) {
+                HStack {
+                    Text("Statistiques".localized)
+                        .font(DesignSystem.Typography.title2())
+                        .foregroundColor(AppColors.primaryText)
+                    Spacer()
                 }
                 
-                Spacer()
-                
-                VStack(spacing: 4) {
-                    Text("\(Int(averageComfort))%")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(AppColors.accent)
-                    Text("Confort moyen")
-                        .font(.system(size: 12))
-                        .foregroundColor(AppColors.secondaryText)
-                }
-                
-                Spacer()
-                
-                VStack(spacing: 4) {
-                    Text(mostWornStyle)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(AppColors.accent)
-                        .lineLimit(1)
-                    Text("Style favori")
-                        .font(.system(size: 12))
-                        .foregroundColor(AppColors.secondaryText)
+                HStack(spacing: 20) {
+                    ModernStatItem(
+                        value: "\(totalOutfits)",
+                        label: "Outfits portés".localized,
+                        icon: "sparkles",
+                        color: .blue
+                    )
+                    
+                    ModernStatItem(
+                        value: "\(Int(averageComfort))%",
+                        label: "Confort moyen".localized,
+                        icon: "heart.fill",
+                        color: .pink
+                    )
+                    
+                    ModernStatItem(
+                        value: mostWornStyle,
+                        label: "Style favori".localized,
+                        icon: "star.fill",
+                        color: .orange
+                    )
                 }
             }
+            .padding(20)
         }
-        .padding(20)
-        .cleanCard(cornerRadius: 18)
+    }
+}
+
+struct ModernStatItem: View {
+    let value: String
+    let label: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 44, height: 44)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(color)
+            }
+            
+            Text(value)
+                .font(DesignSystem.Typography.title2())
+                .foregroundColor(AppColors.primaryText)
+                .fontWeight(.bold)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            
+            Text(label)
+                .font(DesignSystem.Typography.caption())
+                .foregroundColor(AppColors.secondaryText)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct ModernHistoricalOutfitCard: View {
+    let historicalOutfit: HistoricalOutfit
+    let onToggleFavorite: () -> Void
+    let onDelete: () -> Void
+    @State private var showingDeleteAlert = false
+    
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+        VStack(spacing: 0) {
+                // En-tête
+                HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(historicalOutfit.outfit.displayName)
+                            .font(DesignSystem.Typography.title2())
+                        .foregroundColor(AppColors.primaryText)
+                            .fontWeight(.semibold)
+                    
+                    Text(historicalOutfit.dateWorn, style: .date)
+                            .font(DesignSystem.Typography.caption())
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+                
+                    HStack(spacing: 12) {
+                Button(action: onToggleFavorite) {
+                    Image(systemName: historicalOutfit.isFavorite ? "heart.fill" : "heart")
+                                .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(historicalOutfit.isFavorite ? .red : AppColors.secondaryText)
+                                .frame(width: 40, height: 40)
+                        .background(Circle().fill(AppColors.buttonSecondary))
+                }
+                    
+                    Button(action: {
+                        showingDeleteAlert = true
+                    }) {
+                        Image(systemName: "trash")
+                                .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.red)
+                                .frame(width: 40, height: 40)
+                            .background(Circle().fill(AppColors.buttonSecondary))
+                    }
+                }
+            }
+                .padding(20)
+                
+                Divider()
+                    .background(AppColors.cardBorder.opacity(0.5))
+                
+                // Items de l'outfit
+                VStack(spacing: 12) {
+                    ForEach(historicalOutfit.outfit.items) { item in
+                        ModernHistoricalOutfitItemRow(item: item)
+                    }
+                }
+                .padding(20)
+            }
+        }
+            .alert("Supprimer cet outfit".localized, isPresented: $showingDeleteAlert) {
+                Button("Annuler".localized, role: .cancel) { }
+                Button("Supprimer".localized, role: .destructive) {
+                    onDelete()
+                }
+            } message: {
+                Text("Êtes-vous sûr de vouloir supprimer cet outfit de l'historique ?".localized)
+            }
+                }
+            }
+
+struct ModernHistoricalOutfitItemRow: View {
+    let item: WardrobeItem
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Photo
+            Group {
+                let photoURL = item.photoURLs.first ?? item.photoURL
+                if let photoURL = photoURL, !photoURL.isEmpty,
+               let image = PhotoManager.shared.loadPhoto(at: photoURL) {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+            } else {
+                    RoundedRectangle(cornerRadius: DesignSystem.Radius.md)
+                    .fill(AppColors.buttonSecondary)
+                        .frame(width: 60, height: 60)
+                    .overlay(
+                        Image(systemName: item.category.icon)
+                                .font(.system(size: 24, weight: .light))
+                            .foregroundColor(AppColors.secondaryText)
+                    )
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.name)
+                    .font(DesignSystem.Typography.headline())
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text(item.category.rawValue)
+                    .font(DesignSystem.Typography.caption())
+                    .foregroundColor(AppColors.secondaryText)
+            }
+            
+            Spacer()
+        }
+    }
+}
+
+struct ModernEmptyHistoryView: View {
+    var body: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppColors.buttonSecondary,
+                                AppColors.buttonSecondary.opacity(0.7)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 120, height: 120)
+                    .overlay {
+                        Circle()
+                            .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 2)
+                    }
+                
+                Image(systemName: "clock")
+                    .font(.system(size: 52, weight: .light))
+                    .foregroundColor(AppColors.secondaryText)
+            }
+            .shadow(color: AppColors.shadow.opacity(0.15), radius: 16, x: 0, y: 6)
+            
+            VStack(spacing: 12) {
+                Text("Aucun historique".localized)
+                    .font(DesignSystem.Typography.title2())
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text("Générez vos premiers outfits pour commencer votre historique de tenues".localized)
+                    .font(DesignSystem.Typography.body())
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+        }
     }
 }
 

@@ -211,25 +211,26 @@ struct OutfitCalendarScreen: View {
                             }
                             .padding(.horizontal, 20)
                             
-                            // Sélection de style vestimentaire
-                            StyleSelectionCard(
-                                selectedStyle: $selectedStyle,
+                            // Sélection de collection
+                            CollectionsSection(
+                                selectedCollection: Binding(
+                                    get: { selectedCollection },
+                                    set: { selectedCollection = $0 }
+                                ),
                                 customStylePrompt: .constant(""),
-                                showingCustomInput: .constant(false),
-                                selectedCollection: selectedCollection,
                                 collectionService: collectionService
                             )
                             .padding(.horizontal, 20)
                             
                             // Demande spécifique de l'utilisateur
-                            UserRequestCard(
+                            UserRequestSection(
                                 userRequest: $userSpecificRequest,
                                 showingInput: $showingUserRequestInput
                             )
                             .padding(.horizontal, 20)
                             
                             // Sélecteur d'algorithme
-                            AlgorithmSelectionCard(
+                            AlgorithmSection(
                                 useAdvancedAI: $useAdvancedAI,
                                 isAdvancedAIAvailable: isAdvancedAIAvailable
                             )
@@ -238,7 +239,7 @@ struct OutfitCalendarScreen: View {
                             // Bouton pour générer l'outfit
                             Button(action: {
                                 // Vérifier les conditions avant de générer
-                                if selectedStyle == nil {
+                                if selectedCollection == nil {
                                     showingArticleError = true
                                 } else if !hasEnoughItems() {
                                     showingArticleError = true
@@ -254,13 +255,13 @@ struct OutfitCalendarScreen: View {
                                     Text("Générer l'outfit pour cette date".localized)
                                         .font(.system(size: 15, weight: .semibold))
                                 }
-                                .foregroundColor(canGenerate ? AppColors.buttonPrimaryText : AppColors.secondaryText)
+                                .foregroundColor(selectedCollection != nil ? AppColors.buttonPrimaryText : AppColors.secondaryText)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(canGenerate ? AppColors.buttonPrimary : AppColors.buttonSecondary)
+                                .background(selectedCollection != nil ? AppColors.buttonPrimary : AppColors.buttonSecondary)
                                 .roundedCorner(14)
                             }
-                            .disabled(!canGenerate)
+                            .disabled(selectedCollection == nil)
                             .padding(.horizontal, 20)
                         }
                         
@@ -273,11 +274,36 @@ struct OutfitCalendarScreen: View {
                             )
                             .padding(.horizontal, 20)
                         } else if let error = generationError {
-                            ModernErrorCard(error: error) {
+                            VStack(spacing: 20) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 32))
+                                    .foregroundColor(AppColors.secondaryText)
+                                
+                                Text(error)
+                                    .font(.system(size: 15, weight: .regular))
+                                    .foregroundColor(AppColors.secondaryText)
+                                    .multilineTextAlignment(.center)
+                                    .lineSpacing(4)
+                                
+                                Button(action: {
                                 Task {
                                     await generateOutfitForDate()
                                 }
+                                }) {
+                                    HStack {
+                                        Image(systemName: "arrow.clockwise")
+                                        Text("Réessayer")
+                                    }
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(AppColors.buttonPrimaryText)
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 12)
+                                    .background(AppColors.buttonPrimary)
+                                    .cornerRadius(12)
+                                }
                             }
+                            .padding(24)
+                            .liquidGlassCard(cornerRadius: DesignSystem.Radius.lg)
                             .padding(.horizontal, 20)
                         } else if let outfit = scheduledOutfits[Calendar.current.startOfDay(for: selectedDate)] {
                             // Affichage de l'outfit généré épuré
@@ -328,8 +354,8 @@ struct OutfitCalendarScreen: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Group {
-                    if selectedStyle == nil {
-                        Text("Veuillez sélectionner un style vestimentaire avant de générer des outfits.".localized)
+                    if selectedCollection == nil {
+                        Text("Veuillez sélectionner une collection avant de générer des outfits.".localized)
                     } else {
                         let tops = wardrobeService.items.filter { $0.category == .top }.count
                         let bottoms = wardrobeService.items.filter { $0.category == .bottom }.count
@@ -397,10 +423,10 @@ struct OutfitCalendarScreen: View {
             return
         }
         
-        // Vérifier que le style est sélectionné
-        guard selectedStyle != nil else {
+        // Vérifier qu'une collection est sélectionnée
+        guard selectedCollection != nil else {
             await MainActor.run {
-                generationError = "Veuillez sélectionner un style vestimentaire avant de générer des outfits.".localized
+                generationError = "Veuillez sélectionner une collection avant de générer des outfits.".localized
                 isGenerating = false
             }
             return
@@ -440,17 +466,11 @@ struct OutfitCalendarScreen: View {
             generationProgress = 0.2
         }
         
-        // Préparer le style vestimentaire pour l'algorithme
-        var profileWithStyle = userProfile
-        if let style = selectedStyle {
-            profileWithStyle.preferences.preferredStyle = style
-        }
-        
         // Utiliser l'algorithme selon le choix de l'utilisateur
         let algorithm = OutfitMatchingAlgorithm(
             wardrobeService: wardrobeService,
             weatherService: weatherService,
-            userProfile: profileWithStyle
+            userProfile: userProfile
         )
         
         // Préparer la demande spécifique de l'utilisateur
@@ -462,14 +482,14 @@ struct OutfitCalendarScreen: View {
         
         if useAdvancedAI && isAdvancedAIAvailable {
             // Utiliser l'IA avancée sélectionnée (ChatGPT ou Gemini)
-            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: false, userRequest: finalUserRequest) { progress in
+            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: false, userRequest: finalUserRequest, selectedCollection: selectedCollection) { progress in
                 await MainActor.run {
                     self.generationProgress = 0.3 + (progress * 0.6)
                 }
             }
         } else {
             // Utiliser l'algorithme local uniquement
-            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: true, userRequest: finalUserRequest) { progress in
+            outfits = await algorithm.generateOutfitsWithProgress(forceLocal: true, userRequest: finalUserRequest, selectedCollection: selectedCollection) { progress in
                 await MainActor.run {
                     self.generationProgress = 0.3 + (progress * 0.6)
                 }

@@ -20,71 +20,29 @@ struct CollectionsScreen: View {
                     .ignoresSafeArea()
                 
                 if collectionService.collections.isEmpty {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
-                        Image(systemName: "folder.fill")
-                            .font(.system(size: 60, weight: .light))
-                            .foregroundColor(AppColors.secondaryText)
-                        
-                        Text("Aucune collection".localized)
-                            .font(DesignSystem.Typography.title2())
-                            .foregroundColor(AppColors.primaryText)
-                        
-                        Text("Créez des collections pour organiser vos vêtements".localized)
-                            .font(DesignSystem.Typography.body())
-                            .foregroundColor(AppColors.secondaryText)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, DesignSystem.Spacing.lg)
-                        
-                        Button(action: { showingAddCollection = true }) {
-                            Text("Créer une collection".localized)
-                                .font(DesignSystem.Typography.headline())
-                                .foregroundColor(AppColors.buttonPrimaryText)
-                                .padding(.horizontal, DesignSystem.Spacing.lg)
-                                .padding(.vertical, DesignSystem.Spacing.md)
-                                .background(AppColors.buttonPrimary)
-                                .cornerRadius(DesignSystem.Radius.md)
-                        }
+                    ModernEmptyCollectionsView {
+                        showingAddCollection = true
                     }
                 } else {
                     ScrollView(showsIndicators: false) {
                         LazyVGrid(columns: [
-                            GridItem(.flexible(), spacing: DesignSystem.Spacing.md),
-                            GridItem(.flexible(), spacing: DesignSystem.Spacing.md)
-                        ], spacing: DesignSystem.Spacing.md) {
+                            GridItem(.flexible(), spacing: 16),
+                            GridItem(.flexible(), spacing: 16)
+                        ], spacing: 16) {
                             ForEach(collectionService.collections) { collection in
                                 NavigationLink(destination: CollectionDetailScreen(collection: collection)) {
-                                    CollectionCard(collection: collection)
+                                    ModernCollectionCard(collection: collection)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             }
                             
                             // Bouton ajouter
                             Button(action: { showingAddCollection = true }) {
-                                Card(cornerRadius: DesignSystem.Radius.lg) {
-                                    VStack(spacing: DesignSystem.Spacing.md) {
-                                        ZStack {
-                                            Circle()
-                                                .fill(AppColors.buttonPrimary.opacity(0.15))
-                                                .frame(width: 48, height: 48)
-                                            
-                                            Image(systemName: "plus.circle.fill")
-                                                .font(.system(size: 24, weight: .semibold))
-                                                .foregroundColor(AppColors.buttonPrimary)
-                                        }
-                                        
-                                        Text("Nouvelle collection".localized)
-                                            .font(DesignSystem.Typography.footnote())
-                                            .foregroundColor(AppColors.secondaryText)
-                                            .multilineTextAlignment(.center)
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 150)
-                                    .padding(DesignSystem.Spacing.md)
-                                }
+                                ModernAddCollectionCard()
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
-                        .padding(DesignSystem.Spacing.md)
+                        .padding(20)
                     }
                 }
             }
@@ -114,30 +72,35 @@ struct CollectionsScreen: View {
     }
 }
 
-struct CollectionCard: View {
+// MARK: - Composants Modernes
+
+struct ModernCollectionCard: View {
     let collection: WardrobeCollection
+    @State private var isPressed = false
     
     var body: some View {
         Card(cornerRadius: DesignSystem.Radius.lg) {
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                HStack {
+            VStack(alignment: .leading, spacing: 16) {
                     ZStack {
                         Circle()
-                            .fill(colorFromString(collection.color).opacity(0.15))
-                            .frame(width: 40, height: 40)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    colorFromString(collection.color).opacity(0.2),
+                                    colorFromString(collection.color).opacity(0.1)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 56, height: 56)
                         
                         Image(systemName: collection.icon)
-                            .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 26, weight: .semibold))
                             .foregroundColor(colorFromString(collection.color))
                     }
                     
-                    Spacer()
-                    
-                    Text("\(collection.itemIds.count)")
-                        .font(DesignSystem.Typography.footnote())
-                        .foregroundColor(AppColors.secondaryText)
-                }
-                
+                VStack(alignment: .leading, spacing: 6) {
                 Text(collection.name)
                     .font(DesignSystem.Typography.headline())
                     .foregroundColor(AppColors.primaryText)
@@ -148,12 +111,20 @@ struct CollectionCard: View {
                         .font(DesignSystem.Typography.caption())
                         .foregroundColor(AppColors.secondaryText)
                         .lineLimit(2)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(height: 150)
-            .padding(DesignSystem.Spacing.md)
+            .frame(height: 160)
+            .padding(16)
         }
+        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
     
     private func colorFromString(_ colorName: String) -> Color {
@@ -164,7 +135,112 @@ struct CollectionCard: View {
         case "red": return .red
         case "purple": return .purple
         case "gray", "grey": return .gray
+        case "pink": return .pink
+        case "yellow": return .yellow
+        case "cyan": return .cyan
+        case "mint": return .mint
         default: return AppColors.buttonPrimary
+        }
+    }
+}
+
+struct ModernAddCollectionCard: View {
+    @State private var isPressed = false
+    
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    AppColors.buttonPrimary.opacity(0.2),
+                                    AppColors.buttonPrimary.opacity(0.1)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundColor(AppColors.buttonPrimary)
+                }
+                
+                Text("Nouvelle collection".localized)
+                    .font(DesignSystem.Typography.footnote())
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 160)
+        }
+        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+    }
+}
+
+struct ModernEmptyCollectionsView: View {
+    let onCreate: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppColors.buttonSecondary,
+                                AppColors.buttonSecondary.opacity(0.7)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 120, height: 120)
+                    .overlay {
+                        Circle()
+                            .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 2)
+                    }
+                
+                Image(systemName: "folder.fill")
+                    .font(.system(size: 52, weight: .light))
+                    .foregroundColor(AppColors.secondaryText)
+            }
+            .shadow(color: AppColors.shadow.opacity(0.15), radius: 16, x: 0, y: 6)
+            
+            VStack(spacing: 12) {
+                Text("Aucune collection".localized)
+                    .font(DesignSystem.Typography.title2())
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text("Créez des collections pour organiser vos vêtements".localized)
+                    .font(DesignSystem.Typography.body())
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            Button(action: onCreate) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 18, weight: .medium))
+                    Text("Créer une collection".localized)
+                        .font(DesignSystem.Typography.headline())
+                }
+                .foregroundColor(AppColors.buttonPrimaryText)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 14)
+                .background(AppColors.buttonPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+            }
         }
     }
 }
@@ -235,7 +311,7 @@ struct AddCollectionScreen: View {
     @State private var selectedColor = "blue"
     
     let icons = ["folder.fill", "briefcase.fill", "calendar", "airplane", "figure.run", "moon.stars.fill", "tshirt.fill", "sparkles"]
-    let colors = ["blue", "green", "orange", "red", "purple", "gray"]
+    let colors = ["blue", "green", "orange", "red", "purple", "gray", "pink", "yellow", "cyan", "mint"]
     
     var body: some View {
         NavigationStack {
@@ -244,9 +320,9 @@ struct AddCollectionScreen: View {
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
+                    VStack(spacing: 20) {
                         Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                            VStack(alignment: .leading, spacing: 12) {
                                 Text("Nom".localized)
                                     .font(DesignSystem.Typography.headline())
                                     .foregroundColor(AppColors.primaryText)
@@ -254,16 +330,15 @@ struct AddCollectionScreen: View {
                                 TextField("Nom de la collection".localized, text: $name)
                                     .font(DesignSystem.Typography.body())
                                     .foregroundColor(AppColors.primaryText)
-                                    .padding(DesignSystem.Spacing.md)
-                                    .background(AppColors.cardBackground)
-                                    .cornerRadius(DesignSystem.Radius.sm)
+                                    .padding(16)
+                                    .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                             }
-                            .padding(DesignSystem.Spacing.md)
+                            .padding(20)
                         }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 20)
                         
                         Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                            VStack(alignment: .leading, spacing: 12) {
                                 Text("Description".localized)
                                     .font(DesignSystem.Typography.headline())
                                     .foregroundColor(AppColors.primaryText)
@@ -271,17 +346,16 @@ struct AddCollectionScreen: View {
                                 TextField("Description (optionnel)".localized, text: $description, axis: .vertical)
                                     .font(DesignSystem.Typography.body())
                                     .foregroundColor(AppColors.primaryText)
-                                    .padding(DesignSystem.Spacing.md)
-                                    .background(AppColors.cardBackground)
-                                    .cornerRadius(DesignSystem.Radius.sm)
+                                    .padding(16)
+                                    .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                                     .frame(minHeight: 80)
                             }
-                            .padding(DesignSystem.Spacing.md)
+                            .padding(20)
                         }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 20)
                         
                         Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                            VStack(alignment: .leading, spacing: 16) {
                                 Text("Icône".localized)
                                     .font(DesignSystem.Typography.headline())
                                     .foregroundColor(AppColors.primaryText)
@@ -291,30 +365,32 @@ struct AddCollectionScreen: View {
                                     GridItem(.flexible()),
                                     GridItem(.flexible()),
                                     GridItem(.flexible())
-                                ], spacing: DesignSystem.Spacing.md) {
+                                ], spacing: 12) {
                                     ForEach(icons, id: \.self) { icon in
                                         Button {
+                                            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
                                             selectedIcon = icon
+                                            }
                                         } label: {
                                             ZStack {
                                                 Circle()
-                                                    .fill(selectedIcon == icon ? AppColors.buttonPrimary.opacity(0.15) : AppColors.cardBackground)
-                                                    .frame(width: 50, height: 50)
+                                                    .fill(selectedIcon == icon ? AppColors.buttonPrimary.opacity(0.2) : AppColors.buttonSecondary)
+                                                    .frame(width: 56, height: 56)
                                                 
                                                 Image(systemName: icon)
-                                                    .font(.system(size: 20, weight: .medium))
+                                                    .font(.system(size: 24, weight: .medium))
                                                     .foregroundColor(selectedIcon == icon ? AppColors.buttonPrimary : AppColors.secondaryText)
                                             }
                                         }
                                     }
                                 }
                             }
-                            .padding(DesignSystem.Spacing.md)
+                            .padding(20)
                         }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 20)
                         
                         Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                            VStack(alignment: .leading, spacing: 16) {
                                 Text("Couleur".localized)
                                     .font(DesignSystem.Typography.headline())
                                     .foregroundColor(AppColors.primaryText)
@@ -322,20 +398,24 @@ struct AddCollectionScreen: View {
                                 LazyVGrid(columns: [
                                     GridItem(.flexible()),
                                     GridItem(.flexible()),
+                                    GridItem(.flexible()),
+                                    GridItem(.flexible()),
                                     GridItem(.flexible())
-                                ], spacing: DesignSystem.Spacing.md) {
+                                ], spacing: 12) {
                                     ForEach(colors, id: \.self) { color in
                                         Button {
+                                            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
                                             selectedColor = color
+                                            }
                                         } label: {
                                             ZStack {
-                                                RoundedRectangle(cornerRadius: DesignSystem.Radius.sm)
+                                                RoundedRectangle(cornerRadius: DesignSystem.Radius.md)
                                                     .fill(colorFromString(color))
-                                                    .frame(height: 50)
+                                                    .frame(height: 56)
                                                 
                                                 if selectedColor == color {
                                                     Image(systemName: "checkmark")
-                                                        .font(.system(size: 16, weight: .bold))
+                                                        .font(.system(size: 18, weight: .bold))
                                                         .foregroundColor(.white)
                                                 }
                                             }
@@ -343,11 +423,11 @@ struct AddCollectionScreen: View {
                                     }
                                 }
                             }
-                            .padding(DesignSystem.Spacing.md)
+                            .padding(20)
                         }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 20)
                     }
-                    .padding(.vertical, DesignSystem.Spacing.lg)
+                    .padding(.vertical, 20)
                 }
             }
             .navigationTitle("Nouvelle collection".localized)
@@ -390,6 +470,10 @@ struct AddCollectionScreen: View {
         case "red": return .red
         case "purple": return .purple
         case "gray", "grey": return .gray
+        case "pink": return .pink
+        case "yellow": return .yellow
+        case "cyan": return .cyan
+        case "mint": return .mint
         default: return AppColors.buttonPrimary
         }
     }

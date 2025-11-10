@@ -56,7 +56,7 @@ extension Color {
     }
 }
 
-// Modificateur de carte épurée minimaliste
+// Modificateur de carte épurée minimaliste avec Liquid Glass natif iOS
 struct CleanCardModifier: ViewModifier {
     let cornerRadius: CGFloat
     
@@ -64,13 +64,9 @@ struct CleanCardModifier: ViewModifier {
         content
             .background {
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(AppColors.cardBackground)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: cornerRadius)
-                            .stroke(AppColors.cardBorder, lineWidth: 1)
-                    )
-                    .shadow(color: AppColors.shadow, radius: 4, x: 0, y: 2)
+                    .fill(.ultraThinMaterial)
             }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
 }
 
@@ -126,6 +122,12 @@ extension View {
     @ViewBuilder
     func roundedCorner(_ radius: CGFloat = 16) -> some View {
         self.clipShape(RoundedRectangle(cornerRadius: radius))
+    }
+    
+    // Extension pour appliquer le liquid glass iOS 26
+    @ViewBuilder
+    func liquidGlassCard(cornerRadius: CGFloat = 20) -> some View {
+        self.modifier(LiquidGlassModifier(cornerRadius: cornerRadius))
     }
 }
 

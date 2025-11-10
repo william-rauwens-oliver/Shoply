@@ -26,39 +26,27 @@ struct PriceComparisonScreen: View {
                     .ignoresSafeArea()
                 
                 if comparisons.isEmpty {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
-                        Image(systemName: "dollarsign.circle.fill")
-                            .font(.system(size: 60, weight: .light))
-                            .foregroundColor(AppColors.secondaryText)
-                        
-                        Text("Aucune comparaison".localized)
-                            .font(DesignSystem.Typography.title2())
-                            .foregroundColor(AppColors.primaryText)
-                        
-                        Text("Comparez les prix entre différents magasins".localized)
-                            .font(DesignSystem.Typography.body())
-                            .foregroundColor(AppColors.secondaryText)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, DesignSystem.Spacing.lg)
+                    ModernEmptyPriceComparisonView {
+                        showingAddComparison = true
                     }
                 } else {
+                    VStack(spacing: 0) {
+                        // Barre de recherche moderne
+                        PriceComparisonSearchBar(text: $searchQuery)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 12)
+                        
                     ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: DesignSystem.Spacing.md) {
+                            LazyVStack(spacing: 16) {
                             ForEach(filteredComparisons) { comparison in
                                 NavigationLink(destination: PriceComparisonDetailScreen(comparison: comparison)) {
-                                    PriceComparisonCard(comparison: comparison)
+                                        ModernPriceComparisonCard(comparison: comparison)
                                 }
                                 .buttonStyle(PlainButtonStyle())
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    Button(role: .destructive) {
-                                        comparisons.removeAll { $0.id == comparison.id }
-                                    } label: {
-                                        Label("Supprimer".localized, systemImage: "trash")
-                                    }
-                                }
                             }
                         }
-                        .padding(DesignSystem.Spacing.md)
+                            .padding(20)
+                        }
                     }
                 }
             }
@@ -81,7 +69,6 @@ struct PriceComparisonScreen: View {
                     }
                 }
             }
-            .searchable(text: $searchQuery, prompt: "Rechercher un produit".localized)
             .sheet(isPresented: $showingAddComparison) {
                 AddPriceComparisonScreen(comparisons: $comparisons)
             }
@@ -89,32 +76,161 @@ struct PriceComparisonScreen: View {
     }
 }
 
-struct PriceComparisonCard: View {
+// MARK: - Composants Modernes
+
+struct PriceComparisonSearchBar: View {
+    @Binding var text: String
+    @FocusState private var isFocused: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(AppColors.secondaryText)
+            
+            TextField("Rechercher un produit...".localized, text: $text)
+                .font(DesignSystem.Typography.body())
+                .foregroundColor(AppColors.primaryText)
+                .focused($isFocused)
+            
+            if !text.isEmpty {
+                Button(action: {
+                    text = ""
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(AppColors.secondaryText)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .liquidGlassCard(cornerRadius: DesignSystem.Radius.lg)
+    }
+}
+
+struct ModernEmptyPriceComparisonView: View {
+    let onCreate: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppColors.buttonSecondary,
+                                AppColors.buttonSecondary.opacity(0.7)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 120, height: 120)
+                    .overlay {
+                        Circle()
+                            .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 2)
+                    }
+                
+                Image(systemName: "dollarsign.circle.fill")
+                    .font(.system(size: 52, weight: .light))
+                    .foregroundColor(AppColors.secondaryText)
+            }
+            .shadow(color: AppColors.shadow.opacity(0.15), radius: 16, x: 0, y: 6)
+            
+            VStack(spacing: 12) {
+                Text("Aucune comparaison".localized)
+                    .font(DesignSystem.Typography.title2())
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text("Comparez les prix entre différents magasins".localized)
+                    .font(DesignSystem.Typography.body())
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            Button(action: onCreate) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 18, weight: .medium))
+                    Text("Créer une comparaison".localized)
+                        .font(DesignSystem.Typography.headline())
+                }
+                .foregroundColor(AppColors.buttonPrimaryText)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 14)
+                .background(AppColors.buttonPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+            }
+        }
+    }
+}
+
+struct ModernPriceComparisonCard: View {
     let comparison: PriceComparison
+    @State private var isPressed = false
     
     var body: some View {
         Card(cornerRadius: DesignSystem.Radius.lg) {
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        AppColors.buttonPrimary.opacity(0.2),
+                                        AppColors.buttonPrimary.opacity(0.1)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 56, height: 56)
+                        
+                        Image(systemName: "dollarsign.circle.fill")
+                            .font(.system(size: 26, weight: .semibold))
+                            .foregroundColor(AppColors.buttonPrimary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 6) {
                 Text(comparison.itemName)
                     .font(DesignSystem.Typography.headline())
                     .foregroundColor(AppColors.primaryText)
                 
                 if let bestPrice = comparison.bestPrice {
-                    HStack {
+                            HStack(spacing: 8) {
                         Text("Meilleur prix: \(String(format: "%.2f", bestPrice.price)) \(bestPrice.currency)".localized)
-                            .font(DesignSystem.Typography.subheadline())
+                                    .font(DesignSystem.Typography.footnote())
                             .foregroundColor(.green)
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                    }
                         
                         Spacer()
                         
+                    VStack(alignment: .trailing, spacing: 4) {
                         Text("\(comparison.prices.count) magasins".localized)
                             .font(DesignSystem.Typography.caption())
+                            .foregroundColor(AppColors.secondaryText)
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .medium))
                             .foregroundColor(AppColors.secondaryText)
                     }
                 }
             }
-            .padding(DesignSystem.Spacing.sm)
+            .padding(20)
         }
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 }
 
@@ -128,49 +244,20 @@ struct PriceComparisonDetailScreen: View {
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
-                        Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                                Text(comparison.itemName)
-                                    .font(DesignSystem.Typography.title2())
-                                    .foregroundColor(AppColors.primaryText)
-                            }
-                            .padding(DesignSystem.Spacing.md)
-                        }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
-                        .padding(.top, DesignSystem.Spacing.md)
+                    VStack(spacing: 20) {
+                        ModernPriceComparisonHeader(comparison: comparison)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
                         
                         if let bestPrice = comparison.bestPrice {
-                            Card(cornerRadius: DesignSystem.Radius.lg) {
-                                VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                                    Text("Meilleur prix".localized)
-                                        .font(DesignSystem.Typography.headline())
-                                        .foregroundColor(AppColors.primaryText)
-                                    
-                                    Text("\(String(format: "%.2f", bestPrice.price)) \(bestPrice.currency) chez \(bestPrice.storeName)")
-                                        .font(DesignSystem.Typography.body())
-                                        .foregroundColor(.green)
-                                }
-                                .padding(DesignSystem.Spacing.md)
-                            }
-                            .padding(.horizontal, DesignSystem.Spacing.md)
+                            ModernBestPriceCard(bestPrice: bestPrice)
+                                .padding(.horizontal, 20)
                         }
                         
-                        Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                                Text("Tous les prix".localized)
-                                    .font(DesignSystem.Typography.headline())
-                                    .foregroundColor(AppColors.primaryText)
-                                
-                                ForEach(comparison.prices.sorted { $0.price < $1.price }) { price in
-                                    StorePriceRow(price: price, isBest: price.id == comparison.bestPrice?.id)
-                                }
-                            }
-                            .padding(DesignSystem.Spacing.md)
-                        }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        ModernAllPricesSection(comparison: comparison)
+                            .padding(.horizontal, 20)
                     }
-                    .padding(.bottom, DesignSystem.Spacing.lg)
+                    .padding(.bottom, 20)
                 }
             }
             .navigationTitle("Comparaison".localized)
@@ -186,13 +273,112 @@ struct PriceComparisonDetailScreen: View {
     }
 }
 
-struct StorePriceRow: View {
+struct ModernPriceComparisonHeader: View {
+    let comparison: PriceComparison
+    
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    AppColors.buttonPrimary.opacity(0.2),
+                                    AppColors.buttonPrimary.opacity(0.1)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 64, height: 64)
+                    
+                    Image(systemName: "dollarsign.circle.fill")
+                        .font(.system(size: 30, weight: .semibold))
+                        .foregroundColor(AppColors.buttonPrimary)
+                }
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(comparison.itemName)
+                        .font(DesignSystem.Typography.title2())
+                        .foregroundColor(AppColors.primaryText)
+                        .fontWeight(.bold)
+                    
+                    Text("\(comparison.prices.count) magasins comparés".localized)
+                        .font(DesignSystem.Typography.caption())
+                        .foregroundColor(AppColors.secondaryText)
+                }
+                
+                Spacer()
+            }
+            .padding(20)
+        }
+    }
+}
+
+struct ModernBestPriceCard: View {
+    let bestPrice: StorePrice
+    
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(Color.green.opacity(0.15))
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 26, weight: .semibold))
+                        .foregroundColor(.green)
+                }
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Meilleur prix".localized)
+                        .font(DesignSystem.Typography.headline())
+                        .foregroundColor(AppColors.primaryText)
+                    
+                    Text("\(String(format: "%.2f", bestPrice.price)) \(bestPrice.currency) chez \(bestPrice.storeName)")
+                        .font(DesignSystem.Typography.body())
+                        .foregroundColor(.green)
+                        .fontWeight(.semibold)
+                }
+                
+                Spacer()
+            }
+            .padding(20)
+        }
+    }
+}
+
+struct ModernAllPricesSection: View {
+    let comparison: PriceComparison
+    
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Tous les prix".localized)
+                    .font(DesignSystem.Typography.headline())
+                    .foregroundColor(AppColors.primaryText)
+                
+                ForEach(comparison.prices.sorted { $0.price < $1.price }) { price in
+                    ModernStorePriceRow(
+                        price: price,
+                        isBest: price.id == comparison.bestPrice?.id
+                    )
+                }
+            }
+            .padding(20)
+        }
+    }
+}
+
+struct ModernStorePriceRow: View {
     let price: StorePrice
     let isBest: Bool
     
     var body: some View {
-        HStack(spacing: DesignSystem.Spacing.md) {
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(price.storeName)
                     .font(DesignSystem.Typography.headline())
                     .foregroundColor(AppColors.primaryText)
@@ -200,19 +386,28 @@ struct StorePriceRow: View {
                 Text("\(String(format: "%.2f", price.price)) \(price.currency)")
                     .font(DesignSystem.Typography.body())
                     .foregroundColor(isBest ? .green : AppColors.primaryText)
+                    .fontWeight(isBest ? .semibold : .regular)
             }
             
             Spacer()
             
             if isBest {
-                Label("Meilleur".localized, systemImage: "star.fill")
+                HStack(spacing: 6) {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 14, weight: .medium))
+                    Text("Meilleur".localized)
                     .font(DesignSystem.Typography.caption())
+                }
                     .foregroundColor(.green)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.green.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.sm))
             }
         }
-        .padding(DesignSystem.Spacing.sm)
-        .background(AppColors.cardBackground)
-        .cornerRadius(DesignSystem.Radius.sm)
+        .padding(16)
+        .background(isBest ? Color.green.opacity(0.05) : AppColors.buttonSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
     }
 }
 
@@ -232,9 +427,9 @@ struct AddPriceComparisonScreen: View {
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
+                    VStack(spacing: 20) {
                         Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                            VStack(alignment: .leading, spacing: 12) {
                                 Text("Nom du produit".localized)
                                     .font(DesignSystem.Typography.headline())
                                     .foregroundColor(AppColors.primaryText)
@@ -242,9 +437,8 @@ struct AddPriceComparisonScreen: View {
                                 TextField("Nom du produit".localized, text: $itemName)
                                     .font(DesignSystem.Typography.body())
                                     .foregroundColor(AppColors.primaryText)
-                                    .padding(DesignSystem.Spacing.md)
-                                    .background(AppColors.cardBackground)
-                                    .cornerRadius(DesignSystem.Radius.sm)
+                                    .padding(16)
+                                    .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                                 
                                 Picker("Catégorie", selection: $category) {
                                     ForEach(ClothingCategory.allCases) { cat in
@@ -253,31 +447,29 @@ struct AddPriceComparisonScreen: View {
                                 }
                                 .pickerStyle(.menu)
                             }
-                            .padding(DesignSystem.Spacing.md)
+                            .padding(20)
                         }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 20)
                         
                         Card(cornerRadius: DesignSystem.Radius.lg) {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                            VStack(alignment: .leading, spacing: 16) {
                                 Text("Prix".localized)
                                     .font(DesignSystem.Typography.headline())
                                     .foregroundColor(AppColors.primaryText)
                                 
-                                HStack(spacing: DesignSystem.Spacing.md) {
+                                HStack(spacing: 12) {
                                     TextField("Nom du magasin".localized, text: $storeName)
                                         .font(DesignSystem.Typography.body())
                                         .foregroundColor(AppColors.primaryText)
-                                        .padding(DesignSystem.Spacing.md)
-                                        .background(AppColors.cardBackground)
-                                        .cornerRadius(DesignSystem.Radius.sm)
+                                        .padding(16)
+                                        .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                                     
                                     TextField("Prix", text: $price)
                                         .keyboardType(.decimalPad)
                                         .font(DesignSystem.Typography.body())
                                         .foregroundColor(AppColors.primaryText)
-                                        .padding(DesignSystem.Spacing.md)
-                                        .background(AppColors.cardBackground)
-                                        .cornerRadius(DesignSystem.Radius.sm)
+                                        .padding(16)
+                                        .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                                 }
                                 
                                 Button("Ajouter un prix".localized) {
@@ -295,35 +487,22 @@ struct AddPriceComparisonScreen: View {
                                 .disabled(storeName.isEmpty || price.isEmpty)
                                 .font(DesignSystem.Typography.headline())
                                 .foregroundColor((storeName.isEmpty || price.isEmpty) ? AppColors.secondaryText : AppColors.buttonPrimaryText)
-                                .padding(.vertical, DesignSystem.Spacing.sm)
+                                .padding(.vertical, 14)
                                 .frame(maxWidth: .infinity)
                                 .background((storeName.isEmpty || price.isEmpty) ? AppColors.cardBackground : AppColors.buttonPrimary)
-                                .cornerRadius(DesignSystem.Radius.sm)
+                                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
                                 
                                 if !prices.isEmpty {
                                     ForEach(prices) { storePrice in
-                                        HStack {
-                                            Text(storePrice.storeName)
-                                                .font(DesignSystem.Typography.body())
-                                                .foregroundColor(AppColors.primaryText)
-                                            
-                                            Spacer()
-                                            
-                                            Text("\(String(format: "%.2f", storePrice.price)) \(storePrice.currency)")
-                                                .font(DesignSystem.Typography.body())
-                                                .foregroundColor(AppColors.primaryText)
-                                        }
-                                        .padding(DesignSystem.Spacing.sm)
-                                        .background(AppColors.cardBackground)
-                                        .cornerRadius(DesignSystem.Radius.sm)
+                                        ModernStorePriceRow(price: storePrice, isBest: false)
                                     }
                                 }
                             }
-                            .padding(DesignSystem.Spacing.md)
+                            .padding(20)
                         }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.horizontal, 20)
                     }
-                    .padding(.vertical, DesignSystem.Spacing.lg)
+                    .padding(.vertical, 20)
                 }
             }
             .navigationTitle("Nouvelle comparaison".localized)

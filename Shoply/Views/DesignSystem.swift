@@ -72,6 +72,7 @@ struct DesignSystem {
 // MARK: - Composants Réutilisables
 
 struct Card<Content: View>: View {
+    @Environment(\.colorScheme) var colorScheme
     let content: Content
     let cornerRadius: CGFloat
     
@@ -83,10 +84,9 @@ struct Card<Content: View>: View {
     var body: some View {
         content
             .padding(DesignSystem.Spacing.md)
-            .background(AppColors.cardBackground)
-            .overlay {
+            .background {
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(AppColors.cardBorder, lineWidth: 1)
+                    .fill(.ultraThinMaterial)
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }

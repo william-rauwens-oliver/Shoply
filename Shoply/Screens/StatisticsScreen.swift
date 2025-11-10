@@ -23,29 +23,24 @@ struct StatisticsScreen: View {
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
-                        // Tabs
-                        Picker("", selection: $selectedTab) {
-                            Text("Style".localized).tag(0)
-                            Text("Environnement".localized).tag(1)
-                            Text("Coût".localized).tag(2)
-                        }
-                        .pickerStyle(.segmented)
-                        .padding(.horizontal, DesignSystem.Spacing.md)
-                        .padding(.top, DesignSystem.Spacing.md)
+                    VStack(spacing: 20) {
+                        // Tabs modernes
+                        StatisticsTabPicker(selectedTab: $selectedTab)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 16)
                         
                         // Contenu selon le tab
                         Group {
                             if selectedTab == 0 {
-                                styleStatisticsView
+                                modernStyleStatisticsView
                             } else if selectedTab == 1 {
-                                environmentalView
+                                modernEnvironmentalView
                             } else {
-                                costView
+                                modernCostView
                             }
                         }
                     }
-                    .padding(.bottom, DesignSystem.Spacing.xl)
+                    .padding(.bottom, 20)
                 }
             }
             .navigationTitle("Statistiques".localized)
@@ -63,159 +58,124 @@ struct StatisticsScreen: View {
         }
     }
     
-    private var styleStatisticsView: some View {
-        VStack(spacing: DesignSystem.Spacing.lg) {
+    private var modernStyleStatisticsView: some View {
+        VStack(spacing: 20) {
             // Cartes de résumé
-            HStack(spacing: DesignSystem.Spacing.md) {
-                StatCard(
+            HStack(spacing: 12) {
+                ModernStatCard(
                     title: "Vêtements".localized,
                     value: "\(statistics.totalItems)",
                     icon: "tshirt.fill",
-                    color: AppColors.buttonPrimary
+                    color: .blue
                 )
                 
-                StatCard(
+                ModernStatCard(
                     title: "Outfits".localized,
                     value: "\(statistics.totalOutfits)",
                     icon: "sparkles",
-                    color: AppColors.buttonPrimary
+                    color: .purple
                 )
             }
-            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.horizontal, 20)
             
             // Couleurs les plus portées
             if !statistics.mostWornColors.isEmpty {
-                Card(cornerRadius: DesignSystem.Radius.lg) {
-                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                        Text("Couleurs les plus portées".localized)
-                            .font(DesignSystem.Typography.headline())
-                            .foregroundColor(AppColors.primaryText)
-                        
+                ModernSectionCard(
+                    title: "Couleurs les plus portées".localized,
+                    icon: "paintpalette.fill",
+                    color: .pink
+                ) {
                         ForEach(statistics.mostWornColors.prefix(5)) { colorFreq in
-                            ColorFrequencyRow(colorFreq: colorFreq)
-                        }
+                        ModernColorFrequencyRow(colorFreq: colorFreq)
                     }
-                    .padding(DesignSystem.Spacing.md)
                 }
-                .padding(.horizontal, DesignSystem.Spacing.md)
+                .padding(.horizontal, 20)
             }
             
             // Catégories les plus portées
             if !statistics.mostWornCategories.isEmpty {
-                Card(cornerRadius: DesignSystem.Radius.lg) {
-                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                        Text("Catégories les plus portées".localized)
-                            .font(DesignSystem.Typography.headline())
-                            .foregroundColor(AppColors.primaryText)
-                        
+                ModernSectionCard(
+                    title: "Catégories les plus portées".localized,
+                    icon: "square.grid.2x2.fill",
+                    color: .orange
+                ) {
                         ForEach(statistics.mostWornCategories.prefix(5)) { categoryFreq in
-                            CategoryFrequencyRow(categoryFreq: categoryFreq)
-                        }
+                        ModernCategoryFrequencyRow(categoryFreq: categoryFreq)
                     }
-                    .padding(DesignSystem.Spacing.md)
                 }
-                .padding(.horizontal, DesignSystem.Spacing.md)
+                .padding(.horizontal, 20)
             }
             
             // Niveaux moyens
-            HStack(spacing: DesignSystem.Spacing.md) {
-                Card(cornerRadius: DesignSystem.Radius.lg) {
-                    VStack(spacing: DesignSystem.Spacing.xs) {
-                        Text("Confort moyen".localized)
-                            .font(DesignSystem.Typography.footnote())
-                            .foregroundColor(AppColors.secondaryText)
-                        Text(String(format: "%.1f", statistics.averageComfortLevel))
-                            .font(DesignSystem.Typography.title2())
-                            .foregroundColor(AppColors.buttonPrimary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(DesignSystem.Spacing.md)
-                }
+            HStack(spacing: 12) {
+                ModernMetricCard(
+                    title: "Confort moyen".localized,
+                    value: String(format: "%.1f", statistics.averageComfortLevel),
+                    icon: "heart.fill",
+                    color: .red
+                )
                 
-                Card(cornerRadius: DesignSystem.Radius.lg) {
-                    VStack(spacing: DesignSystem.Spacing.xs) {
-                        Text("Style moyen".localized)
-                            .font(DesignSystem.Typography.footnote())
-                            .foregroundColor(AppColors.secondaryText)
-                        Text(String(format: "%.1f", statistics.averageStyleLevel))
-                            .font(DesignSystem.Typography.title2())
-                            .foregroundColor(AppColors.buttonPrimary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(DesignSystem.Spacing.md)
-                }
+                ModernMetricCard(
+                    title: "Style moyen".localized,
+                    value: String(format: "%.1f", statistics.averageStyleLevel),
+                    icon: "star.fill",
+                    color: .yellow
+                )
             }
-            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.horizontal, 20)
         }
     }
     
-    private var environmentalView: some View {
-        VStack(spacing: DesignSystem.Spacing.lg) {
+    private var modernEnvironmentalView: some View {
+        VStack(spacing: 20) {
             // Score de durabilité
-            Card(cornerRadius: DesignSystem.Radius.lg) {
-                VStack(spacing: DesignSystem.Spacing.md) {
-                    Text("Score de Durabilité".localized)
-                        .font(DesignSystem.Typography.headline())
-                        .foregroundColor(AppColors.primaryText)
-                    
-                    ZStack {
-                        Circle()
-                            .stroke(AppColors.cardBorder, lineWidth: 20)
-                            .frame(width: 150, height: 150)
-                        
-                        Circle()
-                            .trim(from: 0, to: environmentalImpact.sustainabilityScore / 100)
-                            .stroke(AppColors.buttonPrimary, style: StrokeStyle(lineWidth: 20, lineCap: .round))
-                            .frame(width: 150, height: 150)
-                            .rotationEffect(.degrees(-90))
-                        
-                        VStack(spacing: DesignSystem.Spacing.xs) {
-                            Text("\(Int(environmentalImpact.sustainabilityScore))")
-                                .font(.system(size: 40, weight: .bold))
-                                .foregroundColor(AppColors.primaryText)
-                            Text("/ 100")
-                                .font(DesignSystem.Typography.footnote())
-                                .foregroundColor(AppColors.secondaryText)
-                        }
-                    }
-                }
-                .padding(DesignSystem.Spacing.lg)
-            }
-            .padding(.horizontal, DesignSystem.Spacing.md)
+            ModernSustainabilityCard(score: environmentalImpact.sustainabilityScore)
+                .padding(.horizontal, 20)
             
             // Statistiques environnementales
-            Card(cornerRadius: DesignSystem.Radius.lg) {
-                VStack(spacing: DesignSystem.Spacing.md) {
-                    EnvStatRow(title: "Vêtements portés ce mois".localized, value: "\(environmentalImpact.itemsWornThisMonth)")
-                    EnvStatRow(title: "Port moyen par vêtement".localized, value: String(format: "%.1f", environmentalImpact.averageWearPerItem))
-                    EnvStatRow(title: "Non portés (30 jours)".localized, value: "\(environmentalImpact.itemsNotWornIn30Days)")
-                    EnvStatRow(title: "Réduction CO₂ (kg)".localized, value: String(format: "%.1f", environmentalImpact.carbonFootprintReduction))
-                }
-                .padding(DesignSystem.Spacing.md)
+            ModernSectionCard(
+                title: "Impact environnemental".localized,
+                icon: "leaf.fill",
+                color: .green
+            ) {
+                ModernEnvStatRow(
+                    title: "Vêtements portés ce mois".localized,
+                    value: "\(environmentalImpact.itemsWornThisMonth)",
+                    icon: "calendar"
+                )
+                ModernEnvStatRow(
+                    title: "Port moyen par vêtement".localized,
+                    value: String(format: "%.1f", environmentalImpact.averageWearPerItem),
+                    icon: "arrow.repeat"
+                )
+                ModernEnvStatRow(
+                    title: "Non portés (30 jours)".localized,
+                    value: "\(environmentalImpact.itemsNotWornIn30Days)",
+                    icon: "clock"
+                )
+                ModernEnvStatRow(
+                    title: "Réduction CO₂ (kg)".localized,
+                    value: String(format: "%.1f", environmentalImpact.carbonFootprintReduction),
+                    icon: "leaf.arrow.circlepath"
+                )
             }
-            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.horizontal, 20)
         }
     }
     
-    private var costView: some View {
-        VStack(spacing: DesignSystem.Spacing.md) {
+    private var modernCostView: some View {
+        VStack(spacing: 16) {
             if costPerWear.isEmpty {
-                Card(cornerRadius: DesignSystem.Radius.lg) {
-                    VStack(spacing: DesignSystem.Spacing.md) {
-                        Image(systemName: "dollarsign.circle")
-                            .font(.system(size: 48, weight: .light))
-                            .foregroundColor(AppColors.secondaryText)
-                        Text("Aucun prix renseigné".localized)
-                            .font(DesignSystem.Typography.body())
-                            .foregroundColor(AppColors.secondaryText)
-                    }
-                    .padding(DesignSystem.Spacing.xl)
-                }
-                .padding(.horizontal, DesignSystem.Spacing.md)
+                ModernEmptyStateCard(
+                    icon: "dollarsign.circle",
+                    title: "Aucun prix renseigné".localized,
+                    message: "Ajoutez des prix à vos vêtements pour voir le coût par port".localized
+                )
+                .padding(.horizontal, 20)
             } else {
                 ForEach(costPerWear.sorted(by: { ($0.costPerWear ?? 0) < ($1.costPerWear ?? 0) })) { cost in
-                    CostPerWearRow(cost: cost)
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                    ModernCostPerWearCard(cost: cost)
+                        .padding(.horizontal, 20)
                 }
             }
         }
@@ -228,9 +188,44 @@ struct StatisticsScreen: View {
     }
 }
 
-// MARK: - Composants
+// MARK: - Composants Modernes
 
-struct StatCard: View {
+struct StatisticsTabPicker: View {
+    @Binding var selectedTab: Int
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(0..<3) { index in
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedTab = index
+                    }
+                }) {
+                    Text(tabTitle(for: index))
+                        .font(DesignSystem.Typography.footnote())
+                        .fontWeight(.semibold)
+                        .foregroundColor(selectedTab == index ? AppColors.buttonPrimaryText : AppColors.secondaryText)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(selectedTab == index ? AppColors.buttonPrimary : Color.clear)
+                }
+            }
+        }
+        .background(AppColors.buttonSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+    }
+    
+    private func tabTitle(for index: Int) -> String {
+        switch index {
+        case 0: return "Style".localized
+        case 1: return "Environnement".localized
+        case 2: return "Coût".localized
+        default: return ""
+        }
+    }
+}
+
+struct ModernStatCard: View {
     let title: String
     let value: String
     let icon: String
@@ -238,7 +233,161 @@ struct StatCard: View {
     
     var body: some View {
         Card(cornerRadius: DesignSystem.Radius.lg) {
-            VStack(spacing: DesignSystem.Spacing.sm) {
+            VStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [color.opacity(0.2), color.opacity(0.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 26, weight: .semibold))
+                        .foregroundColor(color)
+                }
+                
+                Text(value)
+                    .font(DesignSystem.Typography.title())
+                    .foregroundColor(AppColors.primaryText)
+                    .fontWeight(.bold)
+                
+                Text(title)
+                    .font(DesignSystem.Typography.caption())
+                    .foregroundColor(AppColors.secondaryText)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(20)
+        }
+    }
+}
+
+struct ModernSectionCard<Content: View>: View {
+    let title: String
+    let icon: String
+    let color: Color
+    @ViewBuilder let content: Content
+    
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(color.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                        
+                        Image(systemName: icon)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(color)
+        }
+                    
+                    Text(title)
+                        .font(DesignSystem.Typography.headline())
+                        .foregroundColor(AppColors.primaryText)
+                }
+                
+                content
+            }
+            .padding(20)
+        }
+    }
+}
+
+struct ModernColorFrequencyRow: View {
+    let colorFreq: ColorFrequency
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Circle()
+                .fill(colorFromString(colorFreq.color))
+                .frame(width: 24, height: 24)
+                .overlay {
+                    Circle()
+                        .stroke(AppColors.cardBorder, lineWidth: 1)
+                }
+            
+            Text(colorFreq.color)
+                .font(DesignSystem.Typography.body())
+                .foregroundColor(AppColors.primaryText)
+            
+            Spacer()
+            
+            HStack(spacing: 8) {
+            Text("\(colorFreq.count) fois".localized)
+                .font(DesignSystem.Typography.footnote())
+                .foregroundColor(AppColors.secondaryText)
+            
+            Text("\(Int(colorFreq.percentage))%")
+                .font(DesignSystem.Typography.footnote())
+                .foregroundColor(AppColors.primaryText)
+                .fontWeight(.semibold)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(AppColors.buttonSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.sm))
+            }
+        }
+    }
+    
+    private func colorFromString(_ colorName: String) -> Color {
+        switch colorName.lowercased() {
+        case "rouge", "red": return .red
+        case "bleu", "blue": return .blue
+        case "vert", "green": return .green
+        case "jaune", "yellow": return .yellow
+        case "noir", "black": return .black
+        case "blanc", "white": return .white
+        case "gris", "gray", "grey": return .gray
+        case "rose", "pink": return .pink
+        case "orange": return .orange
+        case "violet", "purple": return .purple
+        default: return .gray
+        }
+    }
+}
+
+struct ModernCategoryFrequencyRow: View {
+    let categoryFreq: CategoryFrequency
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(categoryFreq.category)
+                .font(DesignSystem.Typography.body())
+                .foregroundColor(AppColors.primaryText)
+            
+            Spacer()
+            
+            HStack(spacing: 8) {
+            Text("\(categoryFreq.count) fois".localized)
+                .font(DesignSystem.Typography.footnote())
+                .foregroundColor(AppColors.secondaryText)
+            
+            Text("\(Int(categoryFreq.percentage))%")
+                .font(DesignSystem.Typography.footnote())
+                .foregroundColor(AppColors.primaryText)
+                .fontWeight(.semibold)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(AppColors.buttonSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.sm))
+            }
+        }
+    }
+}
+
+struct ModernMetricCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(spacing: 12) {
                 ZStack {
                     Circle()
                         .fill(color.opacity(0.15))
@@ -252,86 +401,75 @@ struct StatCard: View {
                 Text(value)
                     .font(DesignSystem.Typography.title2())
                     .foregroundColor(AppColors.primaryText)
+                    .fontWeight(.bold)
                 
                 Text(title)
-                    .font(DesignSystem.Typography.footnote())
+                    .font(DesignSystem.Typography.caption())
                     .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
-            .padding(DesignSystem.Spacing.md)
+            .padding(20)
         }
     }
 }
 
-struct ColorFrequencyRow: View {
-    let colorFreq: ColorFrequency
+struct ModernSustainabilityCard: View {
+    let score: Double
     
     var body: some View {
-        HStack(spacing: DesignSystem.Spacing.md) {
-            Circle()
-                .fill(colorFromString(colorFreq.color))
-                .frame(width: 20, height: 20)
-            
-            Text(colorFreq.color)
-                .font(DesignSystem.Typography.body())
-                .foregroundColor(AppColors.primaryText)
-            
-            Spacer()
-            
-            Text("\(colorFreq.count) fois".localized)
-                .font(DesignSystem.Typography.footnote())
-                .foregroundColor(AppColors.secondaryText)
-            
-            Text("\(Int(colorFreq.percentage))%")
-                .font(DesignSystem.Typography.footnote())
-                .foregroundColor(AppColors.primaryText)
-                .fontWeight(.semibold)
-        }
-    }
-    
-    private func colorFromString(_ colorName: String) -> Color {
-        switch colorName.lowercased() {
-        case "rouge", "red": return .red
-        case "bleu", "blue": return .blue
-        case "vert", "green": return .green
-        case "jaune", "yellow": return .yellow
-        case "noir", "black": return .black
-        case "blanc", "white": return .white
-        case "gris", "gray", "grey": return .gray
-        default: return .gray
-        }
-    }
-}
-
-struct CategoryFrequencyRow: View {
-    let categoryFreq: CategoryFrequency
-    
-    var body: some View {
-        HStack(spacing: DesignSystem.Spacing.md) {
-            Text(categoryFreq.category)
-                .font(DesignSystem.Typography.body())
-                .foregroundColor(AppColors.primaryText)
-            
-            Spacer()
-            
-            Text("\(categoryFreq.count) fois".localized)
-                .font(DesignSystem.Typography.footnote())
-                .foregroundColor(AppColors.secondaryText)
-            
-            Text("\(Int(categoryFreq.percentage))%")
-                .font(DesignSystem.Typography.footnote())
-                .foregroundColor(AppColors.primaryText)
-                .fontWeight(.semibold)
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(spacing: 20) {
+                Text("Score de Durabilité".localized)
+                    .font(DesignSystem.Typography.headline())
+                    .foregroundColor(AppColors.primaryText)
+                
+                ZStack {
+                    Circle()
+                        .stroke(AppColors.cardBorder, lineWidth: 16)
+                        .frame(width: 160, height: 160)
+                    
+                    Circle()
+                        .trim(from: 0, to: score / 100)
+                        .stroke(
+                            LinearGradient(
+                                colors: [.green, .mint],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            style: StrokeStyle(lineWidth: 16, lineCap: .round)
+                        )
+                        .frame(width: 160, height: 160)
+                        .rotationEffect(.degrees(-90))
+                    
+                    VStack(spacing: 4) {
+                        Text("\(Int(score))")
+                            .font(.system(size: 44, weight: .bold))
+                            .foregroundColor(AppColors.primaryText)
+                        Text("/ 100")
+                            .font(DesignSystem.Typography.footnote())
+                            .foregroundColor(AppColors.secondaryText)
+                    }
+                }
+            }
+            .padding(24)
         }
     }
 }
 
-struct EnvStatRow: View {
+struct ModernEnvStatRow: View {
     let title: String
     let value: String
+    let icon: String
     
     var body: some View {
-        HStack(spacing: DesignSystem.Spacing.md) {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(.green)
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(Color.green.opacity(0.15)))
+            
             Text(title)
                 .font(DesignSystem.Typography.body())
                 .foregroundColor(AppColors.primaryText)
@@ -340,42 +478,71 @@ struct EnvStatRow: View {
             
             Text(value)
                 .font(DesignSystem.Typography.headline())
-                .foregroundColor(AppColors.buttonPrimary)
+                .foregroundColor(.green)
+                .fontWeight(.semibold)
         }
     }
 }
 
-struct CostPerWearRow: View {
+struct ModernCostPerWearCard: View {
     let cost: CostPerWear
     
     var body: some View {
         Card(cornerRadius: DesignSystem.Radius.lg) {
-            HStack(spacing: DesignSystem.Spacing.md) {
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(cost.itemName)
                         .font(DesignSystem.Typography.headline())
                         .foregroundColor(AppColors.primaryText)
+                    
                     Text("Porté \(cost.wearCount) fois".localized)
-                        .font(DesignSystem.Typography.footnote())
+                        .font(DesignSystem.Typography.caption())
                         .foregroundColor(AppColors.secondaryText)
                 }
                 
                 Spacer()
                 
-                VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xs) {
+                VStack(alignment: .trailing, spacing: 6) {
                     if let costPerWear = cost.costPerWear {
                         Text("\(String(format: "%.2f", costPerWear)) €/port")
-                            .font(DesignSystem.Typography.headline())
+                            .font(DesignSystem.Typography.title2())
                             .foregroundColor(AppColors.buttonPrimary)
+                            .fontWeight(.bold)
                     }
                     if let price = cost.purchasePrice {
                         Text("Acheté \(String(format: "%.2f", price)) €".localized)
-                            .font(DesignSystem.Typography.footnote())
+                            .font(DesignSystem.Typography.caption())
                             .foregroundColor(AppColors.secondaryText)
                     }
                 }
             }
-            .padding(DesignSystem.Spacing.md)
+            .padding(20)
+        }
+    }
+}
+
+struct ModernEmptyStateCard: View {
+    let icon: String
+    let title: String
+    let message: String
+    
+    var body: some View {
+        Card(cornerRadius: DesignSystem.Radius.lg) {
+            VStack(spacing: 16) {
+                Image(systemName: icon)
+                    .font(.system(size: 56, weight: .light))
+                    .foregroundColor(AppColors.secondaryText)
+                
+                Text(title)
+                    .font(DesignSystem.Typography.headline())
+                    .foregroundColor(AppColors.primaryText)
+                
+                Text(message)
+                    .font(DesignSystem.Typography.body())
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(32)
         }
     }
 }

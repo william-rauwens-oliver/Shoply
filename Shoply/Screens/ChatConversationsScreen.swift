@@ -12,6 +12,7 @@ struct ChatConversationsScreen: View {
     @State private var conversations: [ChatConversation] = []
     @State private var showingNewChat = false
     @State private var showingDeleteAllAlert = false
+    @Environment(\.dismiss) var dismiss
     
     var body: some View {
         NavigationStack {
@@ -68,6 +69,16 @@ struct ChatConversationsScreen: View {
             .navigationTitle("Conversations")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(AppColors.primaryText)
+                    }
+                }
+                
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     if !conversations.isEmpty {
                         Menu {

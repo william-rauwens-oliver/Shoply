@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import CoreLocation
 #if !WIDGET_EXTENSION
 import UserNotifications
 import UIKit
@@ -14,11 +15,15 @@ import UIKit
 
 struct HomeScreen: View {
     @StateObject private var wardrobeService = WardrobeService()
-    @StateObject private var settingsManager = AppSettingsManager.shared
     @StateObject private var historyStore = OutfitHistoryStore()
+    @StateObject private var collectionService = WardrobeCollectionService.shared
     @State private var currentTime = Date()
     @State private var showingChat = false
     @State private var showingConversations = false
+    
+    private var userProfile: UserProfile {
+        DataManager.shared.loadUserProfile() ?? UserProfile()
+    }
     
     var body: some View {
         NavigationStack {
@@ -27,75 +32,27 @@ struct HomeScreen: View {
                     .ignoresSafeArea()
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
-                        // Header avec photo de profil
-                        HeaderView(currentTime: currentTime)
-                            .padding(.top, DesignSystem.Spacing.lg)
-                            .padding(.horizontal, DesignSystem.Spacing.md)
+                    VStack(spacing: 32) {
+                        // En-tête avec photo de profil
+                        SimpleHeaderView(
+                            userProfile: userProfile,
+                            currentTime: currentTime
+                        )
+                        .padding(.horizontal, 20)
+                        .padding(.top, 20)
                         
-                        // Carte principale - Sélection intelligente
+                        // Action principale
                         NavigationLink(destination: SmartOutfitSelectionScreen()) {
-                            MainActionCard()
+                            SimpleMainActionCard()
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .padding(.horizontal, DesignSystem.Spacing.md)
-                        
-                        // Deux cartes côte à côte
-                        HStack(spacing: DesignSystem.Spacing.md) {
-                            NavigationLink(destination: WardrobeManagementScreen()) {
-                                QuickActionCard(
-                                    icon: "tshirt.fill",
-                                    title: "Garde-robe",
-                                    value: "\(wardrobeService.items.count)",
-                                    color: AppColors.buttonPrimary
-                                )
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                        .padding(.horizontal, 20)
                             
-                            NavigationLink(destination: OutfitHistoryScreen()) {
-                                QuickActionCard(
-                                    icon: "clock.fill",
-                                    title: "Historique",
-                                    value: "\(historyStore.outfits.count)",
-                                    color: AppColors.buttonPrimary
-                                )
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        // Accès rapide
+                        SimpleQuickAccessView()
+                            .padding(.horizontal, 20)
                         
-                        // Section fonctionnalités
-                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
-                            HStack {
-                                Text("Fonctionnalités".localized)
-                                    .font(DesignSystem.Typography.title2())
-                                    .foregroundColor(AppColors.primaryText)
-                                Spacer()
-                            }
-                            .padding(.horizontal, DesignSystem.Spacing.md)
-                            
-                            // Grille de fonctionnalités
-                            LazyVGrid(columns: [
-                                GridItem(.flexible(), spacing: DesignSystem.Spacing.md),
-                                GridItem(.flexible(), spacing: DesignSystem.Spacing.md)
-                            ], spacing: DesignSystem.Spacing.md) {
-                                FeatureGridItem(icon: "chart.bar.fill", title: "Statistiques", destination: StatisticsScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "folder.fill", title: "Collections", destination: CollectionsScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "heart.fill", title: "Wishlist", destination: WishlistScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "airplane", title: "Voyage", destination: TravelModeScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "star.fill", title: "Badges", destination: GamificationScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "barcode.viewfinder", title: "Scanner", destination: BarcodeScannerScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "dollarsign.circle.fill", title: "Prix", destination: PriceComparisonScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "briefcase.fill", title: "Pro", destination: ProfessionalModeScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "book.fill", title: "Lookbooks", destination: LookbooksScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "chart.line.uptrend.xyaxis", title: "Tendances", destination: TrendAnalysisScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "calendar", title: "Événements", destination: CalendarEventsScreen(), color: AppColors.buttonPrimary)
-                                FeatureGridItem(icon: "square.and.arrow.up", title: "Partage", destination: SocialShareScreen(), color: AppColors.buttonPrimary)
-                            }
-                            .padding(.horizontal, DesignSystem.Spacing.md)
-                        }
-                        
-                        // Espace pour le bouton flottant
+                        // Espace pour le bouton chat
                         Spacer()
                             .frame(height: 80)
                     }
@@ -122,16 +79,16 @@ struct HomeScreen: View {
                             ZStack {
                                 Circle()
                                     .fill(AppColors.buttonPrimary)
-                                    .frame(width: 60, height: 60)
+                                    .frame(width: 56, height: 56)
                                     .shadow(color: AppColors.shadow.opacity(0.3), radius: 12, x: 0, y: 6)
                                 
                                 Image(systemName: "message.fill")
-                                    .font(.system(size: 22, weight: .medium))
+                                    .font(.system(size: 22, weight: .semibold))
                                     .foregroundColor(AppColors.buttonPrimaryText)
                             }
                         }
-                        .padding(.trailing, DesignSystem.Spacing.lg)
-                        .padding(.bottom, DesignSystem.Spacing.lg)
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 20)
                     }
                 }
             }
@@ -144,7 +101,7 @@ struct HomeScreen: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: DesignSystem.Spacing.md) {
+                    HStack(spacing: 16) {
                         NavigationLink(destination: FavoritesScreen()) {
                             Image(systemName: "heart.fill")
                                 .font(.system(size: 20, weight: .medium))
@@ -152,9 +109,17 @@ struct HomeScreen: View {
                         }
                         
                         NavigationLink(destination: ProfileScreen()) {
+                            if let photo = userProfile.profilePhoto {
+                                Image(uiImage: photo)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 32, height: 32)
+                                    .clipShape(Circle())
+                            } else {
                             Image(systemName: "person.fill")
                                 .font(.system(size: 20, weight: .medium))
                                 .foregroundColor(AppColors.primaryText)
+                            }
                         }
                     }
                 }
@@ -193,57 +158,52 @@ struct HomeScreen: View {
     #endif
 }
 
-// MARK: - Composants HomeScreen
+// MARK: - Composants Simples
 
-struct HeaderView: View {
+struct SimpleHeaderView: View {
+    let userProfile: UserProfile
     let currentTime: Date
-    @StateObject private var dataManager = DataManager.shared
+    @StateObject private var weatherService = WeatherService.shared
     @State private var greetingKey = "Bonjour"
     
-    private var greetingText: String {
-        greetingKey.localized
-    }
-    
-    private var profile: UserProfile? {
-        dataManager.loadUserProfile()
-    }
-    
     var body: some View {
-        HStack(spacing: DesignSystem.Spacing.lg) {
+        HStack(spacing: 16) {
             // Photo de profil
-            if let profile = profile, let photo = profile.profilePhoto {
+            if let photo = userProfile.profilePhoto {
                 Image(uiImage: photo)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 56, height: 56)
+                    .frame(width: 64, height: 64)
                     .clipShape(Circle())
                     .overlay {
                         Circle()
-                            .stroke(AppColors.cardBorder, lineWidth: 2)
+                            .stroke(AppColors.buttonPrimary.opacity(0.3), lineWidth: 2)
                     }
+                    .shadow(color: AppColors.shadow.opacity(0.2), radius: 8, x: 0, y: 4)
             } else {
+                ZStack {
                 Circle()
-                    .fill(AppColors.buttonSecondary)
-                    .frame(width: 56, height: 56)
-                    .overlay {
+                        .fill(AppColors.buttonPrimary.opacity(0.15))
+                        .frame(width: 64, height: 64)
+                    
                         Image(systemName: "person.fill")
-                            .font(.system(size: 24, weight: .light))
-                            .foregroundColor(AppColors.primaryText)
+                        .font(.system(size: 28, weight: .light))
+                        .foregroundColor(AppColors.buttonPrimary)
                     }
                     .overlay {
                         Circle()
-                            .stroke(AppColors.cardBorder, lineWidth: 2)
+                        .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 2)
                     }
             }
             
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                if let profile = profile, !profile.firstName.isEmpty {
-                    Text("\(greetingText), \(profile.firstName)")
+            // Texte de salutation
+            VStack(alignment: .leading, spacing: 6) {
+                if !userProfile.firstName.isEmpty {
+                    Text("\(greetingKey.localized), \(userProfile.firstName)")
                         .font(DesignSystem.Typography.largeTitle())
                         .foregroundColor(AppColors.primaryText)
-                        .lineLimit(1)
                 } else {
-                    Text(greetingText)
+                    Text(greetingKey.localized)
                         .font(DesignSystem.Typography.largeTitle())
                         .foregroundColor(AppColors.primaryText)
                 }
@@ -263,125 +223,165 @@ struct HeaderView: View {
     private var formattedDate: String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: AppSettingsManager.shared.selectedLanguage.rawValue)
-        formatter.dateStyle = .full
+        formatter.dateStyle = .long
+        formatter.timeStyle = .none
         return formatter.string(from: currentTime)
     }
     
     private func updateGreeting() {
+        if let location = weatherService.location {
+            let lat = location.coordinate.latitude
+            let lon = location.coordinate.longitude
+            guard !lat.isNaN && !lon.isNaN && !lat.isInfinite && !lon.isInfinite else {
         let hour = Calendar.current.component(.hour, from: currentTime)
-        if hour < 12 {
-            greetingKey = "Bonjour"
-        } else if hour < 18 {
-            greetingKey = "Bon après-midi"
+                greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
+                return
+            }
+            greetingKey = SunsetService.shared.getGreeting(
+                latitude: lat,
+                longitude: lon,
+                currentTime: currentTime
+            )
         } else {
-            greetingKey = "Bonsoir"
+            let hour = Calendar.current.component(.hour, from: currentTime)
+            greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
         }
     }
 }
 
-struct MainActionCard: View {
+struct SimpleMainActionCard: View {
     var body: some View {
         Card(cornerRadius: DesignSystem.Radius.lg) {
-            HStack(spacing: DesignSystem.Spacing.lg) {
+            HStack(spacing: 20) {
                 ZStack {
                     Circle()
-                        .fill(AppColors.buttonSecondary)
-                        .frame(width: 56, height: 56)
+                        .fill(AppColors.buttonPrimary.opacity(0.15))
+                        .frame(width: 60, height: 60)
                     
                     Image(systemName: "sparkles")
                         .font(.system(size: 28, weight: .medium))
-                        .foregroundColor(AppColors.primaryText)
+                        .foregroundColor(AppColors.buttonPrimary)
                 }
                 
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text("Sélection Intelligente".localized)
                         .font(DesignSystem.Typography.title2())
                         .foregroundColor(AppColors.primaryText)
                     
                     Text("Générez des outfits adaptés".localized)
-                        .font(DesignSystem.Typography.subheadline())
+                        .font(DesignSystem.Typography.caption())
                         .foregroundColor(AppColors.secondaryText)
                 }
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(AppColors.secondaryText)
             }
-            .padding(DesignSystem.Spacing.lg)
+            .padding(24)
         }
     }
 }
 
-struct QuickActionCard: View {
-    let icon: String
-    let title: String
-    let value: String
-    let color: Color
-    
+struct SimpleQuickAccessView: View {
     var body: some View {
-        Card(cornerRadius: DesignSystem.Radius.lg) {
-            VStack(spacing: DesignSystem.Spacing.lg) {
-                ZStack {
-                    Circle()
-                        .fill(color.opacity(0.15))
-                        .frame(width: 56, height: 56)
-                    
-                    Image(systemName: icon)
-                        .font(.system(size: 26, weight: .semibold))
-                        .foregroundColor(color)
-                }
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Accès rapide".localized)
+                .font(DesignSystem.Typography.headline())
+                .foregroundColor(AppColors.primaryText)
+                .padding(.horizontal, 4)
+            
+            LazyVGrid(columns: [
+                GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12)
+            ], spacing: 12) {
+                SimpleQuickAccessButton(
+                    icon: "tshirt.fill",
+                    title: "Garde-robe",
+                    destination: WardrobeManagementScreen()
+                )
                 
-                VStack(spacing: DesignSystem.Spacing.xs) {
-                    Text(title.localized)
-                        .font(DesignSystem.Typography.footnote())
-                        .foregroundColor(AppColors.secondaryText)
-                    
-                    Text(value)
-                        .font(DesignSystem.Typography.title())
-                        .foregroundColor(AppColors.primaryText)
-                        .fontWeight(.bold)
-                }
+                SimpleQuickAccessButton(
+                    icon: "clock.fill",
+                    title: "Historique",
+                    destination: OutfitHistoryScreen()
+                )
+                
+                SimpleQuickAccessButton(
+                    icon: "folder.fill",
+                    title: "Collections",
+                    destination: CollectionsScreen()
+                )
+                
+                SimpleQuickAccessButton(
+                    icon: "heart.fill",
+                    title: "Wishlist",
+                    destination: WishlistScreen()
+                )
+                
+                SimpleQuickAccessButton(
+                    icon: "airplane",
+                    title: "Voyage",
+                    destination: TravelModeScreen()
+                )
+                
+                SimpleQuickAccessButton(
+                    icon: "briefcase.fill",
+                    title: "Occasions",
+                    destination: OccasionsScreen()
+                )
+                
+                SimpleQuickAccessButton(
+                    icon: "calendar",
+                    title: "Calendrier",
+                    destination: OutfitCalendarScreen()
+                )
+                
+                SimpleQuickAccessButton(
+                    icon: "star.fill",
+                    title: "Badges",
+                    destination: GamificationScreen()
+                )
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, DesignSystem.Spacing.lg)
         }
     }
 }
 
-struct FeatureGridItem<Destination: View>: View {
+struct SimpleQuickAccessButton<Destination: View>: View {
     let icon: String
     let title: String
     let destination: Destination
-    let color: Color
+    @State private var isPressed = false
     
     var body: some View {
         NavigationLink(destination: destination) {
-            Card(cornerRadius: DesignSystem.Radius.lg) {
-                VStack(spacing: DesignSystem.Spacing.md) {
-                    ZStack {
-                        Circle()
-                            .fill(color.opacity(0.15))
-                            .frame(width: 48, height: 48)
-                        
+            VStack(spacing: 10) {
                         Image(systemName: icon)
-                            .font(.system(size: 22, weight: .semibold))
-                            .foregroundColor(color)
-                    }
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundColor(AppColors.buttonPrimary)
+                    .frame(width: 50, height: 50)
+                    .background(AppColors.buttonSecondary)
+                    .clipShape(Circle())
                     
                     Text(title.localized)
-                        .font(DesignSystem.Typography.footnote())
+                    .font(DesignSystem.Typography.caption())
                         .foregroundColor(AppColors.primaryText)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .fontWeight(.medium)
+                    .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 110)
-            }
+            .padding(.vertical, 16)
+            .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
         }
         .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isPressed ? 0.95 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 }

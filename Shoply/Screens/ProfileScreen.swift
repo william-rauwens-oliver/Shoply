@@ -119,8 +119,7 @@ struct ProfileScreen: View {
                                             .foregroundColor(AppColors.secondaryText)
                                     }
                                     .padding(DesignSystem.Spacing.md)
-                                    .background(AppColors.cardBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+                                    .liquidGlassCard(cornerRadius: DesignSystem.Radius.lg)
                                     .overlay {
                                         RoundedRectangle(cornerRadius: DesignSystem.Radius.lg)
                                             .stroke(AppColors.cardBorder, lineWidth: 1.5)
@@ -570,12 +569,7 @@ struct ProfileFormField: View {
                 }
             }
             .padding(DesignSystem.Spacing.md)
-            .background(AppColors.cardBackground)
-            .overlay {
-                RoundedRectangle(cornerRadius: DesignSystem.Radius.lg)
-                    .stroke(AppColors.cardBorder, lineWidth: 1.5)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+            .liquidGlassCard(cornerRadius: DesignSystem.Radius.lg)
         }
     }
 }
@@ -640,12 +634,7 @@ struct ProfileDateField: View {
                 Spacer()
             }
             .padding(DesignSystem.Spacing.md)
-            .background(AppColors.cardBackground)
-            .overlay {
-                RoundedRectangle(cornerRadius: DesignSystem.Radius.lg)
-                    .stroke(AppColors.cardBorder, lineWidth: 1.5)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+            .liquidGlassCard(cornerRadius: DesignSystem.Radius.lg)
                 .onChange(of: date) { oldValue, newValue in
                     // Synchroniser validatedDate avec date si elle change de l'extérieur
                     // minimumDate est la date la plus ancienne, maximumDate est la date la plus récente

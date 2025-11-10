@@ -64,24 +64,47 @@ class ProductSearchService {
         throw ProductSearchError.productNotFound
     }
     
-    /// Recherche sur plusieurs boutiques (simulation avec APIs publiques)
+    /// Recherche sur plusieurs boutiques françaises (simulation avec APIs publiques)
     private func searchMultipleStores(query: String) async throws -> [ProductResult] {
         var results: [ProductResult] = []
         
-        // Simuler la recherche sur différentes boutiques
-        // En production, vous utiliseriez les APIs réelles de chaque boutique
-        let stores = ["Zara", "H&M", "Uniqlo", "Mango", "COS"]
+        // Liste complète des magasins et boutiques français
+        let stores = [
+            // Fast fashion
+            "Zara", "H&M", "Uniqlo", "Mango", "COS", "Bershka", "Pull & Bear", "Stradivarius",
+            // Mode française
+            "Sandro", "Maje", "Claudie Pierlot", "Ba&sh", "Sézane", "Rouje", "Musier Paris",
+            // Grandes enseignes
+            "Galeries Lafayette", "Printemps", "Le Bon Marché", "Monoprix", "Carrefour", "Auchan",
+            // Mode accessible
+            "Kiabi", "C&A", "La Redoute", "Zalando", "Asos", "Vinted", "Vestiaire Collective",
+            // Luxe
+            "Louis Vuitton", "Hermès", "Chanel", "Dior", "Yves Saint Laurent", "Givenchy",
+            // Sport
+            "Decathlon", "Go Sport", "Intersport", "Nike", "Adidas", "Puma",
+            // Chaussures
+            "André", "Bata", "Eram", "Minelli", "Jonak",
+            // Accessoires
+            "Longchamp", "Lancel", "Furla", "Michael Kors", "Coach"
+        ]
         
         for store in stores {
             // Simuler une recherche (en production, utiliser l'API de chaque boutique)
+            let storeNameLower = store.lowercased()
+                .replacingOccurrences(of: " ", with: "-")
+                .replacingOccurrences(of: "&", with: "and")
+                .replacingOccurrences(of: "é", with: "e")
+                .replacingOccurrences(of: "è", with: "e")
+                .replacingOccurrences(of: "à", with: "a")
+            
             let result = ProductResult(
                 name: query,
                 brand: store,
                 barcode: nil,
-                price: Double.random(in: 20...150),
+                price: Double.random(in: 20...500),
                 currency: "EUR",
                 imageURL: nil,
-                storeURL: "https://www.\(store.lowercased()).com/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")",
+                storeURL: "https://www.\(storeNameLower).com/fr/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")",
                 storeName: store
             )
             results.append(result)

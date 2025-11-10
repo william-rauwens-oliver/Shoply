@@ -251,25 +251,76 @@ class GeminiService: ObservableObject {
             throw GeminiError.apiKeyMissing
         }
         
+        // Déterminer le style de tenue approprié selon l'occasion, le genre et l'âge
+        let gender = userProfile.gender
+        let age = userProfile.age
+        
         let prompt = """
-        Je prépare un \(occasion.rawValue) et j'ai besoin de recommandations vestimentaires professionnelles.
+        Je prépare un \(occasion.rawValue). Genre: \(gender.rawValue), Âge: \(age) ans.
         
-        PROFIL:
-        - Genre: \(userProfile.gender.rawValue)
-        - Âge: \(userProfile.age)
+        \(wardrobeItems.isEmpty ? "Aucun vêtement dans la garde-robe." : "Garde-robe disponible:\n\(wardrobeItems.map { "- \($0.name) (\($0.category.rawValue), \($0.color), matière: \($0.material ?? "non spécifiée"))" }.joined(separator: "\n"))")
         
-        OCCASION: \(occasion.rawValue)
+        Réponds avec:
+        1. La liste des vêtements nécessaires à porter (adaptés au genre \(gender.rawValue) et à l'âge \(age) ans)
+        2. Des suggestions de couleurs adaptées à cette occasion
+        3. Des suggestions de matières adaptées à cette occasion
         
-        GARDE-ROBE DISPONIBLE:
-        \(wardrobeItems.map { "- \($0.name) (\($0.category.rawValue), \($0.color))" }.joined(separator: "\n"))
+        Format:
+        **Vêtements:**
+        - Chemise blanche
+        - Pantalon noir
+        - Chaussures de ville
         
-        Donne-moi des recommandations détaillées pour cette occasion :
-        1. Quels vêtements de ma garde-robe dois-je porter ?
-        2. Quelles couleurs sont les plus appropriées ?
-        3. Des conseils sur les accessoires
-        4. Des conseils généraux pour cette occasion
+        **Couleurs recommandées:**
+        - Noir, bleu marine, gris
         
-        Réponds de manière professionnelle et détaillée.
+        **Matières recommandées:**
+        - Coton, laine, lin
+        
+        Réponse concise et directe.
+        """
+        
+        return try await sendGeminiRequest(prompt: prompt)
+    }
+    
+    // MARK: - Recommandations Romantiques/Sociales
+    
+    /// Génère des recommandations pour dates amoureuses et occasions sociales
+    func generateRomanticRecommendations(
+        occasion: RomanticOutfit.RomanticOccasion,
+        userProfile: UserProfile,
+        wardrobeItems: [WardrobeItem]
+    ) async throws -> String {
+        guard isEnabled else {
+            throw GeminiError.apiKeyMissing
+        }
+        
+        let gender = userProfile.gender
+        let age = userProfile.age
+        
+        let prompt = """
+        Je prépare un \(occasion.rawValue). Genre: \(gender.rawValue), Âge: \(age) ans.
+        
+        \(wardrobeItems.isEmpty ? "Aucun vêtement dans la garde-robe." : "Garde-robe disponible:\n\(wardrobeItems.map { "- \($0.name) (\($0.category.rawValue), \($0.color), matière: \($0.material ?? "non spécifiée"))" }.joined(separator: "\n"))")
+        
+        Réponds avec:
+        1. La liste des vêtements nécessaires à porter (adaptés au genre \(gender.rawValue) et à l'âge \(age) ans)
+        2. Des suggestions de couleurs adaptées à cette occasion
+        3. Des suggestions de matières adaptées à cette occasion
+        
+        Format:
+        **Vêtements:**
+        - Robe noire
+        - Escarpins
+        - Sac à main
+        
+        **Couleurs recommandées:**
+        - Noir, rouge, blanc
+        
+        **Matières recommandées:**
+        - Soie, satin, coton
+        
+        Réponse concise et directe.
         """
         
         return try await sendGeminiRequest(prompt: prompt)
@@ -277,35 +328,158 @@ class GeminiService: ObservableObject {
     
     // MARK: - Analyse de Tendances
     
-    /// Analyse les tendances selon le pays, la ville et l'âge
+    /// Analyse les tendances selon le pays, la ville et l'âge (optimisé pour rapidité)
     func analyzeTrends(
         country: String,
         city: String?,
         age: Int,
         userProfile: UserProfile
     ) async throws -> String {
+        // Vérifier que le service est activé et qu'une clé API est disponible
         guard isEnabled else {
+            throw GeminiError.apiKeyMissing
+        }
+        
+        // Obtenir la clé API (stockée ou intégrée)
+        let apiKeyToUse: String
+        if let storedKey = UserDefaults.standard.string(forKey: "gemini_api_key"),
+           !storedKey.isEmpty {
+            apiKeyToUse = storedKey
+        } else {
+            // Utiliser la clé API intégrée par défaut
+            apiKeyToUse = embeddedAPIKey
+        }
+        
+        guard !apiKeyToUse.isEmpty else {
             throw GeminiError.apiKeyMissing
         }
         
         let locationInfo = city != nil ? "\(city!), \(country)" : country
         
+        // Prompt optimisé pour réponse rapide et concise
         let prompt = """
-        Analyse les tendances de mode actuelles pour :
-        - Localisation: \(locationInfo)
-        - Âge: \(age) ans
-        - Genre: \(userProfile.gender.rawValue)
+        Tendances mode pour \(locationInfo), \(age) ans, \(userProfile.gender.rawValue).
         
-        Donne-moi les tendances d'outfits actuelles de manière concise et claire :
-        - Les styles les plus portés
-        - Les couleurs tendances
-        - Les pièces essentielles
-        - Des recommandations personnalisées
+        Liste concise (3-5 points max) :
+        - Styles tendances
+        - Couleurs à la mode
+        - Pièces essentielles
         
-        Réponds de manière concise et à jour.
+        Réponse courte et directe.
         """
         
-        return try await sendGeminiRequest(prompt: prompt)
+        let urlString = "\(baseURL)?key=\(apiKeyToUse)"
+        guard let url = URL(string: urlString) else {
+            throw GeminiError.invalidURL
+        }
+        
+        let requestBody: [String: Any] = [
+            "contents": [
+                [
+                    "parts": [
+                        ["text": prompt]
+                    ]
+                ]
+            ],
+            "generationConfig": [
+                "temperature": 0.7,
+                "maxOutputTokens": 300, // Réduit pour réponse plus rapide
+                "topP": 0.8,
+                "topK": 20
+            ]
+        ]
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GeminiError.apiError
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            // Essayer de décoder le message d'erreur de l'API
+            var errorMessage = ""
+            if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let errorInfo = errorData["error"] as? [String: Any],
+               let message = errorInfo["message"] as? String {
+                errorMessage = message
+            } else if let dataString = String(data: data, encoding: .utf8) {
+                errorMessage = "HTTP \(httpResponse.statusCode): \(dataString.prefix(200))"
+            } else {
+                errorMessage = "HTTP Error \(httpResponse.statusCode)"
+            }
+            
+            if !errorMessage.isEmpty {
+                throw GeminiError.apiErrorWithMessage(errorMessage)
+            } else {
+                throw GeminiError.apiError
+            }
+        }
+        
+        // Vérifier que les données ne sont pas vides
+        guard !data.isEmpty else {
+            throw GeminiError.noResponse
+        }
+        
+        // Décoder la réponse avec gestion d'erreur améliorée
+        do {
+            // Essayer d'abord avec JSONSerialization pour plus de flexibilité
+            if let jsonObject = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                // Vérifier s'il y a une erreur dans la réponse
+                if let errorInfo = jsonObject["error"] as? [String: Any],
+                   let message = errorInfo["message"] as? String {
+                    throw GeminiError.apiErrorWithMessage(message)
+                }
+                
+                // Extraire le texte depuis la structure JSON
+                if let candidates = jsonObject["candidates"] as? [[String: Any]],
+                   let firstCandidate = candidates.first,
+                   let content = firstCandidate["content"] as? [String: Any],
+                   let parts = content["parts"] as? [[String: Any]] {
+                    for part in parts {
+                        if let text = part["text"] as? String, !text.isEmpty {
+                            return text
+                        }
+                    }
+                }
+            }
+            
+            // Fallback: essayer avec JSONDecoder
+            let apiResponse = try JSONDecoder().decode(GeminiResponse.self, from: data)
+            
+            guard let content = apiResponse.candidates.first?.content,
+                  let text = content.parts.compactMap({ $0.text }).first, !text.isEmpty else {
+                throw GeminiError.noResponse
+            }
+            
+            return text
+        } catch let decodingError as DecodingError {
+            print("❌ Erreur de décodage: \(decodingError)")
+            
+            // Dernière tentative: extraire le texte depuis la réponse brute
+            if let dataString = String(data: data, encoding: .utf8) {
+                print("📄 Réponse brute: \(dataString.prefix(1000))")
+                
+                // Chercher du texte entre guillemets ou après "text":
+                if let textRange = dataString.range(of: #""text"\s*:\s*"([^"]+)""#, options: .regularExpression),
+                   let textMatch = dataString[textRange].components(separatedBy: "\"").dropFirst().first,
+                   !textMatch.isEmpty {
+                    return String(textMatch)
+                }
+            }
+            
+            throw GeminiError.apiErrorWithMessage("Erreur de décodage de la réponse")
+        } catch {
+            // Si c'est déjà une GeminiError, la relancer
+            if let geminiError = error as? GeminiError {
+                throw geminiError
+            }
+            throw GeminiError.apiError
+        }
     }
     
     // MARK: - Conseils Voyage
@@ -340,6 +514,67 @@ class GeminiService: ObservableObject {
         - Des recommandations de style pour cette destination
         
         Réponds de manière détaillée et pratique.
+        """
+        
+        return try await sendGeminiRequest(prompt: prompt)
+    }
+    
+    /// Génère une checklist de voyage personnalisée avec Gemini
+    func generateTravelChecklist(
+        destination: String,
+        startDate: Date,
+        endDate: Date,
+        duration: Int,
+        season: String,
+        averageTemperature: Double,
+        weatherConditions: String,
+        userProfile: UserProfile
+    ) async throws -> String {
+        guard isEnabled else {
+            throw GeminiError.apiKeyMissing
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.locale = Locale(identifier: "fr_FR")
+        
+        let prompt = """
+        Je vais voyager à \(destination) du \(formatter.string(from: startDate)) au \(formatter.string(from: endDate)) (\(duration) jours).
+        
+        INFORMATIONS CRITIQUES À UTILISER:
+        - **Destination**: \(destination) (ville/pays/quartier - adapte les vêtements à cette destination spécifique)
+        - **Période**: \(formatter.string(from: startDate)) au \(formatter.string(from: endDate)) (\(duration) jours)
+        - **Saison**: \(season) (TRÈS IMPORTANT - adapte les vêtements à cette saison)
+        - **Météo**: Température moyenne \(Int(averageTemperature))°C, Conditions: \(weatherConditions) (TRÈS IMPORTANT - adapte les vêtements à cette météo)
+        - **Genre**: \(userProfile.gender.rawValue) (adapte les vêtements à ce genre)
+        - **Âge**: \(userProfile.age) ans (adapte le style à cet âge)
+        
+        Génère une checklist complète et PERSONNALISÉE pour ce voyage en tenant compte de TOUTES ces informations :
+        
+        1. **Vêtements** adaptés à :
+           - La destination (\(destination) - style local, culture, activités)
+           - La saison (\(season) - vêtements de saison appropriés)
+           - La météo (\(Int(averageTemperature))°C, \(weatherConditions) - vêtements adaptés à la température et conditions)
+           - La durée (\(duration) jours - quantités appropriées)
+           - Le genre (\(userProfile.gender.rawValue)) et l'âge (\(userProfile.age) ans)
+        
+        2. **Accessoires** nécessaires pour cette destination et cette période
+        
+        3. **Chaussures** adaptées à la destination, la météo et les activités
+        
+        4. **Articles de toilette** essentiels
+        
+        5. **Documents** importants (passeport, billets, etc.)
+        
+        6. **Appareils électroniques** nécessaires
+        
+        7. **Tout autre article** pertinent pour \(destination) en \(season) avec cette météo
+        
+        Format ta réponse comme une liste avec des puces (-), une ligne par item.
+        Pour les quantités, utilise le format: - Item (quantité)
+        Exemple: - T-shirts (5)
+        
+        Réponds UNIQUEMENT avec la liste, sans introduction ni conclusion.
         """
         
         return try await sendGeminiRequest(prompt: prompt)
@@ -614,9 +849,23 @@ class GeminiService: ObservableObject {
         // Ajouter le contexte système uniquement au début de la conversation
         if conversationHistory.isEmpty {
             var systemContext = """
-            Tu es Shoply AI, un assistant intelligent et conversationnel. Tu peux discuter de TOUS les sujets sans restriction : mode, technologie, science, histoire, cuisine, sport, culture, actualités, etc.
+            Tu es Shoply, un assistant intelligent et conversationnel. Tu es l'assistant personnel de l'application Shoply.
             
-            Tu es amical, naturel, et tu adaptes ton style de réponse au contexte. Tu peux avoir des conversations longues et détaillées.
+            TON IDENTITÉ :
+            - Ton nom est "Shoply"
+            - Tu as été développé et entraîné par William RAUWENS OLIVER
+            - Tu es l'assistant personnel de l'application Shoply
+            
+            IMPORTANT : 
+            - Tu t'appelles UNIQUEMENT "Shoply", jamais "Gemini", "Google", "AI" ou autre chose
+            - Si on te demande qui est ton créateur, réponds : "Je suis Shoply, développé et entraîné par William RAUWENS OLIVER"
+            - Si on te demande comment tu t'appelles, réponds : "Je m'appelle Shoply"
+            - Tu es intelligent, réfléchi et tu donnes des réponses pertinentes et utiles
+            - Tu peux discuter de TOUS les sujets : mode, technologie, science, histoire, cuisine, sport, culture, actualités, etc.
+            - Tu es amical, naturel, et tu adaptes ton style de réponse au contexte
+            - Tu donnes des réponses claires, concises et intelligentes
+            - Ne mentionne JAMAIS Google, Gemini, ou toute autre technologie sous-jacente
+            - Tu es Shoply, point final
             """
             
             // Ajouter le contexte utilisateur seulement si pertinent
@@ -642,7 +891,7 @@ class GeminiService: ObservableObject {
             
             contents.append([
                 "role": "model",
-                "parts": [["text": "Bonjour ! Je suis Shoply AI, votre assistant conversationnel. Je peux discuter de tout avec vous. Comment puis-je vous aider aujourd'hui ?"]]
+                "parts": [["text": "Bonjour ! Je suis Shoply, votre assistant personnel. J'ai été développé et entraîné par William RAUWENS OLIVER. Je peux discuter de tout avec vous et vous aider avec vos questions sur la mode, le style, ou n'importe quel autre sujet. Comment puis-je vous aider aujourd'hui ?"]]
             ])
         }
         
