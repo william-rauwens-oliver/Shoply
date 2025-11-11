@@ -5,10 +5,11 @@
 //  Created by William on 02/11/2025.
 //
 
-import AppIntents
 import SwiftUI
 import WidgetKit
+import AppIntents
 
+@available(iOS 18.0, *)
 struct ShoplyWidgetExtensionControl: ControlWidget {
     static let kind: String = "William.Shoply.ShoplyWidgetExtension"
 
@@ -30,6 +31,7 @@ struct ShoplyWidgetExtensionControl: ControlWidget {
     }
 }
 
+@available(iOS 18.0, *)
 extension ShoplyWidgetExtensionControl {
     struct Value {
         var isRunning: Bool
@@ -48,6 +50,7 @@ extension ShoplyWidgetExtensionControl {
     }
 }
 
+@available(iOS 18.0, *)
 struct TimerConfiguration: ControlConfigurationIntent {
     static let title: LocalizedStringResource = "Timer Name Configuration"
 
@@ -55,6 +58,7 @@ struct TimerConfiguration: ControlConfigurationIntent {
     var timerName: String
 }
 
+@available(iOS 18.0, *)
 struct StartTimerIntent: SetValueIntent {
     static let title: LocalizedStringResource = "Start a timer"
 

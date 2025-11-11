@@ -9,6 +9,7 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
+@available(iOS 16.1, *)
 struct ShoplyWidgetExtensionAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         // Dynamic stateful properties about your activity go here!
@@ -19,6 +20,7 @@ struct ShoplyWidgetExtensionAttributes: ActivityAttributes {
     var name: String
 }
 
+@available(iOS 16.1, *)
 struct ShoplyWidgetExtensionLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ShoplyWidgetExtensionAttributes.self) { context in
@@ -56,12 +58,14 @@ struct ShoplyWidgetExtensionLiveActivity: Widget {
     }
 }
 
+@available(iOS 16.1, *)
 extension ShoplyWidgetExtensionAttributes {
     fileprivate static var preview: ShoplyWidgetExtensionAttributes {
         ShoplyWidgetExtensionAttributes(name: "World")
     }
 }
 
+@available(iOS 16.1, *)
 extension ShoplyWidgetExtensionAttributes.ContentState {
     fileprivate static var smiley: ShoplyWidgetExtensionAttributes.ContentState {
         ShoplyWidgetExtensionAttributes.ContentState(emoji: "😀")
@@ -72,6 +76,7 @@ extension ShoplyWidgetExtensionAttributes.ContentState {
      }
 }
 
+@available(iOS 16.1, *)
 #Preview("Notification", as: .content, using: ShoplyWidgetExtensionAttributes.preview) {
    ShoplyWidgetExtensionLiveActivity()
 } contentStates: {
