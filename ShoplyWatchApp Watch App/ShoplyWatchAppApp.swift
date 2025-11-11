@@ -9,10 +9,9 @@ import SwiftUI
 
 @main
 struct ShoplyWatchApp_Watch_AppApp: App {
-    // Utiliser directement les singletons sans @StateObject
-    private let watchDataManager = WatchDataManager.shared
-    private let watchOutfitService = WatchOutfitService.shared
-    private let watchWeatherService = WatchWeatherService.shared
+    @StateObject private var watchDataManager = WatchDataManager.shared
+    @StateObject private var watchOutfitService = WatchOutfitService.shared
+    @StateObject private var watchWeatherService = WatchWeatherService.shared
     
     init() {
         // Configuration initiale de l'app Watch

@@ -141,30 +141,12 @@ struct ChatAIScreen: View {
                             }
                         }
                         .scrollDismissesKeyboard(.interactively)
-                        .defaultScrollAnchor(.bottom)
+                        .modifier(DefaultScrollAnchorModifier())
                         .onAppear {
                             scrollToBottom(proxy: proxy)
                         }
-                        .onChange(of: messages.count) { oldValue, newValue in
-                            if newValue > oldValue {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                    scrollToBottom(proxy: proxy)
-                                }
-                            }
-                        }
-                        .onChange(of: isSending) { oldValue, newValue in
-                            if newValue {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                    withAnimation {
-                                        proxy.scrollTo("loading", anchor: .bottom)
-                                    }
-                                }
-                            } else {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                    scrollToBottom(proxy: proxy)
-                                }
-                            }
-                        }
+                        .modifier(OnChangeMessagesModifier(messagesCount: messages.count, proxy: proxy))
+                        .modifier(OnChangeSendingModifier(isSending: isSending, proxy: proxy))
                     }
                     
                     // Suggestions
@@ -189,20 +171,7 @@ struct ChatAIScreen: View {
                         selectedImage: $selectedImage,
                         onSend: sendMessage
                     )
-                    .onChange(of: selectedPhoto) { oldValue, newValue in
-                        Task {
-                            if let newValue = newValue {
-                                if let data = try? await newValue.loadTransferable(type: Data.self),
-                                   let image = UIImage(data: data) {
-                                    await MainActor.run {
-                                        selectedImage = image
-                                    }
-                                }
-                            } else {
-                                selectedImage = nil
-                            }
-                        }
-                    }
+                    .modifier(OnChangePhotoModifier(selectedPhoto: selectedPhoto, selectedImage: $selectedImage))
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -265,47 +234,7 @@ struct ChatAIScreen: View {
                 messages = initialMessages
             }
         }
-        .onChange(of: aiMode) { oldValue, newValue in
-            // Ajouter ou remplacer un message système pour indiquer le changement de mode
-            if oldValue != newValue {
-                let modeMessage: String
-                switch newValue {
-                case .gemini:
-                    modeMessage = "Mode changé : Shoply AI".localized
-                case .shoplyAI:
-                    modeMessage = "Mode changé : Shoply AI".localized
-                case .appleIntelligence:
-                    modeMessage = "Mode changé : Apple Intelligence".localized
-                }
-                
-                // Vérifier si le dernier message est un message système de changement de mode
-                // Si oui, le remplacer au lieu d'en ajouter un nouveau
-                if let lastMessage = messages.last,
-                   lastMessage.isSystemMessage,
-                   lastMessage.content.contains("Mode changé") {
-                    // Remplacer le dernier message système
-                    if let lastIndex = messages.indices.last {
-                        messages[lastIndex] = ChatMessage(
-                            content: modeMessage,
-                            isUser: false,
-                            isSystemMessage: true
-                        )
-                    }
-                } else {
-                    // Ajouter un nouveau message système (il y a eu des messages entre les changements)
-                    let systemMessage = ChatMessage(
-                        content: modeMessage,
-                        isUser: false,
-                        isSystemMessage: true
-                    )
-                    messages.append(systemMessage)
-                }
-            }
-            
-            if messages.contains(where: { $0.isUser }) {
-                saveConversation()
-            }
-        }
+        .modifier(OnChangeAIModeModifier(aiMode: aiMode, messages: $messages, saveConversation: saveConversation))
         .onDisappear {
             let hasUserMessages = messages.contains { $0.isUser }
             if hasUserMessages {
@@ -877,5 +806,154 @@ struct ChatInputArea: View {
             .padding(.vertical, DesignSystem.Spacing.sm)
             .background(AppColors.background)
         }
+    }
+}
+
+// MARK: - Modifiers de Compatibilité iOS
+
+struct DefaultScrollAnchorModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 17.0, *) {
+            content.defaultScrollAnchor(.bottom)
+        } else {
+            content
+        }
+    }
+}
+
+struct OnChangeMessagesModifier: ViewModifier {
+    let messagesCount: Int
+    let proxy: ScrollViewProxy
+    @State private var previousCount: Int = 0
+    
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                previousCount = messagesCount
+            }
+            .onChange(of: messagesCount) { newValue in
+                if newValue > previousCount {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation {
+                            proxy.scrollTo("bottom", anchor: .bottom)
+                        }
+                    }
+                }
+                previousCount = newValue
+            }
+    }
+}
+
+struct OnChangeSendingModifier: ViewModifier {
+    let isSending: Bool
+    let proxy: ScrollViewProxy
+    @State private var previousSending: Bool = false
+    
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                previousSending = isSending
+            }
+            .onChange(of: isSending) { newValue in
+                if newValue {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation {
+                            proxy.scrollTo("loading", anchor: .bottom)
+                        }
+                    }
+                } else {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        withAnimation {
+                            proxy.scrollTo("bottom", anchor: .bottom)
+                        }
+                    }
+                }
+                previousSending = newValue
+            }
+    }
+}
+
+struct OnChangePhotoModifier: ViewModifier {
+    let selectedPhoto: PhotosPickerItem?
+    @Binding var selectedImage: UIImage?
+    @State private var previousPhoto: PhotosPickerItem?
+    
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                previousPhoto = selectedPhoto
+            }
+            .onChange(of: selectedPhoto) { newValue in
+                Task {
+                    if let newValue = newValue {
+                        if let data = try? await newValue.loadTransferable(type: Data.self),
+                           let image = UIImage(data: data) {
+                            await MainActor.run {
+                                selectedImage = image
+                            }
+                        }
+                    } else {
+                        selectedImage = nil
+                    }
+                }
+                previousPhoto = newValue
+            }
+    }
+}
+
+struct OnChangeAIModeModifier: ViewModifier {
+    let aiMode: ChatAIScreen.AIMode
+    @Binding var messages: [ChatMessage]
+    let saveConversation: () -> Void
+    @State private var previousMode: ChatAIScreen.AIMode?
+    
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                previousMode = aiMode
+            }
+            .onChange(of: aiMode) { newValue in
+                // Ajouter ou remplacer un message système pour indiquer le changement de mode
+                if let oldValue = previousMode, oldValue != newValue {
+                    let modeMessage: String
+                    switch newValue {
+                    case .gemini:
+                        modeMessage = "Mode changé : Shoply AI".localized
+                    case .shoplyAI:
+                        modeMessage = "Mode changé : Shoply AI".localized
+                    case .appleIntelligence:
+                        modeMessage = "Mode changé : Apple Intelligence".localized
+                    }
+                    
+                    // Vérifier si le dernier message est un message système de changement de mode
+                    // Si oui, le remplacer au lieu d'en ajouter un nouveau
+                    if let lastMessage = messages.last,
+                       lastMessage.isSystemMessage,
+                       lastMessage.content.contains("Mode changé") {
+                        // Remplacer le dernier message système
+                        if let lastIndex = messages.indices.last {
+                            messages[lastIndex] = ChatMessage(
+                                content: modeMessage,
+                                isUser: false,
+                                isSystemMessage: true
+                            )
+                        }
+                    } else {
+                        // Ajouter un nouveau message système (il y a eu des messages entre les changements)
+                        let systemMessage = ChatMessage(
+                            content: modeMessage,
+                            isUser: false,
+                            isSystemMessage: true
+                        )
+                        messages.append(systemMessage)
+                    }
+                }
+                
+                if messages.contains(where: { $0.isUser }) {
+                    saveConversation()
+                }
+                
+                previousMode = newValue
+            }
     }
 }

@@ -176,7 +176,7 @@ struct ProfileScreen: View {
                 matching: .images,
                 photoLibrary: .shared()
             )
-            .onChange(of: selectedPhoto) { oldValue, newValue in
+            .onChange(of: selectedPhoto) { newValue in
                 Task {
                     if let newValue = newValue {
                         if let data = try? await newValue.loadTransferable(type: Data.self),
@@ -201,7 +201,7 @@ struct ProfileScreen: View {
                     ))
                 }
             }
-            .onChange(of: selectedImage) { oldValue, newValue in
+            .onChange(of: selectedImage) { newValue in
                 if let newValue = newValue {
                     profile.profilePhoto = newValue
                 }

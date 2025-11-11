@@ -11,7 +11,11 @@ import Combine
 
 /// Gestionnaire des paramètres de l'application
 class AppSettingsManager: ObservableObject {
-    static let shared = AppSettingsManager()
+    static let shared: AppSettingsManager = {
+        let instance = AppSettingsManager()
+        instance.loadSettings()
+        return instance
+    }()
     
     // MARK: - Propriétés publiées
     @Published var colorScheme: ColorScheme? = nil {
@@ -32,8 +36,11 @@ class AppSettingsManager: ObservableObject {
     private let colorSchemeKey = "app_color_scheme" // "light", "dark", "system"
     private let languageKey = "app_language"
     
+    // Queue pour garantir l'accès thread-safe
+    private let settingsQueue = DispatchQueue(label: "com.shoply.settings", attributes: .concurrent)
+    
     private init() {
-        loadSettings()
+        // Initialisation minimale - loadSettings sera appelé par le singleton
     }
     
     // MARK: - Chargement des paramètres

@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-@main
+// Ancien point d'entrée - maintenant dans ShoplyWatchApp Watch App/ShoplyWatchAppApp.swift
+// @main
 struct ShoplyWatchApp: App {
     @StateObject private var watchDataManager = WatchDataManager.shared
     @StateObject private var watchOutfitService = WatchOutfitService.shared

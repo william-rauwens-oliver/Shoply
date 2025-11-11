@@ -61,11 +61,19 @@ class WatchDataManager: NSObject, ObservableObject {
             return
         }
         
-        // Forcer la synchronisation
+        // Forcer la synchronisation plusieurs fois pour s'assurer que les données sont à jour
+        sharedDefaults.synchronize()
+        
+        // Attendre un court instant pour laisser le temps à la synchronisation
+        Thread.sleep(forTimeInterval: 0.1)
+        
+        // Synchroniser à nouveau
         sharedDefaults.synchronize()
         
         // Synchroniser les données depuis l'App Group
-        lastSyncDate = Date()
+        DispatchQueue.main.async {
+            self.lastSyncDate = Date()
+        }
     }
     
     // MARK: - Wardrobe
@@ -142,26 +150,33 @@ class WatchDataManager: NSObject, ObservableObject {
     func isAppConfigured() -> Bool {
         // Vérifier d'abord si l'App Group est accessible
         guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
-            // Essayer aussi de vérifier directement le profil dans UserDefaults standard
-            // comme fallback si l'App Group n'est pas encore configuré
-            return checkStandardUserDefaults()
+            print("⚠️ App Group non accessible: \(appGroupIdentifier)")
+            return false
         }
         
-        // Forcer la synchronisation
+        // Forcer la synchronisation plusieurs fois
         sharedDefaults.synchronize()
         
         // Vérifier si le profil existe dans l'App Group
-        if let data = sharedDefaults.data(forKey: "user_profile"),
-           let profile = try? JSONDecoder().decode(WatchUserProfile.self, from: data) {
-            // Si le prénom existe, l'app est configurée
-            if !profile.firstName.isEmpty {
-                return true
-            }
-            return profile.isConfigured
+        guard let data = sharedDefaults.data(forKey: "user_profile") else {
+            print("⚠️ Aucune donnée 'user_profile' dans l'App Group")
+            return false
         }
         
-        // Si pas de profil dans App Group, vérifier UserDefaults standard
-        return checkStandardUserDefaults()
+        guard let profile = try? JSONDecoder().decode(WatchUserProfile.self, from: data) else {
+            print("⚠️ Impossible de décoder le profil Watch")
+            return false
+        }
+        
+        // Si le prénom existe, l'app est configurée
+        let isConfigured = !profile.firstName.isEmpty || profile.isConfigured
+        if isConfigured {
+            print("✅ App configurée - Prénom: \(profile.firstName), isConfigured: \(profile.isConfigured)")
+        } else {
+            print("⚠️ App non configurée - Prénom vide et isConfigured = false")
+        }
+        
+        return isConfigured
     }
     
     private func checkStandardUserDefaults() -> Bool {

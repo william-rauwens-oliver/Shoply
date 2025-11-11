@@ -5,6 +5,7 @@
 //  Created by William on 11/11/2025.
 //
 
+#if canImport(XCTest)
 import XCTest
 
 final class ShoplyWatchApp_Watch_AppUITests: XCTestCase {
@@ -15,7 +16,7 @@ final class ShoplyWatchApp_Watch_AppUITests: XCTestCase {
         // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
 
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        // In UI tests it's important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
     }
 
     override func tearDownWithError() throws {
@@ -39,3 +40,9 @@ final class ShoplyWatchApp_Watch_AppUITests: XCTestCase {
         }
     }
 }
+
+#else
+// XCTest non disponible - les tests ne peuvent pas s'exécuter
+// Ce cas ne devrait normalement pas se produire pour watchOS
+#warning("XCTest framework non disponible pour ce target")
+#endif

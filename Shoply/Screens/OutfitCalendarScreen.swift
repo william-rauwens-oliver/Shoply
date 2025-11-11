@@ -146,7 +146,7 @@ struct OutfitCalendarScreen: View {
                         .roundedCorner(20)
                         .shadow(color: AppColors.shadow.opacity(0.08), radius: 12, x: 0, y: 4)
                         .padding(.horizontal, 20)
-                        .onChange(of: selectedDate) { oldValue, newValue in
+                        .onChange(of: selectedDate) { newValue in
                             // Réinitialiser l'état météo quand on change de date
                             weatherFetchedForSelectedDate = false
                             weatherErrorMessage = nil

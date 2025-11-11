@@ -343,7 +343,7 @@ struct TravelPlanDetailScreen: View {
                                 }
                             }
                         }
-                        .onChange(of: travelService.travelPlans) { oldValue, newValue in
+                        .onChange(of: travelService.travelPlans) { newValue in
                             if let updatedPlan = newValue.first(where: { $0.id == plan.id }),
                                !updatedPlan.checklist.isEmpty {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {

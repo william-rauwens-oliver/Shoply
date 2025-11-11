@@ -60,7 +60,7 @@ struct FloatingChatButton: View {
                 Image(systemName: "sparkles")
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundColor(AppColors.buttonPrimaryText)
-                    .symbolEffect(.pulse, options: .repeating.speed(0.7))
+                    .modifier(SymbolEffectModifier())
             }
             .frame(width: 56, height: 56)
         }
@@ -69,6 +69,18 @@ struct FloatingChatButton: View {
         }
         .fullScreenCover(isPresented: $showingConversations) {
             ChatConversationsScreen()
+        }
+    }
+}
+
+// MARK: - Modifier de compatibilité pour symbolEffect
+struct SymbolEffectModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 17.0, *) {
+            content
+                .symbolEffect(.pulse, options: .repeating.speed(0.7))
+        } else {
+            content
         }
     }
 }

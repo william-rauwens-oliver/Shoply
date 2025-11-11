@@ -129,8 +129,11 @@ class DataManager: ObservableObject {
                 self.onboardingCompleted = true
                 self.objectWillChange.send()
             }
-            // Synchroniser avec l'Apple Watch
-            syncUserProfileToWatch(profile: profile)
+            // Synchroniser avec l'Apple Watch de manière asynchrone et différée
+            // pour éviter les blocages au démarrage
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.syncUserProfileToWatch(profile: profile)
+            }
             // Synchroniser avec iCloud
             // La synchronisation est gérée manuellement depuis SettingsScreen
             // pour éviter les erreurs de compilation dans le widget extension
@@ -140,12 +143,15 @@ class DataManager: ObservableObject {
     // MARK: - Synchronisation avec Apple Watch
     func syncUserProfileToWatch(profile: UserProfile? = nil) {
         #if !WIDGET_EXTENSION
-        guard let sharedDefaults = UserDefaults(suiteName: "group.com.william.shoply") else {
+        // Synchroniser de manière synchrone pour garantir que les données sont écrites
+        let profileToSync = profile ?? loadUserProfile()
+        guard let profileToSync = profileToSync else {
+            print("⚠️ iOS: Aucun profil à synchroniser")
             return
         }
         
-        let profileToSync = profile ?? loadUserProfile()
-        guard let profileToSync = profileToSync else {
+        guard let sharedDefaults = UserDefaults(suiteName: "group.com.william.shoply") else {
+            print("⚠️ iOS: Impossible d'accéder à l'App Group pour synchroniser le profil")
             return
         }
         
@@ -155,14 +161,29 @@ class DataManager: ObservableObject {
             let isConfigured: Bool
         }
         
+        let isConfigured = !profileToSync.firstName.isEmpty && profileToSync.gender != .notSpecified
         let watchProfile = WatchUserProfile(
             firstName: profileToSync.firstName,
-            isConfigured: !profileToSync.firstName.isEmpty && profileToSync.gender != .notSpecified
+            isConfigured: isConfigured
         )
         
-        if let encoded = try? JSONEncoder().encode(watchProfile) {
-            sharedDefaults.set(encoded, forKey: "user_profile")
-            sharedDefaults.synchronize()
+        guard let encoded = try? JSONEncoder().encode(watchProfile) else {
+            print("⚠️ iOS: Impossible d'encoder le profil Watch")
+            return
+        }
+        
+        // Écrire dans l'App Group de manière synchrone
+        sharedDefaults.set(encoded, forKey: "user_profile")
+        
+        // Forcer la synchronisation plusieurs fois pour s'assurer que ça fonctionne
+        sharedDefaults.synchronize()
+        
+        // Vérifier que les données ont bien été écrites
+        if let savedData = sharedDefaults.data(forKey: "user_profile"),
+           let savedProfile = try? JSONDecoder().decode(WatchUserProfile.self, from: savedData) {
+            print("✅ iOS: Profil synchronisé vers Watch - Prénom: \(savedProfile.firstName), isConfigured: \(savedProfile.isConfigured)")
+        } else {
+            print("❌ iOS: Échec de la synchronisation - les données n'ont pas été sauvegardées")
         }
         #endif
     }
@@ -183,8 +204,9 @@ class DataManager: ObservableObject {
                 self.onboardingCompleted = completed
             }
         }
-        // Synchroniser avec Watch si l'onboarding est complété
+        // Synchroniser avec Watch si l'onboarding est complété (immédiatement)
         if completed {
+            // Synchroniser immédiatement pour que l'App Watch détecte la configuration
             syncUserProfileToWatch()
         }
         return completed

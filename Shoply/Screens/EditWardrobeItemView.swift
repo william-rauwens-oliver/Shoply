@@ -144,7 +144,7 @@ struct EditWardrobeItemView: View {
             .onAppear {
                 loadItemData()
             }
-            .onChange(of: selectedPhotos) { oldValue, newValue in
+            .onChange(of: selectedPhotos) { newValue in
                 Task {
                     // Ajouter les nouvelles photos aux photos existantes
                     for photoItem in newValue {

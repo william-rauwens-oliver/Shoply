@@ -568,17 +568,7 @@ struct ModernAddWishlistItemScreen: View {
                         .foregroundColor(AppColors.primaryText)
                 }
             }
-            .onChange(of: selectedPhoto) { oldValue, newValue in
-                Task {
-                    if let newValue = newValue,
-                       let data = try? await newValue.loadTransferable(type: Data.self),
-                       let image = UIImage(data: data) {
-                        await MainActor.run {
-                            selectedImage = image
-                        }
-                    }
-                }
-            }
+            .onChangePhotosPicker(selectedPhoto: selectedPhoto, selectedImage: $selectedImage)
         }
     }
     

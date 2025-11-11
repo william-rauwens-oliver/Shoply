@@ -344,7 +344,7 @@ struct ModernHeaderSection: View {
                 Image(systemName: "sparkles")
                     .font(.system(size: 48, weight: .medium))
                     .foregroundColor(AppColors.buttonPrimary)
-                    .symbolEffect(.pulse, options: .repeating)
+                    .modifier(SymbolEffectModifier())
             }
             
             VStack(spacing: DesignSystem.Spacing.sm) {
@@ -826,7 +826,7 @@ struct GenerateButtonSection: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundColor(isEnabled ? AppColors.buttonPrimaryText : AppColors.secondaryText)
-                        .symbolEffect(.pulse, options: .repeating)
+                        .modifier(SymbolEffectModifier())
                 }
                 
                 Text("Générer mes outfits".localized)
@@ -907,7 +907,7 @@ struct ModernLoadingView: View {
                             Image(systemName: "sparkles")
                                 .font(.system(size: 24, weight: .medium))
                                 .foregroundColor(AppColors.buttonPrimary)
-                                .symbolEffect(.pulse, options: .repeating)
+                                .modifier(SymbolEffectModifier())
                         }
                     } else {
                         Text("\(Int(progress * 100))%")
@@ -965,7 +965,7 @@ struct ModernLoadingView: View {
                 }
             }
         }
-        .onChange(of: progress) { oldValue, newValue in
+        .onChange(of: progress) { newValue in
             withAnimation(.easeInOut(duration: 0.3)) {
                 currentStep = Int(newValue * 10)
             }

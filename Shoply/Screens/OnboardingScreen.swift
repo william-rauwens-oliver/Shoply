@@ -672,7 +672,7 @@ struct OnboardingStep1: View {
                         .roundedCorner(16)
                     }
                     .padding(.horizontal, 40)
-                    .onChange(of: selectedProfileItem) { oldValue, newValue in
+                    .onChange(of: selectedProfileItem) { newValue in
                         Task {
                             if let newValue = newValue,
                                let data = try? await newValue.loadTransferable(type: Data.self),
@@ -747,7 +747,7 @@ struct OnboardingStep2_Email: View {
                         isTextFieldFocused = true
                     }
                 }
-                .onChange(of: email) { oldValue, newValue in
+                .onChange(of: email) { newValue in
                     // Cacher l'erreur si l'email devient valide
                     if EmailValidation.isValidEmail(newValue) {
                         showingError = false
@@ -839,7 +839,7 @@ struct OnboardingStep3_DateOfBirth: View {
                 )
                 .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
                 .tint(AppColors.buttonPrimary)
-                .onChange(of: dateOfBirth) { oldValue, newValue in
+                .onChange(of: dateOfBirth) { newValue in
                     // Cacher l'erreur si l'âge devient valide
                     let calendar = Calendar.current
                     let ageComponents = calendar.dateComponents([.year], from: newValue, to: Date())

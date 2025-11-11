@@ -25,6 +25,9 @@ struct ShoplyApp: App {
     // Apple Sign In retiré du projet (nettoyage)
     
     init() {
+        // Initialiser AppSettingsManager en premier pour éviter les crashes
+        _ = AppSettingsManager.shared
+        
         // Configuration initiale de l'app
         setupAppearance()
         configureOrientations()
@@ -87,8 +90,19 @@ struct ShoplyApp: App {
                             // Initialiser les notifications motivationnelles
                             initializeMotivationNotifications()
                             
-                            // Synchroniser le profil avec l'Apple Watch
+                            // Synchroniser le profil avec l'Apple Watch IMMÉDIATEMENT et plusieurs fois
+                            // pour s'assurer que l'App Group contient les données
                             dataManager.syncUserProfileToWatch()
+                            
+                            // Synchroniser à nouveau après un court délai
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                dataManager.syncUserProfileToWatch()
+                            }
+                            
+                            // Synchroniser une troisième fois après 3 secondes
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                                dataManager.syncUserProfileToWatch()
+                            }
                             
                             // Synchronisation iCloud désactivée au démarrage pour éviter les crashes
                             // La synchronisation peut être faite manuellement depuis SettingsScreen

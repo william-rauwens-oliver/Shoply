@@ -168,7 +168,7 @@ struct TutorialScreen: View {
                 .padding(.bottom, 40)
             }
         }
-        .onChange(of: currentStep) { oldValue, newValue in
+        .onChange(of: currentStep) { newValue in
             // Cacher le bouton "Passer" sur la dernière étape
             showSkipButton = newValue < steps.count - 1
         }

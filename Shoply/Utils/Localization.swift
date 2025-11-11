@@ -2331,7 +2331,16 @@ struct LocalizedString {
 // Extension pour faciliter l'utilisation
 extension String {
     var localized: String {
-        return LocalizedString.localized(self, for: AppSettingsManager.shared.selectedLanguage)
+        // S'assurer que AppSettingsManager est initialisé de manière thread-safe
+        let language: AppLanguage
+        if Thread.isMainThread {
+            language = AppSettingsManager.shared.selectedLanguage
+        } else {
+            language = DispatchQueue.main.sync {
+                AppSettingsManager.shared.selectedLanguage
+            }
+        }
+        return LocalizedString.localized(self, for: language)
     }
 }
 

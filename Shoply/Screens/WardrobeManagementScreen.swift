@@ -139,7 +139,7 @@ struct WardrobeManagementScreen: View {
             .sheet(isPresented: $showingAddItem) {
                 AddWardrobeItemView(wardrobeService: wardrobeService)
             }
-            .onChange(of: selectedCategory) { oldValue, newValue in
+            .onChange(of: selectedCategory) { newValue in
                 if isSelectionMode {
                     selectedItems.removeAll()
                 }
@@ -659,7 +659,7 @@ struct AddWardrobeItemView: View {
                     .foregroundColor(name.isEmpty ? AppColors.secondaryText : AppColors.buttonPrimary)
                 }
             }
-            .onChange(of: selectedPhotos) { oldValue, newValue in
+            .onChange(of: selectedPhotos) { newValue in
                 Task {
                     photoImages.removeAll()
                     for photoItem in newValue {

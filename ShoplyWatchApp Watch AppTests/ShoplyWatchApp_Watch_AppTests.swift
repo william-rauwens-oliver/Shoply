@@ -5,13 +5,21 @@
 //  Created by William on 11/11/2025.
 //
 
-import Testing
+#if canImport(XCTest)
+import XCTest
 @testable import ShoplyWatchApp_Watch_App
 
-struct ShoplyWatchApp_Watch_AppTests {
+final class ShoplyWatchApp_Watch_AppTests: XCTestCase {
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+    func testExample() throws {
+        // Write your test here and use APIs like `XCTAssert` to check expected conditions.
+        XCTAssertTrue(true)
     }
 
 }
+
+#else
+// XCTest non disponible - les tests ne peuvent pas s'exécuter
+// Ce cas ne devrait normalement pas se produire pour watchOS
+#warning("XCTest framework non disponible pour ce target")
+#endif
