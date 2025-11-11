@@ -76,10 +76,12 @@ extension ShoplyWidgetExtensionAttributes.ContentState {
      }
 }
 
-@available(iOS 16.1, *)
+#if canImport(ActivityKit)
+@available(iOS 17.0, *)
 #Preview("Notification", as: .content, using: ShoplyWidgetExtensionAttributes.preview) {
    ShoplyWidgetExtensionLiveActivity()
 } contentStates: {
     ShoplyWidgetExtensionAttributes.ContentState.smiley
     ShoplyWidgetExtensionAttributes.ContentState.starEyes
 }
+#endif
