@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 /// Écran d'onboarding - Première utilisation
 struct OnboardingScreen: View {
