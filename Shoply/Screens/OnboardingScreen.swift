@@ -419,8 +419,15 @@ struct OnboardingStep0_Welcome: View {
                 .opacity(featuresOpacity)
                 .offset(y: featuresOffset)
             }
-            .padding(.horizontal, 30)
-            .padding(.bottom, 40)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 20)
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(AppColors.buttonSecondary)
+                    .shadow(color: AppColors.shadow.opacity(0.25), radius: 20, x: 0, y: 10)
+            )
+            .padding(.horizontal, 20)
+            .padding(.bottom, 32)
         }
         .onAppear {
             // Animation du logo

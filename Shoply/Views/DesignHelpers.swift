@@ -27,7 +27,8 @@ struct AppColors {
     // Boutons - Noir et blanc pur
     static let buttonPrimary = Color(light: .black, dark: .white)
     static let buttonPrimaryText = Color(light: .white, dark: .black)
-    static let buttonSecondary = Color(light: Color(white: 0.95), dark: Color(white: 0.1))
+    // Légèrement plus clair en mode sombre pour améliorer le contraste des panneaux
+    static let buttonSecondary = Color(light: Color(white: 0.95), dark: Color(white: 0.16))
     static let buttonSecondaryText = Color(light: .black, dark: .white)
     
     // Accents - Gris uniquement

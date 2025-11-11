@@ -199,11 +199,13 @@ struct TutorialStepView: View {
     @State private var circlesOpacity: Double = 0
     
     var body: some View {
-        VStack(spacing: 40) {
-            Spacer()
+        VStack(spacing: 24) {
+            Spacer(minLength: 0)
             
-            // Icône grande avec animation améliorée
-            ZStack {
+            // Panneau pour améliorer la lisibilité
+            VStack(spacing: 24) {
+                // Icône grande avec animation améliorée
+                ZStack {
                 // Cercles concentriques animés avec effet de pulsation
                 ForEach(0..<2, id: \.self) { index in
                     Circle()
@@ -252,27 +254,36 @@ struct TutorialStepView: View {
                         .rotationEffect(.degrees(iconRotation))
                 }
                 .scaleEffect(iconScale)
-            }
-            
-            // Titre et description avec animation améliorée
-            VStack(spacing: 20) {
-                Text(step.title)
-                    .font(.playfairDisplayBold(size: 32))
-                    .foregroundColor(AppColors.primaryText)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 30)
+                }
                 
-                Text(step.description)
-                    .font(.system(size: 17, weight: .regular))
-                    .foregroundColor(AppColors.secondaryText)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(8)
-                    .padding(.horizontal, 40)
+                // Titre et description avec animation améliorée
+                VStack(spacing: 14) {
+                    Text(step.title)
+                        .font(.playfairDisplayBold(size: 28))
+                        .foregroundColor(AppColors.primaryText)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                    
+                    Text(step.description)
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundColor(AppColors.secondaryText)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(6)
+                        .padding(.horizontal, 24)
+                }
+                .opacity(contentOpacity)
+                .offset(y: contentOffset)
             }
-            .opacity(contentOpacity)
-            .offset(y: contentOffset)
+            .padding(.vertical, 24)
+            .padding(.horizontal, 20)
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(AppColors.buttonSecondary)
+                    .shadow(color: AppColors.shadow.opacity(0.25), radius: 20, x: 0, y: 10)
+            )
+            .padding(.horizontal, 20)
             
-            Spacer()
+            Spacer(minLength: 0)
         }
         .padding()
         .onAppear {
