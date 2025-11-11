@@ -29,6 +29,7 @@ struct OnboardingScreen: View {
     @State private var showingAgeError = false
     @State private var showingEmailError = false
     @EnvironmentObject var dataManager: DataManager
+    @StateObject private var settingsManager = AppSettingsManager.shared
     
     // Propriété calculée pour l'âge minimum (15 ans)
     private var minimumDate: Date {
@@ -219,6 +220,7 @@ struct OnboardingScreen: View {
                 TutorialScreen(isPresented: $showingTutorial)
             }
         }
+        .preferredColorScheme(settingsManager.colorScheme)
     }
     
     // Fonction pour valider l'email avec vérification du domaine
@@ -277,6 +279,8 @@ struct OnboardingScreen: View {
 
 // MARK: - Étape 0: Page de bienvenue
 struct OnboardingStep0_Welcome: View {
+    @StateObject private var settingsManager = AppSettingsManager.shared
+    
     @State private var logoScale: CGFloat = 0.8
     @State private var logoRotation: Double = 0
     @State private var featuresOpacity: Double = 0
@@ -368,6 +372,21 @@ struct OnboardingStep0_Welcome: View {
                         .opacity(featuresOpacity)
                 }
             }
+            
+            // Sélecteur de thème (clair/sombre)
+            HStack(spacing: 8) {
+                ThemePillButton(
+                    title: "Clair".localized,
+                    isSelected: settingsManager.colorScheme == .light,
+                    action: { settingsManager.setColorScheme(.light) }
+                )
+                ThemePillButton(
+                    title: "Sombre".localized,
+                    isSelected: settingsManager.colorScheme == .dark,
+                    action: { settingsManager.setColorScheme(.dark) }
+                )
+            }
+            .padding(.top, 20)
             
             Spacer()
             
@@ -488,6 +507,30 @@ struct ModernFeatureCard: View {
                 }
             }
         }
+    }
+}
+
+// Sélecteur de thème en forme de pilule
+private struct ThemePillButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(isSelected ? AppColors.buttonPrimaryText : AppColors.primaryText)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(isSelected ? AppColors.buttonPrimary : AppColors.buttonSecondary)
+                .clipShape(Capsule())
+                .overlay {
+                    Capsule()
+                        .stroke(AppColors.cardBorder.opacity(0.2), lineWidth: isSelected ? 0 : 1)
+                }
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
