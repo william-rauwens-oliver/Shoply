@@ -18,6 +18,7 @@ struct LocalizedString {
             "Paramètres": [                .french: "Paramètres",
                 .english: "Settings",
                 .spanish: "Configuración",
+                .italian: "Impostazioni",
                 .hindi: "Settings",
                 .chineseSimplified: "Settings",
                 .arabic: "Settings",
@@ -29,6 +30,7 @@ struct LocalizedString {
             "Apparence": [                .french: "Apparence",
                 .english: "Appearance",
                 .spanish: "Apariencia",
+                .italian: "Aspetto",
                 .hindi: "Appearance",
                 .chineseSimplified: "Appearance",
                 .arabic: "Appearance",
@@ -40,6 +42,7 @@ struct LocalizedString {
             "Mode sombre": [                .french: "Mode sombre",
                 .english: "Dark mode",
                 .spanish: "Modo oscuro",
+                .italian: "Modalità scura",
                 .hindi: "Dark mode",
                 .chineseSimplified: "Dark mode",
                 .arabic: "Dark mode",
@@ -51,6 +54,7 @@ struct LocalizedString {
             "Clair": [                .french: "Clair",
                 .english: "Light",
                 .spanish: "Claro",
+                .italian: "Chiaro",
                 .hindi: "Light",
                 .chineseSimplified: "Light",
                 .arabic: "Light",
@@ -2310,8 +2314,8 @@ struct LocalizedString {
                 return translation
             }
             
-            // Fallback: essayer les langues les plus parlées dans l'ordre de priorité
-            let fallbackLanguages: [AppLanguage] = [.english, .spanish, .french, .portuguese, .russian, .arabic, .hindi, .chineseSimplified, .bengali, .indonesian]
+            // Fallback: ordre de priorité (inclut l'italien)
+            let fallbackLanguages: [AppLanguage] = [.french, .english, .spanish, .italian, .portuguese, .russian, .arabic, .hindi, .chineseSimplified, .bengali, .indonesian]
             for fallbackLang in fallbackLanguages {
                 if let translation = translationsForKey[fallbackLang] {
                     return translation
