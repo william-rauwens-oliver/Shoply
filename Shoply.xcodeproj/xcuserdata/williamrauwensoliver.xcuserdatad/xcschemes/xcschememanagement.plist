@@ -7,12 +7,55 @@
 		<key>Shoply.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
+		<key>ShoplyWatchApp Watch App.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
 		<key>ShoplyWidgetExtensionExtension.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>0</integer>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>701505D82EB75DFB006919EB</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>704CA0352EB6662F0038DF51</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>704CA0422EB666300038DF51</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>704CA04C2EB666300038DF51</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>7063D3EC2EC38DC100A3C5F3</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>7063D3F82EC38DC300A3C5F3</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>7063D4022EC38DC300A3C5F3</key>
+		<dict>
+			<key>primary</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

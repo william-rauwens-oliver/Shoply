@@ -87,6 +87,9 @@ struct ShoplyApp: App {
                             // Initialiser les notifications motivationnelles
                             initializeMotivationNotifications()
                             
+                            // Synchroniser le profil avec l'Apple Watch
+                            dataManager.syncUserProfileToWatch()
+                            
                             // Synchronisation iCloud désactivée au démarrage pour éviter les crashes
                             // La synchronisation peut être faite manuellement depuis SettingsScreen
                             // checkAndSyncWithiCloud()

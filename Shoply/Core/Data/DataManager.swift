@@ -129,10 +129,42 @@ class DataManager: ObservableObject {
                 self.onboardingCompleted = true
                 self.objectWillChange.send()
             }
+            // Synchroniser avec l'Apple Watch
+            syncUserProfileToWatch(profile: profile)
             // Synchroniser avec iCloud
             // La synchronisation est gérée manuellement depuis SettingsScreen
             // pour éviter les erreurs de compilation dans le widget extension
         }
+    }
+    
+    // MARK: - Synchronisation avec Apple Watch
+    func syncUserProfileToWatch(profile: UserProfile? = nil) {
+        #if !WIDGET_EXTENSION
+        guard let sharedDefaults = UserDefaults(suiteName: "group.com.william.shoply") else {
+            return
+        }
+        
+        let profileToSync = profile ?? loadUserProfile()
+        guard let profileToSync = profileToSync else {
+            return
+        }
+        
+        // Créer le profil Watch simplifié
+        struct WatchUserProfile: Codable {
+            let firstName: String
+            let isConfigured: Bool
+        }
+        
+        let watchProfile = WatchUserProfile(
+            firstName: profileToSync.firstName,
+            isConfigured: !profileToSync.firstName.isEmpty && profileToSync.gender != .notSpecified
+        )
+        
+        if let encoded = try? JSONEncoder().encode(watchProfile) {
+            sharedDefaults.set(encoded, forKey: "user_profile")
+            sharedDefaults.synchronize()
+        }
+        #endif
     }
     
     func loadUserProfile() -> UserProfile? {
@@ -150,6 +182,10 @@ class DataManager: ObservableObject {
             DispatchQueue.main.async {
                 self.onboardingCompleted = completed
             }
+        }
+        // Synchroniser avec Watch si l'onboarding est complété
+        if completed {
+            syncUserProfileToWatch()
         }
         return completed
     }

@@ -60,7 +60,8 @@ struct AIThinkingAnimation: View {
                 Image(systemName: "sparkles")
                     .font(.system(size: 28, weight: .medium))
                     .foregroundColor(AppColors.buttonPrimary)
-                    .symbolEffect(.pulse, options: .repeating)
+                    .scaleEffect(scale * 0.9)
+                    .opacity(opacity)
             }
             
             // Message avec points animés
