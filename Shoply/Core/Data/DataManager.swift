@@ -146,14 +146,19 @@ class DataManager: ObservableObject {
         // Synchroniser de manière synchrone pour garantir que les données sont écrites
         let profileToSync = profile ?? loadUserProfile()
         guard let profileToSync = profileToSync else {
-            print("⚠️ iOS: Aucun profil à synchroniser")
+            print("⚠️ iOS: Aucun profil à synchroniser - loadUserProfile() retourne nil")
             return
         }
         
+        print("📱 iOS: Tentative de synchronisation du profil - Prénom: \(profileToSync.firstName), Genre: \(profileToSync.gender)")
+        
         guard let sharedDefaults = UserDefaults(suiteName: "group.com.william.shoply") else {
-            print("⚠️ iOS: Impossible d'accéder à l'App Group pour synchroniser le profil")
+            print("❌ iOS: CRITIQUE - Impossible d'accéder à l'App Group 'group.com.william.shoply'")
+            print("   → Vérifiez que l'App Group est activé dans les Capabilities du target iOS")
             return
         }
+        
+        print("✅ iOS: App Group accessible")
         
         // Créer le profil Watch simplifié
         struct WatchUserProfile: Codable {
@@ -168,22 +173,38 @@ class DataManager: ObservableObject {
         )
         
         guard let encoded = try? JSONEncoder().encode(watchProfile) else {
-            print("⚠️ iOS: Impossible d'encoder le profil Watch")
+            print("❌ iOS: Impossible d'encoder le profil Watch")
             return
         }
         
+        print("📦 iOS: Données encodées - Taille: \(encoded.count) bytes")
+        
         // Écrire dans l'App Group de manière synchrone
         sharedDefaults.set(encoded, forKey: "user_profile")
+        print("💾 iOS: Données écrites dans UserDefaults avec la clé 'user_profile'")
         
         // Forcer la synchronisation plusieurs fois pour s'assurer que ça fonctionne
-        sharedDefaults.synchronize()
+        let syncResult1 = sharedDefaults.synchronize()
+        print("🔄 iOS: Premier synchronize() - Résultat: \(syncResult1)")
         
-        // Vérifier que les données ont bien été écrites
-        if let savedData = sharedDefaults.data(forKey: "user_profile"),
-           let savedProfile = try? JSONDecoder().decode(WatchUserProfile.self, from: savedData) {
-            print("✅ iOS: Profil synchronisé vers Watch - Prénom: \(savedProfile.firstName), isConfigured: \(savedProfile.isConfigured)")
+        // Attendre un peu
+        Thread.sleep(forTimeInterval: 0.2)
+        
+        // Synchroniser à nouveau
+        let syncResult2 = sharedDefaults.synchronize()
+        print("🔄 iOS: Deuxième synchronize() - Résultat: \(syncResult2)")
+        
+        // Vérifier immédiatement que les données ont bien été écrites
+        if let savedData = sharedDefaults.data(forKey: "user_profile") {
+            print("✅ iOS: Données retrouvées dans App Group - Taille: \(savedData.count) bytes")
+            if let savedProfile = try? JSONDecoder().decode(WatchUserProfile.self, from: savedData) {
+                print("✅ iOS: Profil décodé avec succès - Prénom: '\(savedProfile.firstName)', isConfigured: \(savedProfile.isConfigured)")
+            } else {
+                print("❌ iOS: Impossible de décoder le profil sauvegardé")
+            }
         } else {
-            print("❌ iOS: Échec de la synchronisation - les données n'ont pas été sauvegardées")
+            print("❌ iOS: CRITIQUE - Les données ne sont pas retrouvées après écriture!")
+            print("   → L'App Group ne fonctionne peut-être pas correctement")
         }
         #endif
     }

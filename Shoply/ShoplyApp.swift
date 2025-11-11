@@ -90,18 +90,25 @@ struct ShoplyApp: App {
                             // Initialiser les notifications motivationnelles
                             initializeMotivationNotifications()
                             
-                            // Synchroniser le profil avec l'Apple Watch IMMÉDIATEMENT et plusieurs fois
-                            // pour s'assurer que l'App Group contient les données
-                            dataManager.syncUserProfileToWatch()
-                            
-                            // Synchroniser à nouveau après un court délai
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                                dataManager.syncUserProfileToWatch()
-                            }
-                            
-                            // Synchroniser une troisième fois après 3 secondes
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                                dataManager.syncUserProfileToWatch()
+                            // Vérifier et synchroniser le profil avec l'Apple Watch
+                            // Faire plusieurs tentatives pour garantir la synchronisation
+                            Task {
+                                // Première tentative immédiate
+                                await MainActor.run {
+                                    dataManager.syncUserProfileToWatch()
+                                }
+                                
+                                // Deuxième tentative après 1 seconde
+                                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                await MainActor.run {
+                                    dataManager.syncUserProfileToWatch()
+                                }
+                                
+                                // Troisième tentative après 3 secondes
+                                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                await MainActor.run {
+                                    dataManager.syncUserProfileToWatch()
+                                }
                             }
                             
                             // Synchronisation iCloud désactivée au démarrage pour éviter les crashes

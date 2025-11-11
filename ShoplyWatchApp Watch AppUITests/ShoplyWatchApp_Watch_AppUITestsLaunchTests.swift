@@ -36,5 +36,5 @@ final class ShoplyWatchApp_Watch_AppUITestsLaunchTests: XCTestCase {
 #else
 // XCTest non disponible - les tests ne peuvent pas s'exécuter
 // Ce cas ne devrait normalement pas se produire pour watchOS
-#warning("XCTest framework non disponible pour ce target")
+// Pas de warning car c'est normal pour certains targets watchOS
 #endif
