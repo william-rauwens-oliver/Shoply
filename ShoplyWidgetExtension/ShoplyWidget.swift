@@ -13,8 +13,12 @@ struct ShoplyWidget: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: ChatWidgetProvider()) { (entry: ChatWidgetEntry) in
-            ChatAIWidgetView(entry: entry)
-                .containerBackground(.fill.secondary, for: .widget)
+            if #available(iOS 17.0, *) {
+                ChatAIWidgetView(entry: entry)
+                    .containerBackground(.fill.secondary, for: .widget)
+            } else {
+                ChatAIWidgetView(entry: entry)
+            }
         }
         .configurationDisplayName("Shoply Chat")
         .description("Accès rapide au chatbot IA")
@@ -208,6 +212,7 @@ struct LargeChatWidget: View {
     }
 }
 
+@available(iOS 17.0, *)
 #Preview(as: .systemSmall) {
     ShoplyWidget()
 } timeline: {
