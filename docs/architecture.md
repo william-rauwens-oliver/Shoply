@@ -40,15 +40,11 @@ Persistance (SQLite + Core Data + CloudKit)
   - `GeminiService`: enrichissement (backend, UI masquée)
 
 ## Persistance
-- SQL (SQLite) via `SQLDatabaseService` (CRUD, jointures)
-- NoSQL (CloudKit) via `NoSQLDatabaseService` (documents)
-- Core Data (optionnel, DataManager)
 - UserDefaults pour préférences rapides
+- Core Data (optionnel, via `DataManager`, actuellement désactivé par défaut)
 
 ## Sécurité
-- Auth Apple (`AppleSignInService`)
 - RGPD (`RGDPManager`)
-- Chiffrement iCloud via CloudKit
 - Nettoyage/suppression des données depuis `SettingsScreen`
 
 ## Internationalisation

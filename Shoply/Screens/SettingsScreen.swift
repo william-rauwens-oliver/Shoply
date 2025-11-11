@@ -336,11 +336,10 @@ struct SettingsScreen: View {
         // Supprimer toutes les données utilisateur
         dataManager.deleteAllUserData()
         
-        // Déconnecter Apple Sign In
-        AppleSignInService.shared.signOut()
+                // Déconnexion Apple Sign In supprimée (service retiré)
         
         // Réinitialiser TOUS les flags pour revenir à l'état initial
-        UserDefaults.standard.removeObject(forKey: "hasSeenAppleSignInScreen")
+                UserDefaults.standard.removeObject(forKey: "hasSeenAppleSignInScreen")
         UserDefaults.standard.removeObject(forKey: "hasCompletedTutorial")
         UserDefaults.standard.removeObject(forKey: "tutorial_completed")
         UserDefaults.standard.removeObject(forKey: "onboardingCompleted")

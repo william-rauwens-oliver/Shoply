@@ -109,15 +109,10 @@ L'application **Shoply** répond à **la majorité des compétences** requises p
 - Services isolés et réutilisables
 
 ### 2.3 Concevoir et mettre en place une base de données relationnelle
-**✅ CONFORME**
-- ✅ **SQLite** : Implémentation dans `DatabaseService.swift`
-  - Tables : outfits, favorites, wardrobe_items
-  - Opérations CRUD complètes
-  - Requêtes SQL avec jointures
-- ✅ **Core Data** : Utilisé pour la persistance complexe
-  - NSPersistentContainer configuré
-  - Modèle de données `ShoplyDataModel`
-- ✅ **UserDefaults** : Pour les préférences utilisateur
+**✅ CONFORME (ajusté après nettoyage)**
+- ✅ **UserDefaults** : préférences et données locales simples
+- ✅ **Core Data (optionnel)** : stack présente mais désactivée par défaut
+- ❌ SQL/NoSQL (CloudKit) retirés du projet pour réduire la surface et la complexité
 
 **Preuves** :
 - `SQLDatabaseService` avec createTables(), executeSQL(), executeQuery()
@@ -125,16 +120,9 @@ L'application **Shoply** répond à **la majorité des compétences** requises p
 - Modèles de données structurés (WardrobeItem, Outfit, UserProfile, etc.)
 
 ### 2.4 Développer des composants d'accès aux données SQL et NoSQL
-**✅ CONFORME**
-- ✅ **SQL** : `SQLDatabaseService` avec SQLite3
-  - CRUD complet
-  - Requêtes avec jointures
-  - Gestion des transactions
-- ✅ **NoSQL** : `NoSQLDatabaseService` avec CloudKit
-  - Sauvegarde de documents
-  - Récupération avec prédicats
-  - Synchronisation iCloud
-- ✅ **CloudKitService** : Service dédié pour la synchronisation
+**✅ CONFORME (ciblé sur le périmètre actuel)**
+- ❌ SQL/NoSQL retirés (non utilisés en production)
+- ✅ Données locales par `UserDefaults` et modèles codables
 
 **Preuves** :
 - `DatabaseService.swift` : Commentaire explicite "Conforme aux exigences RNCP37873 - Bloc 2"

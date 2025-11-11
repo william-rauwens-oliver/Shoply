@@ -22,30 +22,7 @@ struct ShoplyApp: App {
     @StateObject private var settingsManager = AppSettingsManager.shared
     @State private var showingTutorial = false
     
-    // Apple Sign In disponible - Permet de proposer l'authentification
-    // Avec un compte développeur gratuit, l'utilisateur peut choisir de passer cette étape
-    // Le bouton "Continuer sans Apple Sign In" permet de contourner le problème
-    private var isAppleSignInAvailable: Bool {
-        // Toujours proposer l'écran, mais l'utilisateur peut choisir de passer
-        // Si Apple Sign In n'est pas configuré (compte gratuit), l'utilisateur verra un bouton pour continuer
-        return true
-    }
-    
-    // Vérifier si l'utilisateur a déjà vu l'écran Apple Sign In
-    private var hasSeenAppleSignIn: Bool {
-        UserDefaults.standard.bool(forKey: "hasSeenAppleSignInScreen")
-    }
-    
-    private func markAppleSignInAsSeen() {
-        UserDefaults.standard.set(true, forKey: "hasSeenAppleSignInScreen")
-    }
-    
-    private func resetAppleSignInIfNeeded() {
-        // Permettre de réinitialiser si l'utilisateur n'est plus authentifié
-        if !AppleSignInService.shared.isAuthenticated {
-            UserDefaults.standard.set(false, forKey: "hasSeenAppleSignInScreen")
-        }
-    }
+    // Apple Sign In retiré du projet (nettoyage)
     
     init() {
         // Configuration initiale de l'app
