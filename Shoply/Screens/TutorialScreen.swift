@@ -192,6 +192,7 @@ struct TutorialStepView: View {
     let step: TutorialStep
     let stepIndex: Int
     let currentStep: Int
+    @Environment(\.colorScheme) private var colorScheme
     @State private var iconScale: CGFloat = 0.5
     @State private var iconRotation: Double = -180
     @State private var contentOpacity: Double = 0
@@ -276,11 +277,14 @@ struct TutorialStepView: View {
             }
             .padding(.vertical, 24)
             .padding(.horizontal, 20)
-            .background(
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(AppColors.buttonSecondary)
-                    .shadow(color: AppColors.shadow.opacity(0.25), radius: 20, x: 0, y: 10)
-            )
+            .background {
+                // En mode clair: pas de fond gris derrière, laisser le fond blanc
+                if colorScheme == .dark {
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(AppColors.buttonSecondary)
+                        .shadow(color: AppColors.shadow.opacity(0.25), radius: 20, x: 0, y: 10)
+                }
+            }
             .padding(.horizontal, 20)
             
             Spacer(minLength: 0)
