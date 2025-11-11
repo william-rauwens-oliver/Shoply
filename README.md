@@ -241,6 +241,13 @@ Le projet utilise un design system minimaliste noir et blanc :
 - **Analyse** : Analyse de tendances et événements
 
 ## 📝 Fonctionnalités Détaillées
+## 📚 Documentation
+- Architecture: `docs/architecture.md`
+- Sécurité: `docs/securite.md`
+- RGPD: `docs/rgpd.md`
+- Déploiement: `docs/deploiement.md`
+- Plan de tests: `docs/plan_de_tests.md`
+
 
 ### Collections
 Organisez vos vêtements en collections thématiques avec icônes et couleurs personnalisables.

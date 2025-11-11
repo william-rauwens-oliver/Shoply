@@ -54,6 +54,34 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
       
+      - name: Build archive
+        run: |
+          set -eo pipefail
+          xcodebuild \
+            -scheme Shoply \
+            -configuration Release \
+            -archivePath $PWD/build/Shoply.xcarchive \
+            archive | xcpretty || true
+      
+      - name: Export archive (ad-hoc)
+        run: |
+          mkdir -p build/export
+          xcodebuild -exportArchive \
+            -archivePath $PWD/build/Shoply.xcarchive \
+            -exportOptionsPlist /dev/null \
+            -exportPath $PWD/build/export || true
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: shoply-build
+          path: |
+            build/Shoply.xcarchive
+            build/export
+      
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+      
       - name: Build for iOS Simulator
         run: |
           xcodebuild build \
