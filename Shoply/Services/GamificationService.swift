@@ -30,38 +30,11 @@ class GamificationService {
     
     private func initializeBadges() {
         badges = [
-            // Badges de progression - Collection
+            // 4 badges faciles seulement
             Badge(name: "Premier Pas", description: "Ajoutez votre premier vêtement à votre garde-robe", icon: "star.fill", category: .consistency, target: 1),
-            Badge(name: "Collectionneur", description: "Construisez une garde-robe de 10 vêtements", icon: "tshirt.fill", category: .variety, target: 10),
-            Badge(name: "Styliste", description: "Atteignez 50 vêtements dans votre garde-robe", icon: "sparkles", category: .variety, target: 50),
-            Badge(name: "Maître Garde-Robe", description: "Collectionnez 100 vêtements", icon: "tshirt.2.fill", category: .variety, target: 100),
-            
-            // Badges de régularité - Consistance
-            Badge(name: "Régulier", description: "Utilisez l'app 7 jours consécutifs", icon: "calendar", category: .consistency, target: 7),
-            Badge(name: "Dévoué", description: "Utilisez l'app 30 jours consécutifs", icon: "calendar.badge.clock", category: .consistency, target: 30),
-            Badge(name: "Passionné", description: "Maintenez un streak de 100 jours", icon: "flame.fill", category: .consistency, target: 100),
-            
-            // Badges de durabilité - Éco-responsabilité
-            Badge(name: "Éco-Conscient", description: "Portez vos vêtements 100 fois au total", icon: "leaf.fill", category: .sustainability, target: 100),
-            Badge(name: "Durable", description: "Portez vos vêtements 500 fois au total", icon: "leaf.circle.fill", category: .sustainability, target: 500),
-            Badge(name: "Zéro Déchet", description: "Réutilisez vos vêtements 1000 fois", icon: "arrow.3.trianglepath", category: .sustainability, target: 1000),
-            
-            // Badges de créativité - Outfits
-            Badge(name: "Créatif", description: "Créez 20 outfits différents", icon: "paintbrush.fill", category: .creativity, target: 20),
-            Badge(name: "Artiste", description: "Créez 50 outfits différents", icon: "paintpalette.fill", category: .creativity, target: 50),
-            Badge(name: "Expert Style", description: "Créez 100 outfits différents", icon: "crown.fill", category: .creativity, target: 100),
-            Badge(name: "Maître Mode", description: "Créez 200 outfits différents", icon: "sparkles.rectangle.stack.fill", category: .creativity, target: 200),
-            
-            // Badges de style - Qualité
-            Badge(name: "Perfectionniste", description: "Notez 50 outfits différents", icon: "star.circle.fill", category: .style, target: 50),
-            Badge(name: "Critique", description: "Notez 100 outfits différents", icon: "star.fill", category: .style, target: 100),
-            Badge(name: "Historique", description: "Portez 20 outfits différents", icon: "clock.fill", category: .consistency, target: 20),
-            Badge(name: "Vétéran", description: "Portez 100 outfits différents", icon: "clock.badge.checkmark.fill", category: .consistency, target: 100),
-            
-            // Badges sociaux - Partage
-            Badge(name: "Partageur", description: "Partagez 10 outfits avec vos amis", icon: "square.and.arrow.up.fill", category: .social, target: 10),
-            Badge(name: "Influenceur", description: "Partagez 50 outfits", icon: "person.2.fill", category: .social, target: 50),
-            Badge(name: "Ambassadeur", description: "Partagez 100 outfits", icon: "megaphone.fill", category: .social, target: 100)
+            Badge(name: "Collectionneur", description: "Construisez une garde-robe de 5 vêtements", icon: "tshirt.fill", category: .variety, target: 5),
+            Badge(name: "Régulier", description: "Utilisez l'app 3 jours consécutifs", icon: "calendar", category: .consistency, target: 3),
+            Badge(name: "Créatif", description: "Créez 3 outfits différents", icon: "paintbrush.fill", category: .creativity, target: 3)
         ]
     }
     

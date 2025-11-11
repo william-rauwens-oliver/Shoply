@@ -12,6 +12,8 @@ struct CollectionsScreen: View {
     @StateObject private var wardrobeService = WardrobeService()
     @State private var showingAddCollection = false
     @State private var selectedCollection: WardrobeCollection?
+    @State private var showingDeleteAlert = false
+    @State private var collectionToDelete: WardrobeCollection?
     
     var body: some View {
         NavigationStack {
@@ -27,12 +29,20 @@ struct CollectionsScreen: View {
                     ScrollView(showsIndicators: false) {
                         AdaptiveContentContainer(maxWidthPad: 1100, horizontalPadding: 24) {
                             LazyVGrid(columns: AdaptiveColumns.twoToThree(isPad: DeviceInfo.isPad), spacing: 16) {
-                            ForEach(collectionService.collections) { collection in
-                                NavigationLink(destination: CollectionDetailScreen(collection: collection)) {
+                                ForEach(collectionService.collections) { collection in
+                                    NavigationLink(destination: CollectionDetailScreen(collection: collection)) {
                                         ModernCollectionCard(collection: collection)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            collectionToDelete = collection
+                                            showingDeleteAlert = true
+                                        } label: {
+                                            Label("Supprimer".localized, systemImage: "trash")
+                                        }
+                                    }
                                 }
-                                .buttonStyle(PlainButtonStyle())
-                            }
                             
                             // Bouton ajouter
                             Button(action: { showingAddCollection = true }) {
@@ -68,6 +78,14 @@ struct CollectionsScreen: View {
                             .foregroundColor(AppColors.primaryText)
                     }
                 }
+            }
+            .alert("Supprimer la collection ?".localized, isPresented: $showingDeleteAlert, presenting: collectionToDelete) { collection in
+                Button("Supprimer".localized, role: .destructive) {
+                    collectionService.deleteCollection(collection)
+                }
+                Button("Annuler".localized, role: .cancel) { }
+            } message: { _ in
+                Text("Cette action est irréversible.".localized)
             }
             .sheet(isPresented: $showingAddCollection) {
                 AddCollectionScreen()
