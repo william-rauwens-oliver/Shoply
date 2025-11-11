@@ -29,12 +29,39 @@ struct CollectionsScreen: View {
                     ScrollView(showsIndicators: false) {
                         AdaptiveContentContainer(maxWidthPad: 1100, horizontalPadding: 24) {
                             LazyVGrid(columns: AdaptiveColumns.twoToThree(isPad: DeviceInfo.isPad), spacing: 16) {
-                                ForEach(collectionService.collections) { collection in
+                            ForEach(collectionService.collections) { collection in
+                                ZStack {
                                     NavigationLink(destination: CollectionDetailScreen(collection: collection)) {
                                         ModernCollectionCard(collection: collection)
                                     }
                                     .buttonStyle(PlainButtonStyle())
-                                    .contextMenu {
+                                    
+                                    // Bouton de suppression par-dessus
+                                    if !collection.isDefault {
+                                        VStack {
+                                            HStack {
+                                                Spacer()
+                                                Button {
+                                                    collectionToDelete = collection
+                                                    showingDeleteAlert = true
+                                                } label: {
+                                                    Image(systemName: "xmark.circle.fill")
+                                                        .font(.system(size: 20, weight: .medium))
+                                                        .foregroundColor(.red.opacity(0.8))
+                                                        .background(
+                                                            Circle()
+                                                                .fill(AppColors.background.opacity(0.9))
+                                                                .frame(width: 24, height: 24)
+                                                        )
+                                                }
+                                                .padding(8)
+                                            }
+                                            Spacer()
+                                        }
+                                    }
+                                }
+                                .contextMenu {
+                                    if !collection.isDefault {
                                         Button(role: .destructive) {
                                             collectionToDelete = collection
                                             showingDeleteAlert = true
@@ -43,6 +70,7 @@ struct CollectionsScreen: View {
                                         }
                                     }
                                 }
+                            }
                             
                             // Bouton ajouter
                             Button(action: { showingAddCollection = true }) {
