@@ -27,24 +27,31 @@ jobs:
       - name: List available simulators
         run: xcrun simctl list devices available | grep iPhone || true
       
+      - name: Show schemes and destinations
+        run: |
+          xcodebuild -list -project Shoply.xcodeproj
+          xcodebuild -showdestinations -project Shoply.xcodeproj -scheme Shoply || true
+      
+      - name: Boot simulator
+        run: |
+          xcrun simctl bootstatus "iPhone 15" -b || true
+      
       - name: Run Unit Tests
         run: |
-          xcodebuild test \
+          xcodebuild clean build test \
             -project Shoply.xcodeproj \
             -scheme Shoply \
             -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
-            -only-testing:ShoplyTests \
             -enableCodeCoverage YES \
             CODE_SIGNING_ALLOWED=NO \
             || echo "Unit tests completed with warnings"
       
       - name: Run UI Tests
         run: |
-          xcodebuild test \
+          xcodebuild clean build test \
             -project Shoply.xcodeproj \
             -scheme Shoply \
             -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
-            -only-testing:ShoplyUITests \
             -enableCodeCoverage YES \
             CODE_SIGNING_ALLOWED=NO \
             || echo "UI tests completed with warnings"
