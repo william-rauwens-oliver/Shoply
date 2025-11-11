@@ -242,7 +242,7 @@ struct SimpleHeaderView: View {
             let lon = location.coordinate.longitude
             guard !lat.isNaN && !lon.isNaN && !lat.isInfinite && !lon.isInfinite else {
                 let hour = Calendar.current.component(.hour, from: now)
-                greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
+                greetingKey = (hour >= 6 && hour < 19) ? "Bonjour" : "Bonsoir"
                 return
             }
             greetingKey = SunsetService.shared.getGreeting(
@@ -260,7 +260,7 @@ struct SimpleHeaderView: View {
             }
             // Fallback temporaire basé sur l'heure
             let hour = Calendar.current.component(.hour, from: now)
-            greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
+            greetingKey = (hour >= 6 && hour < 19) ? "Bonjour" : "Bonsoir"
         }
     }
 }

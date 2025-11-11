@@ -110,19 +110,12 @@ class SunsetService {
         return currentTime >= sunrise && currentTime < sunset
     }
     
-    /// Retourne la salutation appropriée (Bonjour/Bonsoir) basée sur le lever/coucher du soleil
+    /// Retourne la salutation appropriée (Bonjour/Bonsoir)
+    /// Priorise une règle simple et robuste basée sur l'heure locale pour éviter les erreurs de calcul astronomique.
     func getGreeting(latitude: Double, longitude: Double, currentTime: Date = Date()) -> String {
-        // Protection contre les valeurs invalides
-        guard !latitude.isNaN && !longitude.isNaN && !latitude.isInfinite && !longitude.isInfinite else {
-            let hour = Calendar.current.component(.hour, from: currentTime)
-            return (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
-        }
-        
-        if isDaytime(latitude: latitude, longitude: longitude, currentTime: currentTime) {
-            return "Bonjour"
-        } else {
-            return "Bonsoir"
-        }
+        let hour = Calendar.current.component(.hour, from: currentTime)
+        // Jour: 06:00 -> 19:00 (exclu), Nuit sinon
+        return (hour >= 6 && hour < 19) ? "Bonjour" : "Bonsoir"
     }
 }
 
