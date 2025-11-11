@@ -44,7 +44,7 @@ jobs:
             -project Shoply.xcodeproj \
             -scheme Shoply \
             -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
-            -only-testing:Shoply_appUITests \
+            -only-testing:ShoplyUITests \
             -enableCodeCoverage YES \
             CODE_SIGNING_ALLOWED=NO \
             || echo "UI tests completed with warnings"
