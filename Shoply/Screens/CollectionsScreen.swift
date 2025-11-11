@@ -25,24 +25,23 @@ struct CollectionsScreen: View {
                     }
                 } else {
                     ScrollView(showsIndicators: false) {
-                        LazyVGrid(columns: [
-                            GridItem(.flexible(), spacing: 16),
-                            GridItem(.flexible(), spacing: 16)
-                        ], spacing: 16) {
-                            ForEach(collectionService.collections) { collection in
-                                NavigationLink(destination: CollectionDetailScreen(collection: collection)) {
-                                    ModernCollectionCard(collection: collection)
+                        AdaptiveContentContainer(maxWidthPad: 1100, horizontalPadding: 24) {
+                            LazyVGrid(columns: AdaptiveColumns.twoToThree(isPad: DeviceInfo.isPad), spacing: 16) {
+                                ForEach(collectionService.collections) { collection in
+                                    NavigationLink(destination: CollectionDetailScreen(collection: collection)) {
+                                        ModernCollectionCard(collection: collection)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
+                                
+                                // Bouton ajouter
+                                Button(action: { showingAddCollection = true }) {
+                                    ModernAddCollectionCard()
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             }
-                            
-                            // Bouton ajouter
-                            Button(action: { showingAddCollection = true }) {
-                                ModernAddCollectionCard()
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                            .padding(20)
                         }
-                        .padding(20)
                     }
                 }
             }
@@ -279,18 +278,17 @@ struct CollectionDetailScreen: View {
                     }
                 } else {
                     ScrollView(showsIndicators: false) {
-                        LazyVGrid(columns: [
-                            GridItem(.flexible(), spacing: DesignSystem.Spacing.md),
-                            GridItem(.flexible(), spacing: DesignSystem.Spacing.md)
-                        ], spacing: DesignSystem.Spacing.md) {
-                            ForEach(items) { item in
-                                NavigationLink(destination: EditWardrobeItemView(item: item, wardrobeService: WardrobeService())) {
-                                    CollectionWardrobeItemCard(item: item)
+                        AdaptiveContentContainer(maxWidthPad: 1100, horizontalPadding: 24) {
+                            LazyVGrid(columns: AdaptiveColumns.twoToThree(isPad: DeviceInfo.isPad), spacing: DesignSystem.Spacing.md) {
+                                ForEach(items) { item in
+                                    NavigationLink(destination: EditWardrobeItemView(item: item, wardrobeService: WardrobeService())) {
+                                        CollectionWardrobeItemCard(item: item)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
-                                .buttonStyle(PlainButtonStyle())
                             }
+                            .padding(DesignSystem.Spacing.md)
                         }
-                        .padding(DesignSystem.Spacing.md)
                     }
                 }
             }

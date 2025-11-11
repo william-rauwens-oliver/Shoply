@@ -25,14 +25,16 @@ struct TravelModeScreen: View {
                     }
                 } else {
                     ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: 16) {
-                            ForEach(travelService.travelPlans) { plan in
-                                TravelPlanCard(plan: plan) {
-                                    selectedPlan = plan
+                        AdaptiveContentContainer(maxWidthPad: 900, horizontalPadding: 24) {
+                            LazyVStack(spacing: 16) {
+                                ForEach(travelService.travelPlans) { plan in
+                                    TravelPlanCard(plan: plan) {
+                                        selectedPlan = plan
+                                    }
                                 }
                             }
+                            .padding(20)
                         }
-                        .padding(20)
                     }
                 }
             }
@@ -315,22 +317,24 @@ struct TravelPlanDetailScreen: View {
                 if let currentPlan = currentPlan {
                     ScrollViewReader { proxy in
                         ScrollView(showsIndicators: false) {
-                            VStack(spacing: 24) {
-                                // En-tête moderne avec destination
-                                ModernTravelHeader(plan: currentPlan)
-                                    .padding(.horizontal, 20)
-                                    .padding(.top, 20)
-                                
-                                // Checklist en premier
-                                ChecklistSection(plan: currentPlan, travelService: travelService)
-                                    .padding(.horizontal, 20)
-                                    .id("checklist")
-                                
-                                // Informations du voyage
-                                TravelInfoSection(plan: currentPlan)
-                                    .padding(.horizontal, 20)
+                            AdaptiveContentContainer(maxWidthPad: 900, horizontalPadding: 24) {
+                                VStack(spacing: 24) {
+                                    // En-tête moderne avec destination
+                                    ModernTravelHeader(plan: currentPlan)
+                                        .padding(.horizontal, 20)
+                                        .padding(.top, 20)
+                                    
+                                    // Checklist en premier
+                                    ChecklistSection(plan: currentPlan, travelService: travelService)
+                                        .padding(.horizontal, 20)
+                                        .id("checklist")
+                                    
+                                    // Informations du voyage
+                                    TravelInfoSection(plan: currentPlan)
+                                        .padding(.horizontal, 20)
+                                }
+                                .padding(.bottom, 20)
                             }
-                            .padding(.bottom, 20)
                         }
                         .onAppear {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
