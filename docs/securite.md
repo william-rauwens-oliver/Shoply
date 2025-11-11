@@ -7,12 +7,11 @@
 
 ## Mesures en place
 - Authentification:
-  - Sign in with Apple (`AppleSignInService`)
-  - Jetons OAuth (Gemini) stockés de manière sécurisée
+  - Jetons d’API (Gemini) sécurisés (variables d’environnement / secrets CI)
 - Persistance:
-  - CloudKit (chiffré au repos et en transit)
-  - SQLite local: données non sensibles
   - UserDefaults: uniquement préférences
+  - Core Data (optionnel)
+  - SQLite (optionnel, démonstration RNCP) – données non sensibles
 - Données personnelles:
   - `RGDPManager` (consentement, révocation, export)
   - Suppression des données via `SettingsScreen.deleteAllUserData()`
@@ -34,7 +33,7 @@
 
 ## Checklist Dev Secure
 - [x] Validations d’entrée (EmailValidation)
-- [x] Transport chiffré (HTTPS / CloudKit)
+- [x] Transport chiffré (HTTPS)
 - [x] Données minimes persistées
 - [x] Contrôle d’accès côté UI (auth)
 - [x] Journalisation non sensible (no PII)
