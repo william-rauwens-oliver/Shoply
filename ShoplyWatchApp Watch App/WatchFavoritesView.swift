@@ -12,32 +12,44 @@ struct WatchFavoritesView: View {
     @State private var favoriteOutfits: [WatchOutfitHistoryItem] = []
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 8) {
-                if favoriteOutfits.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "heart.fill")
-                            .font(.largeTitle)
-                            .foregroundColor(.secondary)
-                        Text("Aucun favori")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("Marquez des outfits en favori depuis l'app iPhone")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
-                } else {
-                    ForEach(favoriteOutfits) { outfit in
-                        FavoriteOutfitCard(outfit: outfit)
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Favoris")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            
+            // Liste
+            ScrollView {
+                VStack(spacing: 8) {
+                    if favoriteOutfits.isEmpty {
+                        VStack(spacing: 8) {
+                            Image(systemName: "heart.fill")
+                                .font(.largeTitle)
+                                .foregroundColor(.secondary)
+                            Text("Aucun favori")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("Marquez des outfits en favori depuis l'app iPhone")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding()
+                    } else {
+                        ForEach(favoriteOutfits) { outfit in
+                            FavoriteOutfitCard(outfit: outfit)
+                        }
                     }
                 }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
         }
-        .navigationTitle("Favoris")
         .onAppear {
             loadFavorites()
         }
@@ -53,34 +65,43 @@ struct FavoriteOutfitCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(outfit.date, style: .date)
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                Spacer()
+            HStack(spacing: 6) {
                 Image(systemName: "heart.fill")
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundColor(.red)
-            }
-            
-            if !outfit.items.isEmpty {
-                VStack(alignment: .leading, spacing: 3) {
-                    ForEach(outfit.items, id: \.self) { itemName in
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.circle.fill")
+                if !outfit.items.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(outfit.items.prefix(3), id: \.self) { itemName in
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                                Text(itemName)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                            }
+                        }
+                        if outfit.items.count > 3 {
+                            Text("+ \(outfit.items.count - 3) autres")
                                 .font(.caption2)
-                                .foregroundColor(.green)
-                            Text(itemName)
-                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .padding(.leading, 18)
                         }
                     }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(8)
-        .background(Color.red.opacity(0.1))
-        .cornerRadius(8)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.red.opacity(0.15), Color.red.opacity(0.08)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(10)
     }
 }
 

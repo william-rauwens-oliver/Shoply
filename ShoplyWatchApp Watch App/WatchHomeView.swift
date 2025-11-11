@@ -9,49 +9,117 @@ import SwiftUI
 
 struct WatchHomeView: View {
     @EnvironmentObject var watchDataManager: WatchDataManager
-    @EnvironmentObject var watchOutfitService: WatchOutfitService
-    @EnvironmentObject var watchWeatherService: WatchWeatherService
-    @State private var currentOutfit: WatchOutfitSuggestion?
-    @State private var isLoading = true
     @State private var greeting = ""
     @State private var userName = ""
+    @State private var recentHistory: [WatchOutfitHistoryItem] = []
+    @State private var favoriteOutfits: [WatchOutfitHistoryItem] = []
+    @State private var showingChat = false
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 12) {
-                // Salutation personnalisée
-                if !userName.isEmpty {
-                    GreetingCard(greeting: greeting, userName: userName)
+            VStack(spacing: 14) {
+                // Section 1: Parler à Shoply AI
+                VStack(alignment: .leading, spacing: 8) {
+                    if !userName.isEmpty {
+                        Text("\(greeting), \(userName) !")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .padding(.horizontal, 4)
+                    }
+                    
+                    Button(action: {
+                        showingChat = true
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "message.fill")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                            Text("Parler à Shoply AI")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
                 
-                // En-tête avec météo
-                if let weather = watchWeatherService.currentWeather {
-                    WeatherCard(weather: weather)
-                }
-                
-                // Suggestion d'outfit du jour
-                if let outfit = currentOutfit {
-                    OutfitSuggestionCard(outfit: outfit)
-                } else if isLoading {
-                    ProgressView()
-                        .padding()
+                // Section 2: Historique des outfits portés
+                if !recentHistory.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Historique")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .padding(.horizontal, 4)
+                        
+                        ForEach(recentHistory) { item in
+                            HistoryItemCard(item: item)
+                        }
+                    }
                 } else {
-                    Text("Aucune suggestion disponible")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding()
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Historique")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .padding(.horizontal, 4)
+                        
+                        Text("Aucun historique")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 4)
+                    }
                 }
                 
-                // Actions rapides
-                QuickActionsView()
+                // Section 3: Outfits favoris
+                if !favoriteOutfits.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Favoris")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .padding(.horizontal, 4)
+                            .padding(.top, 4)
+                        
+                        ForEach(favoriteOutfits) { outfit in
+                            FavoriteOutfitCard(outfit: outfit)
+                        }
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Favoris")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .padding(.horizontal, 4)
+                            .padding(.top, 4)
+                        
+                        Text("Aucun favori")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 4)
+                    }
+                }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
         }
         .navigationTitle("Shoply")
+        .navigationBarTitleDisplayMode(.inline)
+        .fullScreenCover(isPresented: $showingChat) {
+            WatchChatView()
+                .environmentObject(watchDataManager)
+        }
         .onAppear {
             loadGreeting()
-            loadTodayOutfit()
+            loadHistory()
+            loadFavorites()
         }
     }
     
@@ -67,15 +135,12 @@ struct WatchHomeView: View {
         }
     }
     
-    private func loadTodayOutfit() {
-        isLoading = true
-        Task {
-            let outfit = await watchOutfitService.getTodaySuggestion()
-            await MainActor.run {
-                currentOutfit = outfit
-                isLoading = false
-            }
-        }
+    private func loadHistory() {
+        recentHistory = watchDataManager.getOutfitHistory()
+    }
+    
+    private func loadFavorites() {
+        favoriteOutfits = watchDataManager.getFavoriteOutfits()
     }
 }
 
@@ -119,32 +184,43 @@ struct OutfitSuggestionCard: View {
     let outfit: WatchOutfitSuggestion
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Outfit du jour")
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .textCase(.uppercase)
             
-            Text(outfit.title)
+            Text("Outfit du jour")
                 .font(.headline)
+                .fontWeight(.bold)
             
             if !outfit.items.isEmpty {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     ForEach(outfit.items.prefix(3), id: \.self) { item in
-                        HStack(spacing: 4) {
+                        HStack(spacing: 6) {
                             Image(systemName: "checkmark.circle.fill")
-                                .font(.caption2)
+                                .font(.caption)
                                 .foregroundColor(.green)
                             Text(item)
                                 .font(.caption)
+                                .fontWeight(.medium)
                         }
                     }
                 }
+                .padding(.top, 2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(8)
-        .background(Color.blue.opacity(0.1))
-        .cornerRadius(8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.blue.opacity(0.2), Color.blue.opacity(0.1)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(12)
     }
 }
 
@@ -156,41 +232,20 @@ struct GreetingCard: View {
         HStack {
             Text("\(greeting), \(userName) !")
                 .font(.headline)
+                .fontWeight(.bold)
             Spacer()
         }
-        .padding(8)
-        .background(Color.blue.opacity(0.1))
-        .cornerRadius(8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.blue.opacity(0.2), Color.blue.opacity(0.1)]),
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
+        .cornerRadius(12)
     }
 }
 
-struct QuickActionsView: View {
-    var body: some View {
-        VStack(spacing: 8) {
-            NavigationLink(destination: WatchOutfitSuggestionsView()) {
-                HStack {
-                    Image(systemName: "sparkles")
-                    Text("Nouvelle suggestion")
-                }
-                .font(.caption)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .background(Color.secondary.opacity(0.2))
-                .cornerRadius(8)
-            }
-            
-            NavigationLink(destination: WatchChatView()) {
-                HStack {
-                    Image(systemName: "message.fill")
-                    Text("Chat IA")
-                }
-                .font(.caption)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .background(Color.secondary.opacity(0.2))
-                .cornerRadius(8)
-            }
-        }
-    }
-}
 

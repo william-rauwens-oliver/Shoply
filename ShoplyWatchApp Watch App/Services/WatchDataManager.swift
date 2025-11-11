@@ -16,7 +16,7 @@ class WatchDataManager: NSObject, ObservableObject {
     @Published var lastSyncDate: Date?
     
     private let appGroupIdentifier = "group.com.william.shoply"
-    private var session: WCSession?
+    private(set) var session: WCSession? // Exposé en lecture seule pour ContentView
     
     override init() {
         super.init()
@@ -38,18 +38,42 @@ class WatchDataManager: NSObject, ObservableObject {
         }
     }
     
+    private var lastSyncTime: Date?
+    private let minSyncInterval: TimeInterval = 2.0 // Minimum 2 secondes entre deux syncs
+    
     func startSync() {
+        // Éviter les appels trop fréquents pour éviter les boucles
+        if let lastSync = lastSyncTime, Date().timeIntervalSince(lastSync) < minSyncInterval {
+            print("⏸️ Watch: Synchronisation ignorée (trop récente)")
+            return
+        }
+        
+        lastSyncTime = Date()
+        print("🔄 Watch: Démarrage de la synchronisation")
+        
         // Synchroniser avec l'app iOS via App Groups
         syncFromAppGroup()
         
         // Attendre que WCSession soit activé avant d'utiliser WatchConnectivity
-        if let session = session, session.activationState == .activated {
-            // Demander aussi la configuration via WatchConnectivity si disponible
-            requestConfigurationStatus()
+        if let session = session {
+            if session.activationState == .activated && session.isReachable {
+                print("✅ Watch: WCSession activé et reachable, demande de configuration")
+                // Demander aussi la configuration via WatchConnectivity si disponible
+                requestConfigurationStatus()
+            } else {
+                print("⚠️ Watch: WCSession non activé ou non reachable (état: \(session.activationState.rawValue), reachable: \(session.isReachable))")
+                // Réessayer d'activer la session si elle n'est pas en cours d'activation
+                if session.activationState == .notActivated {
+                    session.activate()
+                }
+            }
+        } else {
+            print("⚠️ Watch: WCSession non initialisé")
         }
         
         // Notifier que les données ont été synchronisées
         DispatchQueue.main.async {
+            self.lastSyncDate = Date()
             self.objectWillChange.send()
         }
     }
@@ -148,34 +172,56 @@ class WatchDataManager: NSObject, ObservableObject {
     }
     
     func isAppConfigured() -> Bool {
+        print("🔍 Watch: ========== VÉRIFICATION CONFIGURATION ==========")
+        
         // Vérifier d'abord si l'App Group est accessible
         guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
-            print("⚠️ App Group non accessible: \(appGroupIdentifier)")
+            print("❌ Watch: CRITIQUE - App Group non accessible: \(appGroupIdentifier)")
+            print("   → ACTION REQUISE: Vérifiez dans Xcode:")
+            print("      1. Sélectionnez le target Watch App")
+            print("      2. Allez dans 'Signing & Capabilities'")
+            print("      3. Ajoutez la capability 'App Groups' si elle n'existe pas")
+            print("      4. Cochez 'group.com.william.shoply'")
             return false
         }
         
+        print("✅ Watch: App Group accessible")
+        
         // Forcer la synchronisation plusieurs fois
+        sharedDefaults.synchronize()
+        Thread.sleep(forTimeInterval: 0.1)
         sharedDefaults.synchronize()
         
         // Vérifier si le profil existe dans l'App Group
         guard let data = sharedDefaults.data(forKey: "user_profile") else {
-            print("⚠️ Aucune donnée 'user_profile' dans l'App Group")
+            print("⚠️ Watch: Aucune donnée 'user_profile' dans l'App Group")
+            print("   → Les données n'ont peut-être pas été synchronisées depuis iOS")
+            print("   → Vérifiez les logs iOS pour voir si la synchronisation a réussi")
             return false
         }
+        
+        print("✅ Watch: Données 'user_profile' trouvées - Taille: \(data.count) bytes")
         
         guard let profile = try? JSONDecoder().decode(WatchUserProfile.self, from: data) else {
-            print("⚠️ Impossible de décoder le profil Watch")
+            print("❌ Watch: Impossible de décoder le profil Watch")
+            // Nettoyer les données corrompues
+            sharedDefaults.removeObject(forKey: "user_profile")
+            sharedDefaults.synchronize()
             return false
         }
         
-        // Si le prénom existe, l'app est configurée
-        let isConfigured = !profile.firstName.isEmpty || profile.isConfigured
+        // Vérifier que le profil est vraiment configuré (prénom non vide ET isConfigured = true)
+        let isConfigured = !profile.firstName.isEmpty && profile.isConfigured
         if isConfigured {
-            print("✅ App configurée - Prénom: \(profile.firstName), isConfigured: \(profile.isConfigured)")
+            print("✅ Watch: App configurée - Prénom: '\(profile.firstName)', isConfigured: \(profile.isConfigured)")
         } else {
-            print("⚠️ App non configurée - Prénom vide et isConfigured = false")
+            print("⚠️ Watch: App non configurée - Prénom: '\(profile.firstName)', isConfigured: \(profile.isConfigured)")
+            // Nettoyer les données si le profil n'est pas vraiment configuré
+            print("🗑️ Watch: Nettoyage des données car le profil n'est pas configuré")
+            clearAllWatchData()
         }
         
+        print("🔍 Watch: ========== FIN VÉRIFICATION ==========")
         return isConfigured
     }
     
@@ -188,27 +234,88 @@ class WatchDataManager: NSObject, ObservableObject {
     
     // Demander la configuration à l'app iOS via WatchConnectivity
     func requestConfigurationStatus() {
-        guard let session = session, session.isReachable else {
+        guard let session = session else {
+            print("⚠️ Watch: WCSession non disponible")
             return
         }
         
-        let message: [String: Any] = [
-            "type": "check_configuration"
-        ]
+        // Vérifier l'état de la session
+        // Note: isPaired et isWatchAppInstalled ne sont pas disponibles sur watchOS
+        print("🔍 Watch: État WCSession - Activation: \(session.activationState.rawValue), Reachable: \(session.isReachable)")
         
-        session.sendMessage(message, replyHandler: { response in
-            if let isConfigured = response["isConfigured"] as? Bool,
-               let firstName = response["firstName"] as? String {
-                DispatchQueue.main.async {
-                    // Mettre à jour le profil local si reçu
-                    if isConfigured {
-                        self.saveUserProfileToAppGroup(firstName: firstName, isConfigured: true)
+        // Essayer d'envoyer un message si la session est reachable
+        if session.isReachable {
+            print("📡 Watch: Envoi d'une demande de configuration via WatchConnectivity")
+            let message: [String: Any] = [
+                "type": "check_configuration"
+            ]
+            
+            session.sendMessage(message, replyHandler: { [weak self] response in
+                guard let self = self else { return }
+                print("✅ Watch: Réponse reçue de iOS: \(response)")
+                if let isConfigured = response["isConfigured"] as? Bool {
+                    DispatchQueue.main.async {
+                        if isConfigured {
+                            // Profil configuré - sauvegarder
+                            if let firstName = response["firstName"] as? String, !firstName.isEmpty {
+                                print("💾 Watch: Sauvegarde du profil reçu depuis iOS - Prénom: \(firstName)")
+                                self.saveUserProfileToAppGroup(firstName: firstName, isConfigured: true)
+                                // Notifier que la configuration est détectée
+                                NotificationCenter.default.post(name: NSNotification.Name("ConfigurationDetected"), object: nil)
+                            }
+                        } else {
+                            // Profil non configuré - nettoyer toutes les données (une seule fois)
+                            print("🗑️ Watch: iOS confirme que le profil n'est pas configuré")
+                            self.clearAllWatchData()
+                            // Notifier que le profil n'est pas configuré (pour arrêter les vérifications)
+                            NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                        }
+                    }
+                } else if let profileData = response["profile"] as? Data {
+                    // Si le profil est envoyé directement en JSON
+                    DispatchQueue.main.async {
+                        self.saveProfileDataToAppGroup(profileData)
+                        NotificationCenter.default.post(name: NSNotification.Name("ConfigurationDetected"), object: nil)
+                    }
+                } else {
+                    // Réponse invalide - considérer comme non configuré
+                    DispatchQueue.main.async {
+                        print("⚠️ Watch: Réponse invalide d'iOS - considéré comme non configuré")
+                        NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
                     }
                 }
+            }, errorHandler: { error in
+                print("❌ Watch: Erreur lors de la vérification de configuration: \(error.localizedDescription)")
+                // En cas d'erreur, considérer comme non configuré
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                }
+            })
+        } else {
+            // Si la session n'est pas reachable, utiliser updateApplicationContext
+            print("📡 Watch: Session non reachable, utilisation de updateApplicationContext")
+            if session.activationState == .activated {
+                let context: [String: Any] = [
+                    "type": "request_profile"
+                ]
+                do {
+                    try session.updateApplicationContext(context)
+                    print("✅ Watch: Application context envoyé")
+                } catch {
+                    print("❌ Watch: Erreur lors de l'envoi du context: \(error.localizedDescription)")
+                }
             }
-        }, errorHandler: { error in
-            print("Erreur lors de la vérification de configuration: \(error.localizedDescription)")
-        })
+        }
+    }
+    
+    private func saveProfileDataToAppGroup(_ data: Data) {
+        guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            return
+        }
+        
+        sharedDefaults.set(data, forKey: "user_profile")
+        sharedDefaults.synchronize()
+        print("✅ Watch: Profil sauvegardé dans App Group depuis WatchConnectivity")
     }
     
     private func saveUserProfileToAppGroup(firstName: String, isConfigured: Bool) {
@@ -281,6 +388,7 @@ extension WatchDataManager: WCSessionDelegate {
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
         // Recevoir des messages de l'app iOS
+        print("📱 Watch: Message reçu de iOS: \(message)")
         if let type = message["type"] as? String {
             switch type {
             case "wardrobe_update":
@@ -289,9 +397,72 @@ extension WatchDataManager: WCSessionDelegate {
             case "outfit_suggestion":
                 // Recevoir une suggestion d'outfit
                 break
+            case "user_profile":
+                // Recevoir le profil utilisateur
+                if let profileBase64 = message["profile"] as? String,
+                   let profileData = Data(base64Encoded: profileBase64) {
+                    saveProfileDataToAppGroup(profileData)
+                } else if let firstName = message["firstName"] as? String,
+                          let isConfigured = message["isConfigured"] as? Bool {
+                    saveUserProfileToAppGroup(firstName: firstName, isConfigured: isConfigured)
+                }
             default:
                 break
             }
+        }
+    }
+    
+    // Recevoir l'application context de l'iOS
+    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String : Any]) {
+        print("📱 Watch: Application context reçu de iOS: \(applicationContext)")
+        
+        if let type = applicationContext["type"] as? String {
+            switch type {
+            case "user_profile":
+                // Recevoir le profil utilisateur via application context
+                if let profileBase64 = applicationContext["profile"] as? String,
+                   let profileData = Data(base64Encoded: profileBase64) {
+                    print("✅ Watch: Profil reçu via application context (base64)")
+                    saveProfileDataToAppGroup(profileData)
+                } else if let firstName = applicationContext["firstName"] as? String,
+                          let isConfigured = applicationContext["isConfigured"] as? Bool {
+                    print("✅ Watch: Profil reçu via application context (champs séparés)")
+                    saveUserProfileToAppGroup(firstName: firstName, isConfigured: isConfigured)
+                }
+                
+            case "user_profile_deleted":
+                // Le profil a été supprimé sur iOS - nettoyer toutes les données
+                print("🗑️ Watch: Profil supprimé sur iOS - nettoyage des données")
+                clearAllWatchData()
+                
+            default:
+                break
+            }
+        }
+    }
+    
+    // Nettoyer toutes les données de la Watch
+    private func clearAllWatchData() {
+        guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            return
+        }
+        
+        // Supprimer toutes les données
+        sharedDefaults.removeObject(forKey: "user_profile")
+        sharedDefaults.removeObject(forKey: "outfit_history")
+        sharedDefaults.removeObject(forKey: "wardrobe_items")
+        sharedDefaults.removeObject(forKey: "wishlist_items")
+        sharedDefaults.removeObject(forKey: "chat_conversations")
+        
+        // Forcer la synchronisation
+        sharedDefaults.synchronize()
+        
+        print("✅ Watch: Toutes les données ont été nettoyées")
+        
+        // Notifier que la configuration a changé
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+            NotificationCenter.default.post(name: NSNotification.Name("ConfigurationDetected"), object: nil)
         }
     }
     

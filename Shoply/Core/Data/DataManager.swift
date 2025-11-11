@@ -124,16 +124,32 @@ class DataManager: ObservableObject {
     func saveUserProfile(_ profile: UserProfile) {
         if let encoded = try? JSONEncoder().encode(profile) {
             UserDefaults.standard.set(encoded, forKey: "userProfile")
+            // Forcer la synchronisation immédiate
+            UserDefaults.standard.synchronize()
+            
             // Notifier que l'onboarding est terminé
             DispatchQueue.main.async {
                 self.onboardingCompleted = true
                 self.objectWillChange.send()
             }
-            // Synchroniser avec l'Apple Watch de manière asynchrone et différée
-            // pour éviter les blocages au démarrage
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            
+            // Synchroniser IMMÉDIATEMENT avec l'Apple Watch (synchrone sur le thread principal)
+            // pour garantir que les données sont disponibles
+            print("📱 iOS: Sauvegarde du profil - Synchronisation immédiate vers Watch")
+            syncUserProfileToWatch(profile: profile)
+            
+            // Synchroniser à nouveau après un court délai pour être sûr
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                print("📱 iOS: Deuxième synchronisation du profil vers Watch")
                 self.syncUserProfileToWatch(profile: profile)
             }
+            
+            // Synchroniser une troisième fois après 3 secondes pour garantir
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                print("📱 iOS: Troisième synchronisation du profil vers Watch")
+                self.syncUserProfileToWatch(profile: profile)
+            }
+            
             // Synchroniser avec iCloud
             // La synchronisation est gérée manuellement depuis SettingsScreen
             // pour éviter les erreurs de compilation dans le widget extension
@@ -150,15 +166,36 @@ class DataManager: ObservableObject {
             return
         }
         
-        print("📱 iOS: Tentative de synchronisation du profil - Prénom: \(profileToSync.firstName), Genre: \(profileToSync.gender)")
+        print("📱 iOS: ========== DÉBUT SYNCHRONISATION ==========")
+        print("📱 iOS: Tentative de synchronisation du profil - Prénom: '\(profileToSync.firstName)', Genre: \(profileToSync.gender)")
         
+        // Vérifier d'abord si l'App Group est accessible
         guard let sharedDefaults = UserDefaults(suiteName: "group.com.william.shoply") else {
             print("❌ iOS: CRITIQUE - Impossible d'accéder à l'App Group 'group.com.william.shoply'")
-            print("   → Vérifiez que l'App Group est activé dans les Capabilities du target iOS")
+            print("   → ACTION REQUISE: Vérifiez dans Xcode:")
+            print("      1. Sélectionnez le target iOS (Shoply)")
+            print("      2. Allez dans 'Signing & Capabilities'")
+            print("      3. Ajoutez la capability 'App Groups' si elle n'existe pas")
+            print("      4. Cochez 'group.com.william.shoply'")
+            print("      5. Nettoyez le build (Product > Clean Build Folder)")
+            print("      6. Recompilez et réinstallez l'app")
             return
         }
         
         print("✅ iOS: App Group accessible")
+        
+        // Vérifier que l'App Group est vraiment accessible en testant une écriture/lecture
+        let testKey = "__test_app_group_access__"
+        sharedDefaults.set("test", forKey: testKey)
+        sharedDefaults.synchronize()
+        if sharedDefaults.string(forKey: testKey) == "test" {
+            print("✅ iOS: App Group fonctionne correctement (test d'écriture/lecture réussi)")
+            sharedDefaults.removeObject(forKey: testKey)
+        } else {
+            print("❌ iOS: CRITIQUE - App Group ne fonctionne pas (test d'écriture/lecture échoué)")
+            print("   → L'App Group est peut-être mal configuré dans Xcode")
+            return
+        }
         
         // Créer le profil Watch simplifié
         struct WatchUserProfile: Codable {
@@ -178,33 +215,136 @@ class DataManager: ObservableObject {
         }
         
         print("📦 iOS: Données encodées - Taille: \(encoded.count) bytes")
+        print("📦 iOS: Contenu JSON: \(String(data: encoded, encoding: .utf8) ?? "N/A")")
         
         // Écrire dans l'App Group de manière synchrone
         sharedDefaults.set(encoded, forKey: "user_profile")
         print("💾 iOS: Données écrites dans UserDefaults avec la clé 'user_profile'")
         
-        // Forcer la synchronisation plusieurs fois pour s'assurer que ça fonctionne
+        // Forcer l'écriture immédiate avec synchronize()
         let syncResult1 = sharedDefaults.synchronize()
         print("🔄 iOS: Premier synchronize() - Résultat: \(syncResult1)")
         
-        // Attendre un peu
-        Thread.sleep(forTimeInterval: 0.2)
+        // Attendre un peu pour laisser le temps à l'écriture
+        Thread.sleep(forTimeInterval: 0.5)
         
-        // Synchroniser à nouveau
+        // Synchroniser à nouveau pour être sûr
         let syncResult2 = sharedDefaults.synchronize()
         print("🔄 iOS: Deuxième synchronize() - Résultat: \(syncResult2)")
         
-        // Vérifier immédiatement que les données ont bien été écrites
-        if let savedData = sharedDefaults.data(forKey: "user_profile") {
-            print("✅ iOS: Données retrouvées dans App Group - Taille: \(savedData.count) bytes")
-            if let savedProfile = try? JSONDecoder().decode(WatchUserProfile.self, from: savedData) {
-                print("✅ iOS: Profil décodé avec succès - Prénom: '\(savedProfile.firstName)', isConfigured: \(savedProfile.isConfigured)")
-            } else {
-                print("❌ iOS: Impossible de décoder le profil sauvegardé")
-            }
+        // Attendre encore un peu
+        Thread.sleep(forTimeInterval: 0.3)
+        
+        // Vérifier immédiatement que les données sont bien écrites
+        if let immediateCheck = sharedDefaults.data(forKey: "user_profile") {
+            print("✅ iOS: Vérification immédiate - Données trouvées (Taille: \(immediateCheck.count) bytes)")
         } else {
+            print("❌ iOS: CRITIQUE - Les données ne sont pas trouvées immédiatement après écriture!")
+        }
+        
+        // Vérifier immédiatement que les données ont bien été écrites
+        // Essayer plusieurs fois pour être sûr
+        var verificationSuccess = false
+        for attempt in 1...3 {
+            if let savedData = sharedDefaults.data(forKey: "user_profile") {
+                print("✅ iOS: Données retrouvées dans App Group (tentative \(attempt)) - Taille: \(savedData.count) bytes")
+                if let savedProfile = try? JSONDecoder().decode(WatchUserProfile.self, from: savedData) {
+                    print("✅ iOS: Profil décodé avec succès - Prénom: '\(savedProfile.firstName)', isConfigured: \(savedProfile.isConfigured)")
+                    verificationSuccess = true
+                    break
+                } else {
+                    print("❌ iOS: Impossible de décoder le profil sauvegardé (tentative \(attempt))")
+                }
+            } else {
+                print("⚠️ iOS: Données non retrouvées (tentative \(attempt))")
+            }
+            
+            if attempt < 3 {
+                Thread.sleep(forTimeInterval: 0.2)
+            }
+        }
+        
+        if !verificationSuccess {
             print("❌ iOS: CRITIQUE - Les données ne sont pas retrouvées après écriture!")
             print("   → L'App Group ne fonctionne peut-être pas correctement")
+            print("   → Vérifiez que l'App Group est bien activé dans Xcode")
+        }
+        
+        // Lister toutes les clés dans l'App Group pour diagnostic
+        let allKeys = Array(sharedDefaults.dictionaryRepresentation().keys)
+        let relevantKeys = allKeys.filter { $0.contains("user") || $0.contains("profile") }
+        print("🔍 iOS: Clés présentes dans App Group: \(relevantKeys)")
+        
+        print("📱 iOS: ========== FIN SYNCHRONISATION ==========")
+        #endif
+    }
+    
+    // MARK: - Créer des données d'exemple pour la Watch
+    func createExampleOutfitHistory() {
+        #if !WIDGET_EXTENSION
+        guard let sharedDefaults = UserDefaults(suiteName: "group.com.william.shoply") else {
+            print("⚠️ iOS: Impossible d'accéder à l'App Group pour créer les exemples")
+            return
+        }
+        
+        // Créer des exemples d'outfits directement dans l'App Group
+        // Structure identique à WatchOutfitHistoryItem pour compatibilité
+        struct ExampleOutfitHistoryItem: Codable {
+            let id: UUID
+            let date: Date
+            let items: [String]
+            let isFavorite: Bool
+            let style: String?
+        }
+        
+        let calendar = Calendar.current
+        let now = Date()
+        
+        let exampleHistory: [ExampleOutfitHistoryItem] = [
+            ExampleOutfitHistoryItem(
+                id: UUID(),
+                date: calendar.date(byAdding: .day, value: -1, to: now) ?? now,
+                items: ["T-shirt blanc", "Jeans bleu", "Baskets blanches"],
+                isFavorite: true,
+                style: "Décontracté"
+            ),
+            ExampleOutfitHistoryItem(
+                id: UUID(),
+                date: calendar.date(byAdding: .day, value: -2, to: now) ?? now,
+                items: ["Chemise bleue", "Pantalon noir", "Chaussures de ville"],
+                isFavorite: false,
+                style: "Formel"
+            ),
+            ExampleOutfitHistoryItem(
+                id: UUID(),
+                date: calendar.date(byAdding: .day, value: -3, to: now) ?? now,
+                items: ["Pull gris", "Jeans noir", "Baskets noires"],
+                isFavorite: true,
+                style: "Casual"
+            ),
+            ExampleOutfitHistoryItem(
+                id: UUID(),
+                date: calendar.date(byAdding: .day, value: -5, to: now) ?? now,
+                items: ["T-shirt noir", "Short beige", "Sandales"],
+                isFavorite: false,
+                style: "Été"
+            ),
+            ExampleOutfitHistoryItem(
+                id: UUID(),
+                date: calendar.date(byAdding: .day, value: -7, to: now) ?? now,
+                items: ["Veste en cuir", "Jeans bleu", "Bottes noires"],
+                isFavorite: true,
+                style: "Rock"
+            )
+        ]
+        
+        // Encoder en JSON avec JSONEncoder (gère UUID et Date correctement)
+        if let encoded = try? JSONEncoder().encode(exampleHistory) {
+            sharedDefaults.set(encoded, forKey: "outfit_history")
+            sharedDefaults.synchronize()
+            print("✅ iOS: Données d'exemple créées pour la Watch (\(exampleHistory.count) outfits)")
+        } else {
+            print("❌ iOS: Erreur lors de l'encodage des exemples")
         }
         #endif
     }
@@ -218,19 +358,47 @@ class DataManager: ObservableObject {
     }
     
     func hasCompletedOnboarding() -> Bool {
-        let completed = loadUserProfile() != nil && !loadUserProfile()!.firstName.isEmpty
+        let profile = loadUserProfile()
+        let completed = profile != nil && !profile!.firstName.isEmpty
         // Synchroniser avec la propriété published
         if completed != onboardingCompleted {
             DispatchQueue.main.async {
                 self.onboardingCompleted = completed
             }
         }
-        // Synchroniser avec Watch si l'onboarding est complété (immédiatement)
-        if completed {
+        // Synchroniser avec Watch si l'onboarding est complété (immédiatement et de manière synchrone)
+        if completed, let profile = profile {
             // Synchroniser immédiatement pour que l'App Watch détecte la configuration
-            syncUserProfileToWatch()
+            syncUserProfileToWatch(profile: profile)
+            
+            // Vérifier que les données sont bien dans l'App Group après synchronisation
+            #if !WIDGET_EXTENSION
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.verifyAndResyncIfNeeded()
+            }
+            #endif
         }
         return completed
+    }
+    
+    // Vérifier et resynchroniser si nécessaire
+    private func verifyAndResyncIfNeeded() {
+        #if !WIDGET_EXTENSION
+        guard let sharedDefaults = UserDefaults(suiteName: "group.com.william.shoply") else {
+            print("⚠️ iOS: Impossible de vérifier l'App Group")
+            return
+        }
+        
+        // Vérifier si les données existent
+        if sharedDefaults.data(forKey: "user_profile") == nil {
+            print("⚠️ iOS: Données manquantes dans l'App Group - resynchronisation...")
+            if let profile = loadUserProfile() {
+                syncUserProfileToWatch(profile: profile)
+            }
+        } else {
+            print("✅ iOS: Données présentes dans l'App Group")
+        }
+        #endif
     }
     
     // MARK: - Gestion de la garde-robe
@@ -426,11 +594,48 @@ class DataManager: ObservableObject {
         // Supprimer l'historique des outfits
         UserDefaults.standard.removeObject(forKey: "historicalOutfits")
         
+        // Nettoyer l'App Group pour la Watch
+        #if !WIDGET_EXTENSION
+        clearWatchAppGroup()
+        #endif
+        
         // Réinitialiser l'onboarding
         DispatchQueue.main.async {
             self.onboardingCompleted = false
             self.objectWillChange.send()
         }
+    }
+    
+    // MARK: - Nettoyer l'App Group pour la Watch
+    func clearWatchAppGroup() {
+        #if !WIDGET_EXTENSION
+        guard let sharedDefaults = UserDefaults(suiteName: "group.com.william.shoply") else {
+            print("⚠️ iOS: Impossible d'accéder à l'App Group pour nettoyer")
+            return
+        }
+        
+        // Supprimer le profil utilisateur
+        sharedDefaults.removeObject(forKey: "user_profile")
+        
+        // Supprimer l'historique des outfits
+        sharedDefaults.removeObject(forKey: "outfit_history")
+        
+        // Supprimer la garde-robe
+        sharedDefaults.removeObject(forKey: "wardrobe_items")
+        
+        // Supprimer la wishlist
+        sharedDefaults.removeObject(forKey: "wishlist_items")
+        
+        // Forcer la synchronisation
+        sharedDefaults.synchronize()
+        
+        print("✅ iOS: App Group nettoyé - toutes les données Watch supprimées")
+        
+        // Notifier via NotificationCenter pour que WatchConnectivityManager puisse réagir
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: NSNotification.Name("UserProfileDeleted"), object: nil)
+        }
+        #endif
     }
 }
 

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import WatchConnectivity
 
 struct ContentView: View {
     @EnvironmentObject var watchDataManager: WatchDataManager
@@ -15,11 +16,12 @@ struct ContentView: View {
     @State private var isConfigured = false
     @State private var isChecking = true
     @State private var timer: Timer?
+    @State private var hasReceivedResponse = false // Pour éviter les vérifications en boucle
     
     var body: some View {
         Group {
             if isChecking {
-                // Écran de chargement initial
+                // Écran de chargement initial avec timeout
                 VStack(spacing: 16) {
                     ProgressView()
                     Text("Chargement...")
@@ -27,66 +29,98 @@ struct ContentView: View {
                         .foregroundColor(.secondary)
                 }
             } else if isConfigured {
+                // 3 écrans en swipe vertical
                 TabView(selection: $selectedTab) {
-                    // Onglet 1: Accueil avec suggestions
-                    WatchHomeView()
+                    // Écran 1: Shoply AI (Chat)
+                    WatchChatView()
                         .tag(0)
                     
-                    // Onglet 2: Suggestions d'outfits
-                    WatchOutfitSuggestionsView()
+                    // Écran 2: Historique des outfits portés
+                    WatchHistoryView()
                         .tag(1)
                     
-                    // Onglet 3: Chat IA
-                    WatchChatView()
-                        .tag(2)
-                    
-                    // Onglet 4: Garde-robe
-                    WatchWardrobeView()
-                        .tag(3)
-                    
-                    // Onglet 5: Historique
-                    WatchHistoryView()
-                        .tag(4)
-                    
-                    // Onglet 6: Wishlist
-                    WatchWishlistView()
-                        .tag(5)
-                    
-                    // Onglet 7: Favoris
+                    // Écran 3: Favoris des outfits
                     WatchFavoritesView()
-                        .tag(6)
+                        .tag(2)
                 }
                 .tabViewStyle(.verticalPage)
             } else {
+                // Écran de configuration si l'app n'est pas configurée sur iPhone
                 WatchConfigurationCheckView(onReceive: checkConfiguration)
             }
         }
         .task {
-            // Démarrer la synchronisation plusieurs fois pour s'assurer que ça fonctionne
-            watchDataManager.startSync()
-            
-            // Vérifier la configuration avec plusieurs tentatives
-            await checkConfigurationWithRetries()
+            // Vérifier la configuration une seule fois au démarrage
+            // Timeout maximum de 5 secondes pour éviter un chargement infini
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    await checkConfigurationWithRetries()
+                    await MainActor.run {
+                        hasReceivedResponse = true
+                    }
+                }
+                
+                group.addTask {
+                    // Timeout de sécurité après 5 secondes
+                    try? await Task.sleep(nanoseconds: 5_000_000_000)
+                    await MainActor.run {
+                        // Si toujours en chargement après 5 secondes, arrêter le chargement
+                        if isChecking {
+                            print("⏱️ Watch: Timeout de vérification - arrêt du chargement")
+                            isChecking = false
+                            hasReceivedResponse = true
+                            // Si pas de réponse, considérer comme non configuré
+                            if !isConfigured {
+                                stopPeriodicCheck()
+                            }
+                        }
+                    }
+                }
+                
+                await group.next()
+                group.cancelAll()
+            }
         }
         .onAppear {
-            // Démarrer la synchronisation dès l'apparition
+            // Démarrer la synchronisation dès l'apparition (une seule fois)
             watchDataManager.startSync()
         }
         .onDisappear {
             stopPeriodicCheck()
         }
-        .onChange(of: watchDataManager.lastSyncDate) { _, _ in
-            // Re-vérifier quand la synchronisation se fait
-            if !isConfigured && !isChecking {
+        .onChange(of: watchDataManager.lastSyncDate) { oldValue, newValue in
+            // Re-vérifier quand la synchronisation se fait, mais seulement si on n'a pas encore reçu de réponse
+            // Éviter les vérifications en boucle
+            if !hasReceivedResponse && !isChecking && !isConfigured {
                 Task {
                     await checkConfigurationAsync()
+                    await MainActor.run {
+                        hasReceivedResponse = true
+                    }
                 }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ConfigurationDetected"))) { _ in
-            // Mettre à jour le statut de configuration
+            // Mettre à jour le statut de configuration seulement si on n'a pas encore reçu de réponse
+            if !hasReceivedResponse {
+                Task {
+                    await checkConfigurationAsync()
+                    await MainActor.run {
+                        hasReceivedResponse = true
+                    }
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ProfileNotConfigured"))) { _ in
+            // Arrêter toutes les vérifications si le profil n'est pas configuré
+            print("🛑 Watch: Arrêt de toutes les vérifications - profil non configuré")
+            stopPeriodicCheck()
             Task {
-                await checkConfigurationAsync()
+                await MainActor.run {
+                    isConfigured = false
+                    isChecking = false
+                    hasReceivedResponse = true // Marquer qu'on a reçu une réponse
+                }
             }
         }
     }
@@ -103,22 +137,50 @@ struct ContentView: View {
             isChecking = true
         }
         
-        // Faire plusieurs tentatives avec des délais croissants
+        // Faire une seule tentative rapide via WatchConnectivity d'abord
         var configured = false
-        let maxRetries = 3
         
-        for attempt in 1...maxRetries {
-            // Forcer la synchronisation à chaque tentative
-            watchDataManager.startSync()
+        // Essayer d'abord via WatchConnectivity (plus rapide et fiable)
+        if let session = watchDataManager.session, session.isReachable {
+            print("🔍 Watch: Vérification via WatchConnectivity...")
+            let message: [String: Any] = ["type": "check_configuration"]
             
-            // Attendre avec un délai croissant (1s, 2s, 3s)
-            try? await Task.sleep(nanoseconds: UInt64(attempt) * 1_000_000_000)
-            
-            // Vérifier la configuration
+            configured = await withCheckedContinuation { continuation in
+                session.sendMessage(message, replyHandler: { response in
+                    print("✅ Watch: Réponse reçue (retries): \(response)")
+                    if let isConfigured = response["isConfigured"] as? Bool {
+                        let result = isConfigured
+                        // Si non configuré, notifier immédiatement pour arrêter les vérifications
+                        if !result {
+                            DispatchQueue.main.async {
+                                NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                            }
+                        }
+                        continuation.resume(returning: result)
+                    } else {
+                        // Réponse invalide - considérer comme non configuré
+                        DispatchQueue.main.async {
+                            NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                        }
+                        continuation.resume(returning: false)
+                    }
+                }, errorHandler: { error in
+                    print("❌ Watch: Erreur (retries): \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                    }
+                    continuation.resume(returning: false)
+                })
+            }
+        } else {
+            // Si pas de réponse via WatchConnectivity, vérifier l'App Group
             configured = watchDataManager.isAppConfigured()
             
-            if configured {
-                break
+            // Si non configuré, notifier
+            if !configured {
+                await MainActor.run {
+                    NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                }
             }
         }
         
@@ -126,42 +188,80 @@ struct ContentView: View {
         await MainActor.run {
             isConfigured = configured
             isChecking = false // IMPORTANT: Toujours arrêter le chargement
+            hasReceivedResponse = true // Marquer qu'on a reçu une réponse
             
-            // Si non configuré, démarrer la vérification périodique
-            if !configured {
-                startPeriodicCheck()
-            } else {
-                stopPeriodicCheck()
-            }
+            // Arrêter toutes les vérifications
+            stopPeriodicCheck()
         }
     }
     
     private func checkConfigurationAsync() async {
+        // Ne pas vérifier si on a déjà reçu une réponse
+        if hasReceivedResponse {
+            return
+        }
+        
         // Marquer qu'on vérifie
         await MainActor.run {
             isChecking = true
         }
         
-        // Forcer la synchronisation
-        watchDataManager.startSync()
+        var configured = false
         
-        // Attendre un court instant pour laisser le temps à la synchronisation
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 secondes
-        
-        // Vérifier la configuration (avec protection contre les blocages)
-        let configured = watchDataManager.isAppConfigured()
+        // Essayer d'abord via WatchConnectivity si disponible
+        if let session = watchDataManager.session, session.isReachable {
+            print("🔍 Watch: Vérification asynchrone via WatchConnectivity...")
+            let message: [String: Any] = ["type": "check_configuration"]
+            
+            configured = await withCheckedContinuation { continuation in
+                session.sendMessage(message, replyHandler: { response in
+                    print("✅ Watch: Réponse reçue (async): \(response)")
+                    if let isConfigured = response["isConfigured"] as? Bool {
+                        let result = isConfigured
+                        // Si non configuré, notifier immédiatement pour arrêter les vérifications
+                        if !result {
+                            DispatchQueue.main.async {
+                                NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                            }
+                        }
+                        continuation.resume(returning: result)
+                    } else {
+                        // Réponse invalide - considérer comme non configuré
+                        DispatchQueue.main.async {
+                            NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                        }
+                        continuation.resume(returning: false)
+                    }
+                }, errorHandler: { error in
+                    print("❌ Watch: Erreur (async): \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                    }
+                    continuation.resume(returning: false)
+                })
+            }
+        } else {
+            // Si WatchConnectivity n'est pas disponible, vérifier l'App Group
+            watchDataManager.startSync()
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 seconde seulement
+            configured = watchDataManager.isAppConfigured()
+            
+            // Si non configuré, notifier
+            if !configured {
+                await MainActor.run {
+                    NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                }
+            }
+        }
         
         // Mettre à jour sur le thread principal (TOUJOURS mettre isChecking à false)
         await MainActor.run {
             isConfigured = configured
             isChecking = false // IMPORTANT: Toujours arrêter le chargement
+            hasReceivedResponse = true // Marquer qu'on a reçu une réponse
             
-            // Si non configuré, démarrer la vérification périodique
-            if !configured {
-                startPeriodicCheck()
-            } else {
-                stopPeriodicCheck()
-            }
+            // Arrêter toutes les vérifications
+            stopPeriodicCheck()
         }
     }
     
@@ -169,12 +269,30 @@ struct ContentView: View {
         // Arrêter le timer existant s'il y en a un
         stopPeriodicCheck()
         
+        // Ne pas démarrer la vérification périodique si on est déjà en train de vérifier
+        guard !isChecking else {
+            return
+        }
+        
         // Capturer les références nécessaires
         let dataManager = watchDataManager
         
-        // Vérifier toutes les 5 secondes si non configuré (moins fréquent pour économiser la batterie)
-        let timerRef = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak dataManager] timer in
+        // Vérifier toutes les 10 secondes si non configuré (moins fréquent pour économiser la batterie)
+        // Limiter à 6 tentatives maximum (1 minute) pour éviter les boucles infinies
+        var attemptCount = 0
+        let maxAttempts = 6
+        
+        let timerRef = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak dataManager] timer in
             guard let dataManager = dataManager else {
+                timer.invalidate()
+                return
+            }
+            
+            attemptCount += 1
+            
+            // Arrêter après un certain nombre de tentatives
+            if attemptCount > maxAttempts {
+                print("⏱️ Watch: Arrêt de la vérification périodique après \(maxAttempts) tentatives")
                 timer.invalidate()
                 return
             }
@@ -188,8 +306,10 @@ struct ContentView: View {
                     NotificationCenter.default.post(name: NSNotification.Name("ConfigurationDetected"), object: nil)
                 }
             } else {
-                // Forcer la synchronisation
-                dataManager.startSync()
+                // Forcer la synchronisation (mais seulement si on n'a pas déjà vérifié récemment)
+                if attemptCount % 2 == 0 { // Toutes les 2 tentatives seulement
+                    dataManager.startSync()
+                }
             }
         }
         timer = timerRef

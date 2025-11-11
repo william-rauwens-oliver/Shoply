@@ -11,6 +11,7 @@ import Combine
 import Foundation
 import UIKit
 import UserNotifications
+import WatchConnectivity
 #endif
 
 @main
@@ -42,6 +43,11 @@ struct ShoplyApp: App {
         _ = OutfitReviewService.shared
         _ = CareReminderService.shared
         _ = ProactiveSuggestionsService.shared
+        
+        // Initialiser WatchConnectivity
+        #if !WIDGET_EXTENSION
+        _ = WatchConnectivityManager.shared
+        #endif
     }
     
     private func configureOrientations() {
@@ -91,24 +97,51 @@ struct ShoplyApp: App {
                             initializeMotivationNotifications()
                             
                             // Vérifier et synchroniser le profil avec l'Apple Watch
-                            // Faire plusieurs tentatives pour garantir la synchronisation
-                            Task {
-                                // Première tentative immédiate
-                                await MainActor.run {
-                                    dataManager.syncUserProfileToWatch()
-                                }
+                            if dataManager.hasCompletedOnboarding() {
+                                // Créer des données d'exemple pour la Watch UNIQUEMENT si le profil existe
+                                dataManager.createExampleOutfitHistory()
                                 
-                                // Deuxième tentative après 1 seconde
-                                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                                await MainActor.run {
-                                    dataManager.syncUserProfileToWatch()
+                                // Faire plusieurs tentatives pour garantir la synchronisation
+                                // IMPORTANT: Toujours synchroniser au démarrage, même si le profil existe déjà
+                                Task {
+                                    // Première tentative immédiate
+                                    await MainActor.run {
+                                        print("🔄 iOS: Synchronisation initiale du profil vers Watch")
+                                        if let profile = dataManager.loadUserProfile() {
+                                            dataManager.syncUserProfileToWatch(profile: profile)
+                                        }
+                                        #if !WIDGET_EXTENSION
+                                        WatchConnectivityManager.shared.sendProfileToWatch()
+                                        #endif
+                                    }
+                                    
+                                    // Deuxième tentative après 1 seconde
+                                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                    await MainActor.run {
+                                        print("🔄 iOS: Deuxième synchronisation du profil vers Watch")
+                                        if let profile = dataManager.loadUserProfile() {
+                                            dataManager.syncUserProfileToWatch(profile: profile)
+                                        }
+                                        #if !WIDGET_EXTENSION
+                                        WatchConnectivityManager.shared.sendProfileToWatch()
+                                        #endif
+                                    }
+                                    
+                                    // Troisième tentative après 3 secondes
+                                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                    await MainActor.run {
+                                        print("🔄 iOS: Troisième synchronisation du profil vers Watch")
+                                        if let profile = dataManager.loadUserProfile() {
+                                            dataManager.syncUserProfileToWatch(profile: profile)
+                                        }
+                                        #if !WIDGET_EXTENSION
+                                        WatchConnectivityManager.shared.sendProfileToWatch()
+                                        #endif
+                                    }
                                 }
-                                
-                                // Troisième tentative après 3 secondes
-                                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                                await MainActor.run {
-                                    dataManager.syncUserProfileToWatch()
-                                }
+                            } else {
+                                // Nettoyer l'App Group si pas de profil
+                                dataManager.clearWatchAppGroup()
                             }
                             
                             // Synchronisation iCloud désactivée au démarrage pour éviter les crashes
