@@ -110,75 +110,75 @@ struct OnboardingScreen: View {
                 if currentStep > 0 {
                     // Étapes >= 2: bouton Précédent + Suivant alignés
                     if currentStep > 1 {
-                        HStack(spacing: 20) {
-                            Button(action: {
-                                withAnimation {
-                                    currentStep -= 1
-                                }
-                            }) {
-                                Text("Précédent")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(AppColors.primaryText)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(AppColors.buttonSecondary)
-                                    .roundedCorner(20)
-                                    .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                HStack(spacing: 20) {
+                        Button(action: {
+                            withAnimation {
+                                currentStep -= 1
                             }
-                            
-                            Button(action: {
-                                if currentStep < 4 {
-                                    // Valider avant de passer à l'étape suivante
+                        }) {
+                            Text("Précédent")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(AppColors.primaryText)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(AppColors.buttonSecondary)
+                                .roundedCorner(20)
+                                    .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                    }
+                    
+                    Button(action: {
+                            if currentStep < 4 {
+                                // Valider avant de passer à l'étape suivante
                                     if currentStep == 2 {
-                                        let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
-                                        if !trimmedEmail.isEmpty && isValidEmail(trimmedEmail) {
-                                            showingEmailError = false
+                                    let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+                                    if !trimmedEmail.isEmpty && isValidEmail(trimmedEmail) {
+                                        showingEmailError = false
                                             withAnimation { currentStep += 1 }
-                                        } else {
-                                            showingEmailError = true
-                                        }
-                                    } else if currentStep == 3 {
-                                        if calculatedAge >= 15 {
-                                            showingAgeError = false
+                                    } else {
+                                        showingEmailError = true
+                                    }
+                                } else if currentStep == 3 {
+                                    if calculatedAge >= 15 {
+                                        showingAgeError = false
                                             withAnimation { currentStep += 1 }
                                         } else {
                                             showingAgeError = true
                                         }
                                     } else {
                                         withAnimation { currentStep += 1 }
-                                    }
-                                } else {
-                                    completeOnboarding()
-                                }
-                            }) {
-                                Text(currentStep < 4 ? "Suivant" : "Terminer")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(AppColors.buttonPrimaryText)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(AppColors.buttonPrimary)
-                                    .roundedCorner(20)
-                                    .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
                             }
-                            .disabled(
-                                (currentStep == 2 && (email.trimmingCharacters(in: .whitespaces).isEmpty || !isValidEmail(email.trimmingCharacters(in: .whitespaces)))) ||
-                                (currentStep == 3 && calculatedAge < 15)
-                            )
-                            .opacity(
-                                (currentStep == 2 && (email.trimmingCharacters(in: .whitespaces).isEmpty || !isValidEmail(email.trimmingCharacters(in: .whitespaces)))) ||
-                                (currentStep == 3 && calculatedAge < 15) ? 0.5 : 1.0
-                            )
+                        } else {
+                            completeOnboarding()
                         }
-                        .padding(.horizontal, 30)
-                        .padding(.bottom, 50)
-                    } else {
+                    }) {
+                            Text(currentStep < 4 ? "Suivant" : "Terminer")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(AppColors.buttonPrimaryText)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(AppColors.buttonPrimary)
+                                .roundedCorner(20)
+                                .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                        }
+                        .disabled(
+                            (currentStep == 2 && (email.trimmingCharacters(in: .whitespaces).isEmpty || !isValidEmail(email.trimmingCharacters(in: .whitespaces)))) ||
+                            (currentStep == 3 && calculatedAge < 15)
+                        )
+                        .opacity(
+                            (currentStep == 2 && (email.trimmingCharacters(in: .whitespaces).isEmpty || !isValidEmail(email.trimmingCharacters(in: .whitespaces)))) ||
+                            (currentStep == 3 && calculatedAge < 15) ? 0.5 : 1.0
+                        )
+                    }
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 50)
+                } else {
                         // Étape 1: centrer le bouton Suivant
                         HStack {
                             Spacer()
-                            Button(action: {
+                    Button(action: {
                                 if !firstName.trimmingCharacters(in: .whitespaces).isEmpty {
                                     withAnimation { currentStep += 1 }
-                                }
+                        }
                             }) {
                                 Text("Suivant")
                                     .font(.system(size: 18, weight: .semibold))
@@ -220,7 +220,7 @@ struct OnboardingScreen: View {
                             .background(AppColors.buttonPrimary)
                             .roundedCorner(20)
                             .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
-                    }
+                }
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 12)
@@ -298,7 +298,7 @@ struct OnboardingStep0_Welcome: View {
             VStack(spacing: 0) {
                 // Logo animé avec effet moderne (réduit)
                 VStack(spacing: 16) {
-                    ZStack {
+                ZStack {
                         // Cercles animés en arrière-plan (réduits)
                         ForEach(0..<2, id: \.self) { index in
                             Circle()
@@ -345,9 +345,9 @@ struct OnboardingStep0_Welcome: View {
                                             ),
                                             lineWidth: 3
                                         )
-                                }
+                }
                                 .shadow(color: AppColors.buttonPrimary.opacity(0.4), radius: 15, x: 0, y: 8)
-                            
+                
                             Image(systemName: "sparkles")
                                 .font(.system(size: 50, weight: .bold))
                                 .foregroundColor(AppColors.buttonPrimary)
@@ -365,20 +365,20 @@ struct OnboardingStep0_Welcome: View {
                             .opacity(featuresOpacity)
                         
                         Text("Shoply".localized)
-                            .font(.playfairDisplayBold(size: 36))
-                            .foregroundColor(AppColors.primaryText)
+                        .font(.playfairDisplayBold(size: 36))
+                        .foregroundColor(AppColors.primaryText)
                             .opacity(featuresOpacity)
-                        
+                    
                         Text("Votre assistant style intelligent".localized)
                             .font(.system(size: 15, weight: .regular))
-                            .foregroundColor(AppColors.secondaryText)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
-                            .lineSpacing(4)
+                        .foregroundColor(AppColors.secondaryText)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                        .lineSpacing(4)
                             .opacity(featuresOpacity)
-                    }
                 }
-                
+            }
+            
                 // Sélecteur de thème (clair/sombre)
                 HStack(spacing: 8) {
                     ThemePillButton(
@@ -422,7 +422,7 @@ struct OnboardingStep0_Welcome: View {
                     )
                     .opacity(featuresOpacity)
                     .offset(y: featuresOffset)
-                }
+            }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
                 .padding(.bottom, 100) // Espace pour le bouton en bas
@@ -510,8 +510,8 @@ struct ModernFeatureCard: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
                     isVisible = true
-                }
-            }
+    }
+}
         }
     }
 }

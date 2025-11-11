@@ -46,20 +46,20 @@ struct WishlistScreen: View {
                             ModernFilterPicker(selectedFilter: $filter)
                                 .padding(.horizontal, 20)
                                 .padding(.top, 12)
-                            
-                            // Liste
-                            if filteredItems.isEmpty {
+                    
+                    // Liste
+                    if filteredItems.isEmpty {
                                 ModernEmptyWishlistView {
                                     showingAddItem = true
                                 }
-                            } else {
-                                ScrollView(showsIndicators: false) {
+                    } else {
+                        ScrollView(showsIndicators: false) {
                                     LazyVStack(spacing: 16) {
-                                        ForEach(filteredItems) { item in
+                                ForEach(filteredItems) { item in
                                             ModernWishlistItemCard(item: item)
                                                 .padding(.horizontal, 20)
-                                        }
-                                    }
+                                }
+                            }
                                     .padding(.vertical, 20)
                                 }
                             }

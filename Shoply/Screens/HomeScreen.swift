@@ -165,6 +165,7 @@ struct SimpleHeaderView: View {
     let currentTime: Date
     @StateObject private var weatherService = WeatherService.shared
     @State private var greetingKey = "Bonjour"
+    @State private var currentTimeState = Date()
     
     var body: some View {
         HStack(spacing: 16) {
@@ -216,6 +217,11 @@ struct SimpleHeaderView: View {
             Spacer()
         }
         .onAppear {
+            currentTimeState = Date()
+            updateGreeting()
+        }
+        .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
+            currentTimeState = Date()
             updateGreeting()
         }
     }
@@ -225,25 +231,35 @@ struct SimpleHeaderView: View {
         formatter.locale = Locale(identifier: AppSettingsManager.shared.selectedLanguage.rawValue)
         formatter.dateStyle = .long
         formatter.timeStyle = .none
-        return formatter.string(from: currentTime)
+        return formatter.string(from: currentTimeState)
     }
     
     private func updateGreeting() {
+        let now = currentTimeState
+        
         if let location = weatherService.location {
             let lat = location.coordinate.latitude
             let lon = location.coordinate.longitude
             guard !lat.isNaN && !lon.isNaN && !lat.isInfinite && !lon.isInfinite else {
-        let hour = Calendar.current.component(.hour, from: currentTime)
+                let hour = Calendar.current.component(.hour, from: now)
                 greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
                 return
             }
             greetingKey = SunsetService.shared.getGreeting(
                 latitude: lat,
                 longitude: lon,
-                currentTime: currentTime
+                currentTime: now
             )
         } else {
-            let hour = Calendar.current.component(.hour, from: currentTime)
+            // Si pas de localisation, essayer de la demander
+            Task {
+                _ = await weatherService.startLocationUpdates()
+                await MainActor.run {
+                    updateGreeting()
+                }
+            }
+            // Fallback temporaire basé sur l'heure
+            let hour = Calendar.current.component(.hour, from: now)
             greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
         }
     }

@@ -374,21 +374,31 @@ struct ModernHeaderSection: View {
     }
     
     private func updateGreeting() {
+        let now = currentTime
+        
         if let location = weatherService.location {
             let lat = location.coordinate.latitude
             let lon = location.coordinate.longitude
             guard !lat.isNaN && !lon.isNaN && !lat.isInfinite && !lon.isInfinite else {
-                let hour = Calendar.current.component(.hour, from: currentTime)
+                let hour = Calendar.current.component(.hour, from: now)
                 greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
                 return
             }
             greetingKey = SunsetService.shared.getGreeting(
                 latitude: lat,
                 longitude: lon,
-                currentTime: currentTime
+                currentTime: now
             )
         } else {
-            let hour = Calendar.current.component(.hour, from: currentTime)
+            // Si pas de localisation, essayer de la demander
+            Task {
+                _ = await weatherService.startLocationUpdates()
+                await MainActor.run {
+                    updateGreeting()
+                }
+            }
+            // Fallback temporaire basé sur l'heure
+            let hour = Calendar.current.component(.hour, from: now)
             greetingKey = (hour >= 5 && hour < 18) ? "Bonjour" : "Bonsoir"
         }
     }

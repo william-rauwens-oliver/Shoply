@@ -227,7 +227,9 @@ struct ModernTabPicker: View {
 
 struct ModernBadgeCard: View {
     let badge: Badge
+    @StateObject private var gamificationService = GamificationService.shared
     @State private var isPressed = false
+    @State private var scale: CGFloat = 1.0
     
     var body: some View {
         Card(cornerRadius: DesignSystem.Radius.lg) {
@@ -252,6 +254,8 @@ struct ModernBadgeCard: View {
                     Image(systemName: badge.icon)
                         .font(.system(size: 32, weight: .semibold))
                         .foregroundColor(badge.isUnlocked ? badge.category.color : AppColors.secondaryText)
+                        .grayscale(badge.isUnlocked ? 0 : 0.8)
+                        .opacity(badge.isUnlocked ? 1 : 0.9)
                 }
                 
                 VStack(spacing: 6) {
@@ -268,25 +272,63 @@ struct ModernBadgeCard: View {
                         .lineLimit(2)
                     
                     if !badge.isUnlocked {
-                        ProgressView(value: badge.progress)
-                            .tint(badge.category.color)
-                            .scaleEffect(x: 1, y: 1.2, anchor: .center)
+                        VStack(spacing: 6) {
+                            ProgressView(value: badge.progress)
+                                .tint(badge.category.color)
+                                .scaleEffect(x: 1, y: 1.2, anchor: .center)
+                            
+                            HStack {
+                                Text("\(badge.current)/\(badge.target)")
+                                    .font(DesignSystem.Typography.footnote())
+                                    .foregroundColor(AppColors.secondaryText)
+                                Spacer()
+                                if badge.progress >= 1.0 {
+                                    Button {
+                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+                                            scale = 1.07
+                                        }
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                                                scale = 1.0
+                                            }
+                                        }
+                                        gamificationService.claimBadge(badge)
+                                    } label: {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "sparkles")
+                                            Text("Réclamer".localized)
+                                        }
+                                        .font(DesignSystem.Typography.footnote())
+                                        .foregroundColor(AppColors.buttonPrimaryText)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(AppColors.buttonPrimary)
+                                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+                                    }
+                                } else {
+                                    Text("En cours".localized)
+                                        .font(DesignSystem.Typography.footnote())
+                                        .foregroundColor(AppColors.secondaryText)
+                                }
+                            }
+                        }
                     } else {
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.circle.fill")
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark.seal.fill")
                                 .font(.system(size: 14, weight: .medium))
                             Text("Débloqué".localized)
-                            .font(DesignSystem.Typography.caption())
+                                .font(DesignSystem.Typography.caption())
                         }
-                            .foregroundColor(.green)
+                        .foregroundColor(.green)
                     }
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(16)
         }
-        .opacity(badge.isUnlocked ? 1.0 : 0.7)
+        .opacity(badge.isUnlocked ? 1.0 : 0.85)
         .scaleEffect(isPressed ? 0.97 : 1.0)
+        .scaleEffect(scale)
         .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)

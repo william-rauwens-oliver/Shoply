@@ -206,10 +206,10 @@ struct TutorialStepView: View {
             // Panneau pour améliorer la lisibilité
             VStack(spacing: 24) {
                 // Icône grande avec animation améliorée
-                ZStack {
+            ZStack {
                 // Cercles concentriques animés avec effet de pulsation
                 ForEach(0..<2, id: \.self) { index in
-                    Circle()
+                Circle()
                         .stroke(
                             step.imageColor.opacity(0.2 - Double(index) * 0.1),
                             lineWidth: 2
@@ -232,7 +232,7 @@ struct TutorialStepView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 180, height: 180)
+                    .frame(width: 180, height: 180)
                         .overlay {
                             Circle()
                                 .stroke(
@@ -248,28 +248,28 @@ struct TutorialStepView: View {
                                 )
                         }
                         .shadow(color: step.imageColor.opacity(0.3), radius: 20, x: 0, y: 10)
-                    
-                    Image(systemName: step.icon)
+                
+                Image(systemName: step.icon)
                         .font(.system(size: 80, weight: .semibold))
-                        .foregroundColor(step.imageColor)
+                    .foregroundColor(step.imageColor)
                         .rotationEffect(.degrees(iconRotation))
                 }
                 .scaleEffect(iconScale)
-                }
-                
+            }
+            
                 // Titre et description avec animation améliorée
                 VStack(spacing: 14) {
-                    Text(step.title)
+                Text(step.title)
                         .font(.playfairDisplayBold(size: 28))
-                        .foregroundColor(AppColors.primaryText)
-                        .multilineTextAlignment(.center)
+                    .foregroundColor(AppColors.primaryText)
+                    .multilineTextAlignment(.center)
                         .padding(.horizontal, 20)
-                    
-                    Text(step.description)
+                
+                Text(step.description)
                         .font(.system(size: 16, weight: .regular))
-                        .foregroundColor(AppColors.secondaryText)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(6)
+                    .foregroundColor(AppColors.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(6)
                         .padding(.horizontal, 24)
                 }
                 .opacity(contentOpacity)
@@ -283,7 +283,7 @@ struct TutorialStepView: View {
                     RoundedRectangle(cornerRadius: 24)
                         .fill(AppColors.buttonSecondary)
                         .shadow(color: AppColors.shadow.opacity(0.25), radius: 20, x: 0, y: 10)
-                }
+            }
             }
             .padding(.horizontal, 20)
             

@@ -175,7 +175,7 @@ class ShoplyAIAdvancedLLM {
         }
         weights["dense"] = denseWeights
         biases["dense"] = [Float](repeating: 0.0, count: vocabSize)
-
+        
         print("   Créé par: \(creator)")
         print("   Version: \(version)")
         print("   Boosté avec Gemini: \(geminiBoostEnabled)")
@@ -336,7 +336,7 @@ class ShoplyAIAdvancedLLM {
                 relatedTopics: ["éducation", "apprentissage", "développement"]
             )
         ]
-
+        
     }
     
     // MARK: - Chargement des Poids
@@ -427,7 +427,7 @@ class ShoplyAIAdvancedLLM {
                     geminiBase: refinedResponse,
                     shoplyEnrichment: shoplyEnrichment
                 )
-
+                
             } catch {
                 
                 // Fallback : utiliser Shoply AI seul
@@ -463,7 +463,7 @@ class ShoplyAIAdvancedLLM {
         
         // Si confiance faible, chercher aussi sur internet
         if confidence < 0.6 {
-
+            
             do {
                 // Chercher sur internet
                 let searchResults = try await webSearchService.searchAndExtract(

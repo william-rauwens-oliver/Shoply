@@ -124,7 +124,7 @@ struct OutfitHistoryScreen: View {
                                         historicalOutfit: historicalOutfit,
                                         onToggleFavorite: {
                                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                                historyStore.toggleFavorite(outfit: historicalOutfit)
+                                            historyStore.toggleFavorite(outfit: historicalOutfit)
                                             }
                                         },
                                         onDelete: {
@@ -263,49 +263,49 @@ struct HistoricalOutfitCard: View {
             // Action si nécessaire
         } label: {
             Card(cornerRadius: DesignSystem.Radius.lg) {
-                VStack(spacing: 0) {
+        VStack(spacing: 0) {
                     // En-tête
                     HStack(spacing: 16) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(historicalOutfit.outfit.displayName)
+                    Text(historicalOutfit.outfit.displayName)
                                 .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(AppColors.primaryText)
+                        .foregroundColor(AppColors.primaryText)
                             
                             HStack(spacing: 6) {
                                 Image(systemName: "calendar")
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(AppColors.secondaryText)
-                                
-                                Text(historicalOutfit.dateWorn, style: .date)
+                    
+                    Text(historicalOutfit.dateWorn, style: .date)
                                     .font(DesignSystem.Typography.caption())
-                                    .foregroundColor(AppColors.secondaryText)
+                        .foregroundColor(AppColors.secondaryText)
                             }
-                        }
-                        
-                        Spacer()
-                        
+                }
+                
+                Spacer()
+                
                         HStack(spacing: 12) {
                             Button {
                                 onToggleFavorite()
                             } label: {
-                                Image(systemName: historicalOutfit.isFavorite ? "heart.fill" : "heart")
+                    Image(systemName: historicalOutfit.isFavorite ? "heart.fill" : "heart")
                                     .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(historicalOutfit.isFavorite ? .red : AppColors.secondaryText)
+                        .foregroundColor(historicalOutfit.isFavorite ? .red : AppColors.secondaryText)
                                     .frame(width: 40, height: 40)
-                                    .background(Circle().fill(AppColors.buttonSecondary))
-                            }
-                            
+                        .background(Circle().fill(AppColors.buttonSecondary))
+                }
+                    
                             Button {
-                                showingDeleteAlert = true
+                        showingDeleteAlert = true
                             } label: {
-                                Image(systemName: "trash")
+                        Image(systemName: "trash")
                                     .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.red)
+                            .foregroundColor(.red)
                                     .frame(width: 40, height: 40)
-                                    .background(Circle().fill(AppColors.buttonSecondary))
-                            }
-                        }
+                            .background(Circle().fill(AppColors.buttonSecondary))
                     }
+                }
+            }
                     .padding(20)
                     
                     Rectangle()
@@ -331,14 +331,14 @@ struct HistoricalOutfitCard: View {
                 .onChanged { _ in isPressed = true }
                 .onEnded { _ in isPressed = false }
         )
-        .alert("Supprimer cet outfit".localized, isPresented: $showingDeleteAlert) {
-            Button("Annuler".localized, role: .cancel) { }
-            Button("Supprimer".localized, role: .destructive) {
-                onDelete()
-            }
-        } message: {
+            .alert("Supprimer cet outfit".localized, isPresented: $showingDeleteAlert) {
+                Button("Annuler".localized, role: .cancel) { }
+                Button("Supprimer".localized, role: .destructive) {
+                    onDelete()
+                }
+            } message: {
             Text("Êtes-vous sûr de vouloir supprimer cet outfit ?".localized)
-        }
+            }
     }
 }
 
@@ -350,16 +350,16 @@ struct HistoricalOutfitItemRow: View {
             Group {
                 let photoURL = item.photoURLs.first ?? item.photoURL
                 if let photoURL = photoURL, !photoURL.isEmpty,
-                   let image = PhotoManager.shared.loadPhoto(at: photoURL) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
+               let image = PhotoManager.shared.loadPhoto(at: photoURL) {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
                         .frame(width: 64, height: 64)
                         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
-                } else {
+            } else {
                     ZStack {
                         RoundedRectangle(cornerRadius: DesignSystem.Radius.md)
-                            .fill(AppColors.buttonSecondary)
+                    .fill(AppColors.buttonSecondary)
                             .frame(width: 64, height: 64)
                         
                         Image(systemName: item.category.icon)

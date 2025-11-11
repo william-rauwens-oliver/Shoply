@@ -13,6 +13,7 @@ class GamificationService {
     
     private let wardrobeService = WardrobeService()
     private let outfitService = OutfitService()
+    private let encoder = JSONEncoder()
     
     @Published var badges: [Badge] = []
     @Published var achievements: [Achievement] = []
@@ -109,6 +110,29 @@ class GamificationService {
         calculateLevel()
         
         saveGamificationData()
+    }
+    
+    // Permettre de “réclamer” manuellement un badge lorsque la progression est atteinte
+    func claimBadge(_ badge: Badge) {
+        guard let index = badges.firstIndex(where: { $0.id == badge.id }) else { return }
+        let current = badges[index].current
+        guard current >= badges[index].target else { return }
+        // Marquer comme débloqué si pas déjà
+        if badges[index].unlockedAt == nil {
+            badges[index] = Badge(
+                id: badges[index].id,
+                name: badges[index].name,
+                description: badges[index].description,
+                icon: badges[index].icon,
+                category: badges[index].category,
+                target: badges[index].target,
+                current: badges[index].current,
+                unlockedAt: Date()
+            )
+            // Récompenser un peu d'XP
+            addXP(10)
+            saveGamificationData()
+        }
     }
     
     /// Calcule et met à jour le niveau (utilise la logique de StyleLevel)

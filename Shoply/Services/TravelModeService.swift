@@ -296,7 +296,7 @@ class TravelModeService: ObservableObject {
                     var updatedPlan = travelPlans[planIndex]
                     updatedPlan.checklist = checklistItems
                     travelPlans[planIndex] = updatedPlan
-                    saveTravelPlans()
+        saveTravelPlans()
                 }
             }
         } catch {

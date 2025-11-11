@@ -626,38 +626,38 @@ struct AboutView: View {
                             }
                             
                             VStack(spacing: 8) {
-                                Text("Shoply")
+                            Text("Shoply")
                                     .font(DesignSystem.Typography.largeTitle())
-                                    .foregroundColor(AppColors.primaryText)
-                                
-                                if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-                                   let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
-                                    Text("Version \(version) (\(build))")
+                                .foregroundColor(AppColors.primaryText)
+                            
+                            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+                               let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+                                Text("Version \(version) (\(build))")
                                         .font(DesignSystem.Typography.caption())
-                                        .foregroundColor(AppColors.secondaryText)
-                                }
+                                    .foregroundColor(AppColors.secondaryText)
                             }
+                        }
                         }
                         .padding(.top, 32)
                         .padding(.bottom, 8)
                         
-                        // Description
+                            // Description
                         Card(cornerRadius: DesignSystem.Radius.lg) {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Description".localized)
                                     .font(DesignSystem.Typography.title2())
-                                    .foregroundColor(AppColors.primaryText)
-                                
+                                .foregroundColor(AppColors.primaryText)
+                            
                                 Text("Shoply est votre assistant personnel intelligent pour gérer votre garde-robe et créer des tenues parfaites. L'application vous permet de gérer vos vêtements, créer des collections, planifier vos outfits, suivre votre historique, et bénéficier de suggestions intelligentes adaptées à la météo, aux occasions et à votre style personnel grâce à Shoply AI.\n\nShoply AI - Créé uniquement par William RAUWENS OLIVER. Aucune équipe n'a créé cette application, elle a été entièrement développée par une seule personne.".localized)
                                     .font(DesignSystem.Typography.body())
-                                    .foregroundColor(AppColors.secondaryText)
+                                .foregroundColor(AppColors.secondaryText)
                                     .lineSpacing(6)
                             }
                             .padding(24)
                         }
                         .padding(.horizontal, 20)
-                        
-                        // Fonctionnalités
+                            
+                            // Fonctionnalités
                         Card(cornerRadius: DesignSystem.Radius.lg) {
                             VStack(alignment: .leading, spacing: 20) {
                                 Text("Fonctionnalités principales".localized)
@@ -681,21 +681,21 @@ struct AboutView: View {
                             .padding(24)
                         }
                         .padding(.horizontal, 20)
-                        
-                        // Développement
+                            
+                            // Développement
                         Card(cornerRadius: DesignSystem.Radius.lg) {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Développement".localized)
                                     .font(DesignSystem.Typography.title2())
-                                    .foregroundColor(AppColors.primaryText)
-                                
+                                .foregroundColor(AppColors.primaryText)
+                            
                                 Text("Développé avec SwiftUI pour iOS et iPadOS par William RAUWENS OLIVER, utilisant Shoply AI, une intelligence artificielle avancée, pour offrir une expérience utilisateur exceptionnelle.\n\nCette application a été créée entièrement par une seule personne, sans équipe. Tous les aspects du développement, du design à l'implémentation, ont été réalisés par William RAUWENS OLIVER.".localized)
                                     .font(DesignSystem.Typography.body())
                                     .foregroundColor(AppColors.secondaryText)
                                     .lineSpacing(6)
                             }
                             .padding(24)
-                        }
+                            }
                         .padding(.horizontal, 20)
                         
                         // Contact
@@ -716,15 +716,15 @@ struct AboutView: View {
                                                 .fill(AppColors.buttonPrimary.opacity(0.15))
                                                 .frame(width: 44, height: 44)
                                             
-                                            Image(systemName: "link.circle.fill")
+                                        Image(systemName: "link.circle.fill")
                                                 .font(.system(size: 22, weight: .semibold))
-                                                .foregroundColor(AppColors.buttonPrimary)
+                                            .foregroundColor(AppColors.buttonPrimary)
                                         }
                                         
                                         VStack(alignment: .leading, spacing: 4) {
                                             Text("Me contacter sur LinkedIn".localized)
                                                 .font(DesignSystem.Typography.headline())
-                                                .foregroundColor(AppColors.primaryText)
+                                            .foregroundColor(AppColors.primaryText)
                                             
                                             Text("William RAUWENS OLIVER".localized)
                                                 .font(DesignSystem.Typography.caption())
@@ -735,8 +735,8 @@ struct AboutView: View {
                                         
                                         Image(systemName: "arrow.up.right")
                                             .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(AppColors.secondaryText)
-                                    }
+                                .foregroundColor(AppColors.secondaryText)
+                        }
                                     .padding(16)
                                     .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                                 }
@@ -783,7 +783,7 @@ struct FeatureRow: View {
                     .fill(AppColors.buttonPrimary.opacity(0.12))
                     .frame(width: 40, height: 40)
                 
-                Image(systemName: icon)
+            Image(systemName: icon)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(AppColors.buttonPrimary)
             }

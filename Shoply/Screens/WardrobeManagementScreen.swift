@@ -72,28 +72,28 @@ struct WardrobeManagementScreen: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         ScrollView(showsIndicators: false) {
-                            LazyVGrid(columns: [
+                        LazyVGrid(columns: [
                                 GridItem(.flexible(), spacing: 16),
                                 GridItem(.flexible(), spacing: 16)
                             ], spacing: 16) {
-                                ForEach(filteredItems) { item in
-                                    WardrobeItemCard(
-                                        item: item,
-                                        wardrobeService: wardrobeService,
-                                        isSelectionMode: $isSelectionMode,
-                                        isSelected: Binding(
-                                            get: { selectedItems.contains(item.id) },
-                                            set: { isSelected in
-                                                if isSelected {
-                                                    selectedItems.insert(item.id)
-                                                } else {
-                                                    selectedItems.remove(item.id)
-                                                }
+                            ForEach(filteredItems) { item in
+                                WardrobeItemCard(
+                                    item: item,
+                                    wardrobeService: wardrobeService,
+                                    isSelectionMode: $isSelectionMode,
+                                    isSelected: Binding(
+                                        get: { selectedItems.contains(item.id) },
+                                        set: { isSelected in
+                                            if isSelected {
+                                                selectedItems.insert(item.id)
+                                            } else {
+                                                selectedItems.remove(item.id)
                                             }
-                                        )
+                                        }
                                     )
-                                }
+                                )
                             }
+                        }
                             .padding(20)
                         }
                     }
@@ -109,7 +109,7 @@ struct WardrobeManagementScreen: View {
                         .foregroundColor(AppColors.primaryText)
                 }
                 
-                ToolbarItem(placement: .navigationBarLeading) {
+                    ToolbarItem(placement: .navigationBarLeading) {
                     if !isSelectionMode && !wardrobeService.items.isEmpty {
                         HStack(spacing: 12) {
                             BackButtonWithLongPress()
@@ -123,9 +123,9 @@ struct WardrobeManagementScreen: View {
                         }
                     } else {
                         BackButtonWithLongPress()
+                        }
                     }
-                }
-                
+                    
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showingAddItem = true
@@ -221,7 +221,7 @@ struct CategoryPicker: View {
                 ForEach(ClothingCategory.allCases) { category in
                     Button {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            selectedCategory = category
+                        selectedCategory = category
                         }
                     } label: {
                         VStack(spacing: 8) {
@@ -230,7 +230,7 @@ struct CategoryPicker: View {
                                     .fill(selectedCategory == category ? AppColors.buttonPrimary.opacity(0.2) : AppColors.buttonSecondary.opacity(0.3))
                                     .frame(width: 52, height: 52)
                                 
-                                Image(systemName: category.icon)
+                            Image(systemName: category.icon)
                                     .font(.system(size: 22, weight: .semibold))
                                     .foregroundColor(selectedCategory == category ? AppColors.buttonPrimary : AppColors.primaryText)
                             }
@@ -238,11 +238,11 @@ struct CategoryPicker: View {
                             Text(category.rawValue)
                                 .font(.system(size: 12, weight: selectedCategory == category ? .semibold : .regular))
                                 .foregroundColor(selectedCategory == category ? AppColors.buttonPrimary : AppColors.secondaryText)
-                        }
-                        .frame(width: 70)
                     }
-                }
+                        .frame(width: 70)
             }
+        }
+    }
             .padding(.horizontal, 4)
         }
     }
@@ -310,15 +310,15 @@ struct WardrobeItemCard: View {
             Button {
                 if isSelectionMode {
                     withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                        isSelected.toggle()
+                    isSelected.toggle()
                     }
                 } else {
-                    showingDetail = true
+            showingDetail = true
                 }
             } label: {
                 VStack(alignment: .leading, spacing: 0) {
                     // Photo
-                    Group {
+                Group {
                         let firstPhotoURL = item.photoURLs.first ?? item.photoURL
                         if let photoURL = firstPhotoURL, !photoURL.isEmpty,
                            let image = PhotoManager.shared.loadPhoto(at: photoURL) {
@@ -341,7 +341,7 @@ struct WardrobeItemCard: View {
                                 Image(systemName: item.category.icon)
                                     .font(.system(size: 48, weight: .light))
                                     .foregroundColor(AppColors.secondaryText)
-                            }
+                }
                             .frame(height: 180)
                         }
                     }
@@ -349,23 +349,23 @@ struct WardrobeItemCard: View {
                     
                     // Informations
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(item.name)
+                    Text(item.name)
                             .font(DesignSystem.Typography.headline())
                             .foregroundColor(AppColors.primaryText)
-                            .lineLimit(1)
+                        .lineLimit(1)
                         
                         HStack(spacing: 6) {
                             Circle()
                                 .fill(colorFromString(item.color))
                                 .frame(width: 12, height: 12)
-                            
-                            Text(item.color)
+                    
+                    Text(item.color)
                                 .font(DesignSystem.Typography.caption())
                                 .foregroundColor(AppColors.secondaryText)
-                        }
-                    }
+                }
+            }
                     .padding(14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .liquidGlassCard(cornerRadius: DesignSystem.Radius.lg)
             }
@@ -383,8 +383,8 @@ struct WardrobeItemCard: View {
                     isSelected = true
                 }
             }
-            .sheet(isPresented: $showingDetail) {
-                WardrobeItemDetailView(item: item, wardrobeService: wardrobeService)
+        .sheet(isPresented: $showingDetail) {
+            WardrobeItemDetailView(item: item, wardrobeService: wardrobeService)
             }
             
             // Indicateurs
@@ -410,24 +410,24 @@ struct WardrobeItemCard: View {
                 VStack {
                     HStack {
                         Spacer()
-                        ZStack {
-                            Circle()
+                ZStack {
+                    Circle()
                                 .fill(isSelected ? AppColors.buttonPrimary : .white)
-                                .frame(width: 28, height: 28)
+                        .frame(width: 28, height: 28)
                                 .shadow(color: AppColors.shadow.opacity(0.3), radius: 6, x: 0, y: 3)
-                            
-                            if isSelected {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(AppColors.buttonPrimaryText)
-                            }
-                        }
-                        .padding(10)
+                    
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(AppColors.buttonPrimaryText)
                     }
-                    Spacer()
                 }
+                        .padding(10)
             }
+                    Spacer()
         }
+    }
+}
     }
     
     private func colorFromString(_ colorName: String) -> Color {
@@ -466,7 +466,7 @@ struct EmptyWardrobeView: View {
                     )
                     .frame(width: 120, height: 120)
                 
-                Image(systemName: category.icon)
+            Image(systemName: category.icon)
                     .font(.system(size: 50, weight: .light))
                     .foregroundColor(AppColors.buttonPrimary)
             }
@@ -475,14 +475,14 @@ struct EmptyWardrobeView: View {
                 Text("Aucun \(category.rawValue.lowercased()) dans votre garde-robe".localized)
                     .font(DesignSystem.Typography.title2())
                     .foregroundColor(AppColors.primaryText)
-                    .multilineTextAlignment(.center)
-                
+                .multilineTextAlignment(.center)
+            
                 Text("Appuyez sur le bouton + pour ajouter vos premiers vêtements".localized)
                     .font(DesignSystem.Typography.body())
                     .foregroundColor(AppColors.secondaryText)
-                    .multilineTextAlignment(.center)
+                .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
-            }
+        }
         }
     }
 }
@@ -526,10 +526,10 @@ struct AddWardrobeItemView: View {
                                         .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                                     
                                     Picker("Catégorie".localized, selection: $selectedCategory) {
-                                        ForEach(ClothingCategory.allCases) { category in
-                                            Text(category.rawValue).tag(category)
-                                        }
-                                    }
+                        ForEach(ClothingCategory.allCases) { category in
+                            Text(category.rawValue).tag(category)
+                        }
+                    }
                                     .padding(14)
                                     .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
                                     
@@ -564,21 +564,21 @@ struct AddWardrobeItemView: View {
                                     .foregroundColor(AppColors.primaryText)
                                 
                                 VStack(spacing: 12) {
-                                    ForEach(Season.allCases, id: \.rawValue) { season in
-                                        Toggle(season.rawValue, isOn: Binding(
-                                            get: { selectedSeasons.contains(season) },
-                                            set: { isOn in
-                                                if isOn {
-                                                    selectedSeasons.insert(season)
-                                                } else {
-                                                    selectedSeasons.remove(season)
-                                                }
-                                            }
-                                        ))
-                                        .tint(AppColors.buttonPrimary)
-                                    }
+                    ForEach(Season.allCases, id: \.rawValue) { season in
+                        Toggle(season.rawValue, isOn: Binding(
+                            get: { selectedSeasons.contains(season) },
+                            set: { isOn in
+                                if isOn {
+                                    selectedSeasons.insert(season)
+                                } else {
+                                    selectedSeasons.remove(season)
                                 }
                             }
+                        ))
+                                        .tint(AppColors.buttonPrimary)
+                                    }
+                    }
+                }
                             .padding(20)
                         }
                         .padding(.horizontal, 20)
@@ -590,44 +590,44 @@ struct AddWardrobeItemView: View {
                                     .font(DesignSystem.Typography.headline())
                                     .foregroundColor(AppColors.primaryText)
                                 
-                                PhotosPicker(
-                                    selection: $selectedPhotos,
-                                    maxSelectionCount: 10,
-                                    matching: .images
-                                ) {
-                                    HStack {
-                                        Image(systemName: "photo.on.rectangle")
+                    PhotosPicker(
+                        selection: $selectedPhotos,
+                        maxSelectionCount: 10,
+                        matching: .images
+                    ) {
+                        HStack {
+                            Image(systemName: "photo.on.rectangle")
                                         Text("Ajouter des photos (jusqu'à 10)".localized)
-                                    }
+                        }
                                     .font(DesignSystem.Typography.body())
-                                    .foregroundColor(AppColors.primaryText)
+                        .foregroundColor(AppColors.primaryText)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .liquidGlassCard(cornerRadius: DesignSystem.Radius.md)
-                                }
-                                
-                                if !photoImages.isEmpty {
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack(spacing: 12) {
-                                            ForEach(Array(photoImages.enumerated()), id: \.offset) { index, image in
-                                                ZStack(alignment: .topTrailing) {
-                                                    Image(uiImage: image)
-                                                        .resizable()
-                                                        .aspectRatio(contentMode: .fill)
-                                                        .frame(width: 120, height: 120)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                                                    
+                    }
+                    
+                    if !photoImages.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(Array(photoImages.enumerated()), id: \.offset) { index, image in
+                                    ZStack(alignment: .topTrailing) {
+                                        Image(uiImage: image)
+                                    .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 120, height: 120)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                                        
                                                     Button {
-                                                        photoImages.remove(at: index)
+                                            photoImages.remove(at: index)
                                                     } label: {
-                                                        Image(systemName: "xmark.circle.fill")
-                                                            .foregroundColor(.red)
-                                                            .background(Color.white.clipShape(Circle()))
-                                                    }
-                                                    .padding(4)
-                                                }
-                                            }
-                                        }
+                                            Image(systemName: "xmark.circle.fill")
+                                                .foregroundColor(.red)
+                                                .background(Color.white.clipShape(Circle()))
+                            }
+                                        .padding(4)
+                                    }
+                                }
+                            }
                                     }
                                 }
                             }
@@ -725,7 +725,7 @@ struct WardrobeItemDetailView: View {
         if isEditing {
             EditWardrobeItemView(item: item, wardrobeService: wardrobeService)
         } else {
-            NavigationStack {
+        NavigationStack {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
                         // Photos
@@ -734,9 +734,9 @@ struct WardrobeItemDetailView: View {
                                 HStack(spacing: 12) {
                                     ForEach(photoURLsToDisplay, id: \.self) { photoURL in
                                         if let image = PhotoManager.shared.loadPhoto(at: photoURL) {
-                                            Image(uiImage: image)
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fit)
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
                                                 .frame(maxWidth: 400, maxHeight: 500)
                                                 .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.xl))
                                         }
@@ -744,23 +744,23 @@ struct WardrobeItemDetailView: View {
                                 }
                                 .padding(.horizontal, 20)
                             }
-                        } else {
-                            VStack(spacing: 16) {
-                                Image(systemName: item.category.icon)
+                    } else {
+                        VStack(spacing: 16) {
+                            Image(systemName: item.category.icon)
                                     .font(.system(size: 80, weight: .light))
-                                    .foregroundColor(AppColors.secondaryText)
-                                
+                                .foregroundColor(AppColors.secondaryText)
+                            
                                 Text("Aucune photo".localized)
                                     .font(DesignSystem.Typography.body())
-                                    .foregroundColor(AppColors.secondaryText)
-                            }
-                            .frame(height: 300)
-                            .frame(maxWidth: .infinity)
+                                .foregroundColor(AppColors.secondaryText)
+                        }
+                        .frame(height: 300)
+                        .frame(maxWidth: .infinity)
                             .liquidGlassCard(cornerRadius: DesignSystem.Radius.xl)
                             .padding(.horizontal, 20)
-                        }
-                        
-                        // Informations
+                    }
+                    
+                    // Informations
                         Card(cornerRadius: DesignSystem.Radius.lg) {
                             VStack(alignment: .leading, spacing: 16) {
                                 ForEach(detailRows, id: \.label) { row in
@@ -781,16 +781,16 @@ struct WardrobeItemDetailView: View {
                                             .background(AppColors.separator.opacity(0.3))
                                     }
                                 }
-                            }
+                    }
                             .padding(20)
                         }
                         .padding(.horizontal, 20)
                         .padding(.bottom, 20)
-                    }
                 }
-                .navigationTitle(item.name)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
+            }
+            .navigationTitle(item.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
                     ToolbarItem(placement: .principal) {
                         Text(item.name)
                             .font(DesignSystem.Typography.title2())
@@ -802,7 +802,7 @@ struct WardrobeItemDetailView: View {
                         BackButtonWithLongPress()
                     }
                     
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                         HStack(spacing: 16) {
                             Button {
                                 isEditing = true
@@ -813,25 +813,25 @@ struct WardrobeItemDetailView: View {
                             }
                             
                             Button {
-                                showingDeleteAlert = true
+                        showingDeleteAlert = true
                             } label: {
-                                Image(systemName: "trash")
+                        Image(systemName: "trash")
                                     .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(.red)
-                            }
+                                .foregroundColor(.red)
+                    }
                         }
-                    }
-                }
-                .alert("Supprimer".localized, isPresented: $showingDeleteAlert) {
-                    Button("Annuler".localized, role: .cancel) { }
-                    Button("Supprimer".localized, role: .destructive) {
-                        wardrobeService.deleteItem(item)
-                        dismiss()
-                    }
-                } message: {
-                    Text("Êtes-vous sûr de vouloir supprimer cet article ?".localized)
                 }
             }
+            .alert("Supprimer".localized, isPresented: $showingDeleteAlert) {
+                Button("Annuler".localized, role: .cancel) { }
+                Button("Supprimer".localized, role: .destructive) {
+                    wardrobeService.deleteItem(item)
+                    dismiss()
+                }
+            } message: {
+                    Text("Êtes-vous sûr de vouloir supprimer cet article ?".localized)
+            }
+        }
         }
     }
     

@@ -27,7 +27,7 @@ struct TravelModeScreen: View {
                     ScrollView(showsIndicators: false) {
                         AdaptiveContentContainer(maxWidthPad: 900, horizontalPadding: 24) {
                             LazyVStack(spacing: 16) {
-                                ForEach(travelService.travelPlans) { plan in
+                            ForEach(travelService.travelPlans) { plan in
                                     TravelPlanCard(plan: plan) {
                                         selectedPlan = plan
                                     }
@@ -316,7 +316,7 @@ struct TravelPlanDetailScreen: View {
                 
                 if let currentPlan = currentPlan {
                     ScrollViewReader { proxy in
-                        ScrollView(showsIndicators: false) {
+                ScrollView(showsIndicators: false) {
                             AdaptiveContentContainer(maxWidthPad: 900, horizontalPadding: 24) {
                                 VStack(spacing: 24) {
                                     // En-tête moderne avec destination
@@ -328,7 +328,7 @@ struct TravelPlanDetailScreen: View {
                                     ChecklistSection(plan: currentPlan, travelService: travelService)
                                         .padding(.horizontal, 20)
                                         .id("checklist")
-                                    
+                        
                                     // Informations du voyage
                                     TravelInfoSection(plan: currentPlan)
                                         .padding(.horizontal, 20)
@@ -531,8 +531,8 @@ struct ChecklistSection: View {
                             Text("\(Int(progress * 100))%")
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(AppColors.buttonPrimary)
-                        }
-                    }
+            }
+        }
                 }
             }
             .padding(24)
@@ -596,7 +596,7 @@ struct ChecklistItemRow: View {
     @State private var isPressed = false
     
     var body: some View {
-        Button {
+            Button {
             if let index = plan.checklist.firstIndex(where: { $0.id == item.id }) {
                 var updatedPlan = plan
                 updatedPlan.checklist[index].isChecked.toggle()
@@ -619,28 +619,28 @@ struct ChecklistItemRow: View {
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(AppColors.buttonPrimary)
                             .transition(.scale.combined(with: .opacity))
-                    }
+            }
                 }
                 
                 // Contenu
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(item.item)
+                Text(item.item)
                         .font(.system(size: 16, weight: item.isChecked ? .medium : .regular))
                         .foregroundColor(item.isChecked ? AppColors.secondaryText : AppColors.primaryText)
-                        .strikethrough(item.isChecked)
+                    .strikethrough(item.isChecked)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
-                    
+                
                     if let quantity = item.quantity, quantity > 1 {
                         HStack(spacing: 6) {
                             Image(systemName: "number.circle.fill")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(AppColors.buttonPrimary.opacity(0.7))
-                            Text("Quantité: \(quantity)".localized)
+                    Text("Quantité: \(quantity)".localized)
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(AppColors.secondaryText)
-                        }
-                    }
+                        .foregroundColor(AppColors.secondaryText)
+                }
+            }
                 }
                 
                 Spacer()
@@ -680,8 +680,8 @@ struct TravelInfoSection: View {
                 Text("Informations du voyage".localized)
                     .font(DesignSystem.Typography.headline())
                     .foregroundColor(AppColors.primaryText)
-                
-                Spacer()
+            
+            Spacer()
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 16)
