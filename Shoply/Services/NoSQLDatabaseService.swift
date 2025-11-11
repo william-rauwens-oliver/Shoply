@@ -44,7 +44,11 @@ final class NoSQLDatabaseService {
     func query(collection: String, whereKey: String? = nil, equals value: String? = nil) async throws -> [Document] {
         var all: [Document] = []
         queue.sync {
-            all = Array(storage[collection]?.values ?? [])
+            if let col = storage[collection] {
+                all = Array(col.values)
+            } else {
+                all = []
+            }
         }
         guard let key = whereKey, let val = value else {
             return all.sorted { $0.createdAt > $1.createdAt }
