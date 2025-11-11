@@ -13,8 +13,12 @@ struct ShoplyWidget: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: ShoplyWidgetProvider()) { entry in
-            ShoplyWidgetEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
+            if #available(iOS 17.0, *) {
+                ShoplyWidgetEntryView(entry: entry)
+                    .containerBackground(.fill.tertiary, for: .widget)
+            } else {
+                ShoplyWidgetEntryView(entry: entry)
+            }
         }
         .configurationDisplayName("Shoply".localized)
         .description("Affiche vos outfits du jour et la météo".localized)
@@ -349,6 +353,7 @@ struct LockScreenInlineWidget: View {
 
 // La localisation utilise l'extension String.localized définie dans Localization.swift
 
+@available(iOS 17.0, *)
 #Preview(as: .systemSmall) {
     ShoplyWidget()
 } timeline: {
