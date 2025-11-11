@@ -106,11 +106,12 @@ struct TutorialScreen: View {
                 // Contenu du tutoriel
                 TabView(selection: $currentStep) {
                     ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                        TutorialStepView(step: step)
+                        TutorialStepView(step: step, stepIndex: index)
                             .tag(index)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(.spring(response: 0.5, dampingFraction: 0.8), value: currentStep)
                 .padding(.top, 20)
                 
                 // Indicateur de progression
@@ -195,16 +196,20 @@ struct TutorialStep {
 
 struct TutorialStepView: View {
     let step: TutorialStep
-    @State private var iconScale: CGFloat = 0.8
+    let stepIndex: Int
+    @State private var iconScale: CGFloat = 0.5
+    @State private var iconRotation: Double = -180
     @State private var contentOpacity: Double = 0
+    @State private var contentOffset: CGFloat = 50
+    @State private var circlesOpacity: Double = 0
     
     var body: some View {
         VStack(spacing: 40) {
             Spacer()
             
-            // Icône grande avec animation
+            // Icône grande avec animation améliorée
             ZStack {
-                // Cercles concentriques animés
+                // Cercles concentriques animés avec effet de pulsation
                 ForEach(0..<2, id: \.self) { index in
                     Circle()
                         .stroke(
@@ -212,10 +217,11 @@ struct TutorialStepView: View {
                             lineWidth: 2
                         )
                         .frame(width: 200 + CGFloat(index * 30), height: 200 + CGFloat(index * 30))
-                        .opacity(0.5)
+                        .opacity(circlesOpacity)
+                        .scaleEffect(iconScale)
                 }
                 
-                // Cercle principal
+                // Cercle principal avec animation de rotation
                 ZStack {
                     Circle()
                         .fill(
@@ -248,11 +254,12 @@ struct TutorialStepView: View {
                     Image(systemName: step.icon)
                         .font(.system(size: 80, weight: .semibold))
                         .foregroundColor(step.imageColor)
+                        .rotationEffect(.degrees(iconRotation))
                 }
                 .scaleEffect(iconScale)
             }
             
-            // Titre et description avec animation
+            // Titre et description avec animation améliorée
             VStack(spacing: 20) {
                 Text(step.title)
                     .font(.playfairDisplayBold(size: 32))
@@ -268,19 +275,36 @@ struct TutorialStepView: View {
                     .padding(.horizontal, 40)
             }
             .opacity(contentOpacity)
+            .offset(y: contentOffset)
             
             Spacer()
         }
         .padding()
         .onAppear {
-            // Animation d'entrée
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
-                iconScale = 1.0
+            // Réinitialiser les animations à chaque apparition
+            iconScale = 0.5
+            iconRotation = -180
+            contentOpacity = 0
+            contentOffset = 50
+            circlesOpacity = 0
+            
+            // Animation séquentielle améliorée
+            // 1. Cercles concentriques
+            withAnimation(.easeOut(duration: 0.4)) {
+                circlesOpacity = 0.5
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                withAnimation(.easeIn(duration: 0.4)) {
+            // 2. Icône principale avec rotation et scale
+            withAnimation(.spring(response: 0.7, dampingFraction: 0.6)) {
+                iconScale = 1.0
+                iconRotation = 0
+            }
+            
+            // 3. Contenu avec fade in et slide up
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
                     contentOpacity = 1.0
+                    contentOffset = 0
                 }
             }
         }

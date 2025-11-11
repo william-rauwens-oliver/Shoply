@@ -567,69 +567,76 @@ struct OnboardingStep1: View {
                 }
             
             // Photo de profil (optionnelle)
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(spacing: 16) {
                 Text("Photo de profil (optionnelle)".localized)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(AppColors.primaryText)
-                    .padding(.horizontal, 40)
                 
-                HStack(spacing: 12) {
-                    if let img = profileImage {
+                if let img = profileImage {
+                    ZStack {
+                        Circle()
+                            .fill(AppColors.buttonSecondary)
+                            .frame(width: 120, height: 120)
+                            .overlay {
+                                Circle()
+                                    .stroke(AppColors.buttonPrimary.opacity(0.3), lineWidth: 3)
+                            }
+                            .shadow(color: AppColors.shadow.opacity(0.2), radius: 12, x: 0, y: 6)
+                        
                         Image(uiImage: img)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(height: 140)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .frame(width: 120, height: 120)
+                            .clipShape(Circle())
                             .overlay {
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 1)
+                                Circle()
+                                    .stroke(AppColors.cardBorder.opacity(0.2), lineWidth: 2)
                             }
-                            .padding(.leading, 40)
-                        
-                        Button {
-                            profileImage = nil
-                        } label: {
-                            HStack {
-                                Image(systemName: "trash")
-                                Text("Supprimer".localized)
-                            }
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.red)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
-                            .background(AppColors.buttonSecondary)
-                            .roundedCorner(12)
+                    }
+                    
+                    Button {
+                        profileImage = nil
+                    } label: {
+                        HStack {
+                            Image(systemName: "trash")
+                            Text("Supprimer".localized)
                         }
-                        .padding(.trailing, 40)
-                    } else {
-                        PhotosPicker(selection: $selectedProfileItem, matching: .images) {
-                            HStack(spacing: 12) {
-                                Image(systemName: "photo.on.rectangle.angled")
-                                    .font(.system(size: 22, weight: .medium))
-                                Text("Choisir une photo de profil".localized)
-                                    .font(.system(size: 15, weight: .semibold))
-                            }
-                            .foregroundColor(AppColors.primaryText)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(AppColors.buttonSecondary)
-                            .roundedCorner(16)
-                            .padding(.horizontal, 40)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.red)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(AppColors.buttonSecondary)
+                        .roundedCorner(12)
+                    }
+                } else {
+                    PhotosPicker(selection: $selectedProfileItem, matching: .images) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .font(.system(size: 22, weight: .medium))
+                            Text("Choisir une photo de profil".localized)
+                                .font(.system(size: 15, weight: .semibold))
                         }
-                        .onChange(of: selectedProfileItem) { oldValue, newValue in
-                            Task {
-                                if let newValue = newValue,
-                                   let data = try? await newValue.loadTransferable(type: Data.self),
-                                   let image = UIImage(data: data) {
-                                    await MainActor.run {
-                                        profileImage = image
-                                    }
+                        .foregroundColor(AppColors.primaryText)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(AppColors.buttonSecondary)
+                        .roundedCorner(16)
+                    }
+                    .padding(.horizontal, 40)
+                    .onChange(of: selectedProfileItem) { oldValue, newValue in
+                        Task {
+                            if let newValue = newValue,
+                               let data = try? await newValue.loadTransferable(type: Data.self),
+                               let image = UIImage(data: data) {
+                                await MainActor.run {
+                                    profileImage = image
                                 }
                             }
                         }
                     }
                 }
             }
+            .padding(.top, 8)
             
             Spacer()
         }
