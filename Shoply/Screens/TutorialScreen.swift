@@ -65,12 +65,6 @@ struct TutorialScreen: View {
                 imageColor: AppColors.buttonPrimary
             ),
             TutorialStep(
-                icon: "chart.line.uptrend.xyaxis",
-                title: "Statistiques et tendances".localized,
-                description: "Analysez vos préférences vestimentaires, suivez vos vêtements les plus portés et découvrez les tendances mode adaptées à votre profil. Comprenez votre style en profondeur.".localized,
-                imageColor: AppColors.buttonPrimary
-            ),
-            TutorialStep(
                 icon: "briefcase.fill",
                 title: "Modes spécialisés".localized,
                 description: "Utilisez le Mode Professionnel pour les occasions importantes, le Mode Romantique pour les rendez-vous, et créez des lookbooks PDF de vos meilleurs outfits.".localized,
