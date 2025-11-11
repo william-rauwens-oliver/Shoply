@@ -106,7 +106,7 @@ struct TutorialScreen: View {
                 // Contenu du tutoriel
                 TabView(selection: $currentStep) {
                     ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                        TutorialStepView(step: step, stepIndex: index)
+                        TutorialStepView(step: step, stepIndex: index, currentStep: currentStep)
                             .tag(index)
                     }
                 }
@@ -197,6 +197,7 @@ struct TutorialStep {
 struct TutorialStepView: View {
     let step: TutorialStep
     let stepIndex: Int
+    let currentStep: Int
     @State private var iconScale: CGFloat = 0.5
     @State private var iconRotation: Double = -180
     @State private var contentOpacity: Double = 0
@@ -301,6 +302,29 @@ struct TutorialStepView: View {
             }
             
             // 3. Contenu avec fade in et slide up
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
+                    contentOpacity = 1.0
+                    contentOffset = 0
+                }
+            }
+        }
+        .onChange(of: currentStep) { _, newValue in
+            // Rejouer l'animation à CHAQUE fois qu'on arrive sur cette étape
+            guard newValue == stepIndex else { return }
+            iconScale = 0.5
+            iconRotation = -180
+            contentOpacity = 0
+            contentOffset = 50
+            circlesOpacity = 0
+            
+            withAnimation(.easeOut(duration: 0.4)) {
+                circlesOpacity = 0.5
+            }
+            withAnimation(.spring(response: 0.7, dampingFraction: 0.6)) {
+                iconScale = 1.0
+                iconRotation = 0
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
                     contentOpacity = 1.0
