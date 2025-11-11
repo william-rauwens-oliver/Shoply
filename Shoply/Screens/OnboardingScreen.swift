@@ -107,90 +107,94 @@ struct OnboardingScreen: View {
                 
                 // Boutons de navigation
                 if currentStep > 0 {
-                HStack(spacing: 20) {
-                        if currentStep > 1 {
-                        Button(action: {
-                            withAnimation {
-                                currentStep -= 1
-                            }
-                        }) {
-                            Text("Précédent")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(AppColors.primaryText)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(AppColors.buttonSecondary)
-                                .roundedCorner(20)
+                    // Étapes >= 2: bouton Précédent + Suivant alignés
+                    if currentStep > 1 {
+                        HStack(spacing: 20) {
+                            Button(action: {
+                                withAnimation {
+                                    currentStep -= 1
+                                }
+                            }) {
+                                Text("Précédent")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(AppColors.primaryText)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(AppColors.buttonSecondary)
+                                    .roundedCorner(20)
                                     .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
                             }
-                        } else {
-                            Spacer()
-                                .frame(maxWidth: .infinity)
-                    }
-                    
-                    Button(action: {
-                            if currentStep < 4 {
-                                // Valider avant de passer à l'étape suivante
-                                if currentStep == 1 {
-                                    // Validation prénom - doit être rempli
-                                    if !firstName.trimmingCharacters(in: .whitespaces).isEmpty {
-                                        withAnimation {
-                                            currentStep += 1
+                            
+                            Button(action: {
+                                if currentStep < 4 {
+                                    // Valider avant de passer à l'étape suivante
+                                    if currentStep == 2 {
+                                        let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+                                        if !trimmedEmail.isEmpty && isValidEmail(trimmedEmail) {
+                                            showingEmailError = false
+                                            withAnimation { currentStep += 1 }
+                                        } else {
+                                            showingEmailError = true
                                         }
-                                    }
-                                } else if currentStep == 2 {
-                                    // Validation email - doit être rempli et valide
-                                    let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
-                                    if !trimmedEmail.isEmpty && isValidEmail(trimmedEmail) {
-                                        showingEmailError = false
-                                        withAnimation {
-                                            currentStep += 1
+                                    } else if currentStep == 3 {
+                                        if calculatedAge >= 15 {
+                                            showingAgeError = false
+                                            withAnimation { currentStep += 1 }
+                                        } else {
+                                            showingAgeError = true
                                         }
                                     } else {
-                                        showingEmailError = true
-                                    }
-                                } else if currentStep == 3 {
-                                    // Validation âge - doit être au minimum 15 ans
-                                    if calculatedAge >= 15 {
-                                        showingAgeError = false
-                            withAnimation {
-                                currentStep += 1
-                                        }
-                                    } else {
-                                        showingAgeError = true
+                                        withAnimation { currentStep += 1 }
                                     }
                                 } else {
-                                    // Étape 0 (bienvenue) ou autre - passer à l'étape suivante
-                                    withAnimation {
-                                        currentStep += 1
-                                    }
+                                    completeOnboarding()
+                                }
+                            }) {
+                                Text(currentStep < 4 ? "Suivant" : "Terminer")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(AppColors.buttonPrimaryText)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(AppColors.buttonPrimary)
+                                    .roundedCorner(20)
+                                    .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
                             }
-                        } else {
-                            completeOnboarding()
+                            .disabled(
+                                (currentStep == 2 && (email.trimmingCharacters(in: .whitespaces).isEmpty || !isValidEmail(email.trimmingCharacters(in: .whitespaces)))) ||
+                                (currentStep == 3 && calculatedAge < 15)
+                            )
+                            .opacity(
+                                (currentStep == 2 && (email.trimmingCharacters(in: .whitespaces).isEmpty || !isValidEmail(email.trimmingCharacters(in: .whitespaces)))) ||
+                                (currentStep == 3 && calculatedAge < 15) ? 0.5 : 1.0
+                            )
                         }
-                    }) {
-                            Text(currentStep < 4 ? "Suivant" : "Terminer")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(AppColors.buttonPrimaryText)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(AppColors.buttonPrimary)
-                                .roundedCorner(20)
-                                .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                        .padding(.horizontal, 30)
+                        .padding(.bottom, 50)
+                    } else {
+                        // Étape 1: centrer le bouton Suivant
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                if !firstName.trimmingCharacters(in: .whitespaces).isEmpty {
+                                    withAnimation { currentStep += 1 }
+                                }
+                            }) {
+                                Text("Suivant")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(AppColors.buttonPrimaryText)
+                                    .frame(maxWidth: 420)
+                                    .padding()
+                                    .background(AppColors.buttonPrimary)
+                                    .roundedCorner(20)
+                                    .shadow(color: AppColors.shadow, radius: 8, x: 0, y: 4)
+                            }
+                            .disabled(firstName.trimmingCharacters(in: .whitespaces).isEmpty)
+                            .opacity(firstName.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1.0)
+                            Spacer()
                         }
-                        .disabled(
-                            (currentStep == 1 && firstName.trimmingCharacters(in: .whitespaces).isEmpty) ||
-                            (currentStep == 2 && (email.trimmingCharacters(in: .whitespaces).isEmpty || !isValidEmail(email.trimmingCharacters(in: .whitespaces)))) ||
-                            (currentStep == 3 && calculatedAge < 15)
-                        )
-                        .opacity(
-                            (currentStep == 1 && firstName.trimmingCharacters(in: .whitespaces).isEmpty) ||
-                            (currentStep == 2 && (email.trimmingCharacters(in: .whitespaces).isEmpty || !isValidEmail(email.trimmingCharacters(in: .whitespaces)))) ||
-                            (currentStep == 3 && calculatedAge < 15) ? 0.5 : 1.0
-                        )
+                        .padding(.horizontal, 30)
+                        .padding(.bottom, 50)
                     }
-                    .padding(.horizontal, 30)
-                    .padding(.bottom, 50)
                 } else {
                     // Page de bienvenue - bouton centré
                     Button(action: {
