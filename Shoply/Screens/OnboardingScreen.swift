@@ -208,24 +208,24 @@ struct OnboardingScreen: View {
         // Assure la visibilité du CTA "Pour commencer" même si le contenu est long
         .safeAreaInset(edge: .bottom) {
             if currentStep == 0 {
-                HStack {
+                VStack(spacing: 0) {
                     Button(action: {
                         withAnimation { currentStep += 1 }
                     }) {
                         Text("Pour commencer".localized)
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(AppColors.buttonPrimaryText)
-                            .frame(maxWidth: 500)
-                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
                             .background(AppColors.buttonPrimary)
                             .roundedCorner(20)
                             .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
                     }
                 }
-                .frame(maxWidth: .infinity)
                 .padding(.horizontal, 24)
-                .padding(.vertical, 8)
-                .background(AppColors.background.opacity(0.0001)) // capture safe area taps sans changer le fond
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                .background(AppColors.background)
             }
         }
     }
@@ -294,147 +294,139 @@ struct OnboardingStep0_Welcome: View {
     @State private var featuresOffset: CGFloat = 30
     
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-            
-            // Logo animé avec effet moderne
-            VStack(spacing: 32) {
-                ZStack {
-                    // Cercles animés en arrière-plan
-                    ForEach(0..<3, id: \.self) { index in
-                        Circle()
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        AppColors.buttonPrimary.opacity(0.3 - Double(index) * 0.1),
-                                        AppColors.buttonPrimary.opacity(0.1 - Double(index) * 0.05)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 2
-                            )
-                            .frame(width: 160 + CGFloat(index * 20), height: 160 + CGFloat(index * 20))
-                            .opacity(0.6)
-                            .blur(radius: CGFloat(index) * 2)
-                    }
-                    
-                    // Logo principal avec effet glassmorphism (étoiles pour l'IA)
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 0) {
+                // Logo animé avec effet moderne (réduit)
+                VStack(spacing: 16) {
                     ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        AppColors.buttonPrimary.opacity(0.25),
-                                        AppColors.buttonPrimary.opacity(0.15)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                        // Cercles animés en arrière-plan (réduits)
+                        ForEach(0..<2, id: \.self) { index in
+                            Circle()
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [
+                                            AppColors.buttonPrimary.opacity(0.3 - Double(index) * 0.1),
+                                            AppColors.buttonPrimary.opacity(0.1 - Double(index) * 0.05)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 2
                                 )
-                            )
-                            .frame(width: 160, height: 160)
-                            .overlay {
-                                Circle()
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [
-                                                AppColors.buttonPrimary.opacity(0.5),
-                                                AppColors.buttonPrimary.opacity(0.2)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 3
-                                    )
-                            }
-                            .shadow(color: AppColors.buttonPrimary.opacity(0.4), radius: 20, x: 0, y: 10)
+                                .frame(width: 120 + CGFloat(index * 15), height: 120 + CGFloat(index * 15))
+                                .opacity(0.6)
+                                .blur(radius: CGFloat(index) * 2)
+                        }
                         
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 70, weight: .bold))
-                            .foregroundColor(AppColors.buttonPrimary)
-                            .rotationEffect(.degrees(logoRotation))
+                        // Logo principal (réduit)
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            AppColors.buttonPrimary.opacity(0.25),
+                                            AppColors.buttonPrimary.opacity(0.15)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 120, height: 120)
+                                .overlay {
+                                    Circle()
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [
+                                                    AppColors.buttonPrimary.opacity(0.5),
+                                                    AppColors.buttonPrimary.opacity(0.2)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 3
+                                        )
+                                }
+                                .shadow(color: AppColors.buttonPrimary.opacity(0.4), radius: 15, x: 0, y: 8)
+                            
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 50, weight: .bold))
+                                .foregroundColor(AppColors.buttonPrimary)
+                                .rotationEffect(.degrees(logoRotation))
+                        }
+                        .scaleEffect(logoScale)
                     }
-                    .scaleEffect(logoScale)
-                }
-                .padding(.top, 40)
-                
-                // Titre avec animation
-                VStack(spacing: 20) {
-                    Text("Bienvenue sur".localized)
-                        .font(.system(size: 24, weight: .light))
-                        .foregroundColor(AppColors.secondaryText)
-                        .opacity(featuresOpacity)
+                    .padding(.top, 20)
                     
-                    Text("Shoply".localized)
-                        .font(.playfairDisplayBold(size: 48))
-                        .foregroundColor(AppColors.primaryText)
-                        .opacity(featuresOpacity)
-                    
-                    Text("Votre assistant style intelligent".localized)
-                        .font(.system(size: 18, weight: .regular))
-                        .foregroundColor(AppColors.secondaryText)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 50)
-                        .lineSpacing(6)
-                        .opacity(featuresOpacity)
+                    // Titre avec animation (réduit)
+                    VStack(spacing: 10) {
+                        Text("Bienvenue sur".localized)
+                            .font(.system(size: 18, weight: .light))
+                            .foregroundColor(AppColors.secondaryText)
+                            .opacity(featuresOpacity)
+                        
+                        Text("Shoply".localized)
+                            .font(.playfairDisplayBold(size: 36))
+                            .foregroundColor(AppColors.primaryText)
+                            .opacity(featuresOpacity)
+                        
+                        Text("Votre assistant style intelligent".localized)
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(AppColors.secondaryText)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+                            .lineSpacing(4)
+                            .opacity(featuresOpacity)
+                    }
                 }
-            }
-            
-            // Sélecteur de thème (clair/sombre)
-            HStack(spacing: 8) {
-                ThemePillButton(
-                    title: "Clair".localized,
-                    isSelected: settingsManager.colorScheme == .light,
-                    action: { settingsManager.setColorScheme(.light) }
-                )
-                ThemePillButton(
-                    title: "Sombre".localized,
-                    isSelected: settingsManager.colorScheme == .dark,
-                    action: { settingsManager.setColorScheme(.dark) }
-                )
-            }
-            .padding(.top, 20)
-            
-            Spacer()
-            
-            // Points forts avec animation en cascade
-            VStack(spacing: 24) {
-                ModernFeatureCard(
-                    icon: "sparkles",
-                    title: "Shoply AI".localized,
-                    description: "Intelligence artificielle avancée pour des suggestions personnalisées".localized,
-                    delay: 0.1
-                )
-                .opacity(featuresOpacity)
-                .offset(y: featuresOffset)
                 
-                ModernFeatureCard(
-                    icon: "tshirt.fill",
-                    title: "Garde-robe complète".localized,
-                    description: "Organisez vos vêtements en collections et suivez votre style".localized,
-                    delay: 0.2
-                )
-                .opacity(featuresOpacity)
-                .offset(y: featuresOffset)
+                // Sélecteur de thème (clair/sombre)
+                HStack(spacing: 8) {
+                    ThemePillButton(
+                        title: "Clair".localized,
+                        isSelected: settingsManager.colorScheme == .light,
+                        action: { settingsManager.setColorScheme(.light) }
+                    )
+                    ThemePillButton(
+                        title: "Sombre".localized,
+                        isSelected: settingsManager.colorScheme == .dark,
+                        action: { settingsManager.setColorScheme(.dark) }
+                    )
+                }
+                .padding(.top, 16)
                 
-                ModernFeatureCard(
-                    icon: "airplane",
-                    title: "Mode Voyage".localized,
-                    description: "Planifiez vos outfits de voyage avec checklist intelligente".localized,
-                    delay: 0.3
-                )
-                .opacity(featuresOpacity)
-                .offset(y: featuresOffset)
+                // Points forts avec animation en cascade (réduits)
+                VStack(spacing: 12) {
+                    ModernFeatureCard(
+                        icon: "sparkles",
+                        title: "Shoply AI".localized,
+                        description: "Intelligence artificielle avancée pour des suggestions personnalisées".localized,
+                        delay: 0.1
+                    )
+                    .opacity(featuresOpacity)
+                    .offset(y: featuresOffset)
+                    
+                    ModernFeatureCard(
+                        icon: "tshirt.fill",
+                        title: "Garde-robe complète".localized,
+                        description: "Organisez vos vêtements en collections et suivez votre style".localized,
+                        delay: 0.2
+                    )
+                    .opacity(featuresOpacity)
+                    .offset(y: featuresOffset)
+                    
+                    ModernFeatureCard(
+                        icon: "airplane",
+                        title: "Mode Voyage".localized,
+                        description: "Planifiez vos outfits de voyage avec checklist intelligente".localized,
+                        delay: 0.3
+                    )
+                    .opacity(featuresOpacity)
+                    .offset(y: featuresOffset)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 100) // Espace pour le bouton en bas
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 20)
-            .background(
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(AppColors.buttonSecondary)
-                    .shadow(color: AppColors.shadow.opacity(0.25), radius: 20, x: 0, y: 10)
-            )
-            .padding(.horizontal, 20)
-            .padding(.bottom, 32)
         }
         .onAppear {
             // Animation du logo
@@ -465,9 +457,9 @@ struct ModernFeatureCard: View {
     @State private var isVisible = false
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
             ZStack {
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 12)
                     .fill(
                         LinearGradient(
                             colors: [
@@ -478,40 +470,40 @@ struct ModernFeatureCard: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 56, height: 56)
+                    .frame(width: 44, height: 44)
                     .overlay {
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: 12)
                             .stroke(AppColors.buttonPrimary.opacity(0.3), lineWidth: 1.5)
                     }
                 
                 Image(systemName: icon)
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(AppColors.buttonPrimary)
             }
             
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundColor(AppColors.primaryText)
                 
                 Text(description)
-                    .font(.system(size: 14, weight: .regular))
+                    .font(.system(size: 13, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
                     .lineLimit(2)
             }
             
             Spacer()
         }
-        .padding(18)
+        .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: 16)
                 .fill(AppColors.buttonSecondary)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 20)
+                    RoundedRectangle(cornerRadius: 16)
                         .stroke(AppColors.cardBorder.opacity(0.2), lineWidth: 1)
                 }
         )
-        .shadow(color: AppColors.shadow.opacity(0.1), radius: 8, x: 0, y: 4)
+        .shadow(color: AppColors.shadow.opacity(0.1), radius: 6, x: 0, y: 3)
         .scaleEffect(isVisible ? 1.0 : 0.95)
         .opacity(isVisible ? 1.0 : 0)
         .onAppear {
