@@ -213,13 +213,9 @@ struct ChatAIScreen: View {
                             .font(DesignSystem.Typography.headline())
                             .foregroundColor(AppColors.primaryText)
                         
-                        Picker("Mode", selection: $aiMode) {
-                            ForEach(availableAIModes, id: \.self) { mode in
-                                Text(mode.displayName).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: min(200, CGFloat(availableAIModes.count) * 90))
+                        Text("Shoply AI".localized)
+                            .font(DesignSystem.Typography.subheadline())
+                            .foregroundColor(AppColors.secondaryText)
                     }
                 }
                 
