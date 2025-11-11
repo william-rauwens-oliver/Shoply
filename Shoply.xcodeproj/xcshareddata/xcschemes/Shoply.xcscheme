@@ -21,20 +21,6 @@
                ReferencedContainer = "container:Shoply.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "7063D3EC2EC38DC100A3C5F3"
-               BuildableName = "ShoplyWatchApp Watch App.app"
-               BlueprintName = "ShoplyWatchApp Watch App"
-               ReferencedContainer = "container:Shoply.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -64,16 +50,6 @@
             ReferencedContainer = "container:Shoply.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <BuildableProductRunnable
-         runnableDebuggingMode = "1">
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7063D3EC2EC38DC100A3C5F3"
-            BuildableName = "ShoplyWatchApp Watch App.app"
-            BlueprintName = "ShoplyWatchApp Watch App"
-            ReferencedContainer = "container:Shoply.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -88,16 +64,6 @@
             BlueprintIdentifier = "704CA0352EB6662F0038DF51"
             BuildableName = "Shoply.app"
             BlueprintName = "Shoply"
-            ReferencedContainer = "container:Shoply.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7063D3EC2EC38DC100A3C5F3"
-            BuildableName = "ShoplyWatchApp Watch App.app"
-            BlueprintName = "ShoplyWatchApp Watch App"
             ReferencedContainer = "container:Shoply.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

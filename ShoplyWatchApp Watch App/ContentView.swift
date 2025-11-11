@@ -89,37 +89,56 @@ struct ContentView: View {
             stopPeriodicCheck()
         }
         .onChange(of: watchDataManager.lastSyncDate) { oldValue, newValue in
-            // Re-vérifier quand la synchronisation se fait, mais seulement si on n'a pas encore reçu de réponse
-            // Éviter les vérifications en boucle
-            if !hasReceivedResponse && !isChecking && !isConfigured {
+            // Re-vérifier quand la synchronisation se fait pour détecter les changements
+            // Vérifier immédiatement si le profil a été supprimé ou ajouté
+            if !isChecking {
                 Task {
-                    await checkConfigurationAsync()
+                    // Vérifier rapidement l'état actuel
+                    let currentlyConfigured = watchDataManager.isAppConfigured()
                     await MainActor.run {
-                        hasReceivedResponse = true
+                        // Si l'état a changé, mettre à jour immédiatement
+                        if currentlyConfigured != isConfigured {
+                            print("🔄 Watch: État de configuration changé - Mise à jour immédiate")
+                            isConfigured = currentlyConfigured
+                            isChecking = false
+                            if !currentlyConfigured {
+                                stopPeriodicCheck()
+                            }
+                        }
                     }
                 }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ConfigurationDetected"))) { _ in
-            // Mettre à jour le statut de configuration seulement si on n'a pas encore reçu de réponse
-            if !hasReceivedResponse {
-                Task {
-                    await checkConfigurationAsync()
-                    await MainActor.run {
-                        hasReceivedResponse = true
+            // Mettre à jour le statut de configuration (même si on a déjà reçu une réponse pour les mises à jour en temps réel)
+            print("🔄 Watch: Notification ConfigurationDetected reçue - Vérification de l'état")
+            Task {
+                // Vérifier rapidement l'état actuel
+                let currentlyConfigured = watchDataManager.isAppConfigured()
+                await MainActor.run {
+                    if currentlyConfigured != isConfigured {
+                        print("✅ Watch: Configuration détectée - Mise à jour immédiate (était: \(isConfigured), maintenant: \(currentlyConfigured))")
+                        isConfigured = currentlyConfigured
+                        isChecking = false
+                        if currentlyConfigured {
+                            stopPeriodicCheck()
+                        }
+                    } else {
+                        print("ℹ️ Watch: État déjà à jour (configuré: \(currentlyConfigured))")
                     }
                 }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ProfileNotConfigured"))) { _ in
             // Arrêter toutes les vérifications si le profil n'est pas configuré
+            // IMPORTANT: Réagir même si hasReceivedResponse est true (pour les mises à jour en temps réel)
             print("🛑 Watch: Arrêt de toutes les vérifications - profil non configuré")
             stopPeriodicCheck()
             Task {
                 await MainActor.run {
                     isConfigured = false
                     isChecking = false
-                    hasReceivedResponse = true // Marquer qu'on a reçu une réponse
+                    // Ne pas mettre hasReceivedResponse à true ici pour permettre les mises à jour futures
                 }
             }
         }

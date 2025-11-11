@@ -401,11 +401,36 @@ extension WatchDataManager: WCSessionDelegate {
                 // Recevoir le profil utilisateur
                 if let profileBase64 = message["profile"] as? String,
                    let profileData = Data(base64Encoded: profileBase64) {
+                    print("✅ Watch: Profil reçu via message (base64)")
                     saveProfileDataToAppGroup(profileData)
+                    // Vérifier si le profil est configuré et notifier
+                    DispatchQueue.main.async {
+                        self.lastSyncDate = Date()
+                        if self.isAppConfigured() {
+                            print("✅ Watch: Profil configuré détecté via message - notification envoyée")
+                            NotificationCenter.default.post(name: NSNotification.Name("ConfigurationDetected"), object: nil)
+                        } else {
+                            NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                        }
+                    }
                 } else if let firstName = message["firstName"] as? String,
                           let isConfigured = message["isConfigured"] as? Bool {
+                    print("✅ Watch: Profil reçu via message - Prénom: '\(firstName)', isConfigured: \(isConfigured)")
                     saveUserProfileToAppGroup(firstName: firstName, isConfigured: isConfigured)
+                    DispatchQueue.main.async {
+                        self.lastSyncDate = Date()
+                        if isConfigured {
+                            print("✅ Watch: Profil configuré détecté via message - notification envoyée")
+                            NotificationCenter.default.post(name: NSNotification.Name("ConfigurationDetected"), object: nil)
+                        } else {
+                            NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                        }
+                    }
                 }
+            case "user_profile_deleted":
+                // Le profil a été supprimé sur iOS
+                print("🗑️ Watch: Profil supprimé sur iOS via message - nettoyage des données")
+                clearAllWatchData()
             default:
                 break
             }
@@ -424,16 +449,36 @@ extension WatchDataManager: WCSessionDelegate {
                    let profileData = Data(base64Encoded: profileBase64) {
                     print("✅ Watch: Profil reçu via application context (base64)")
                     saveProfileDataToAppGroup(profileData)
+                    // Vérifier si le profil est configuré et notifier
+                    DispatchQueue.main.async {
+                        self.lastSyncDate = Date()
+                        if self.isAppConfigured() {
+                            print("✅ Watch: Profil configuré détecté - notification envoyée")
+                            NotificationCenter.default.post(name: NSNotification.Name("ConfigurationDetected"), object: nil)
+                        } else {
+                            NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                        }
+                    }
                 } else if let firstName = applicationContext["firstName"] as? String,
                           let isConfigured = applicationContext["isConfigured"] as? Bool {
-                    print("✅ Watch: Profil reçu via application context (champs séparés)")
+                    print("✅ Watch: Profil reçu via application context (champs séparés) - Prénom: '\(firstName)', isConfigured: \(isConfigured)")
                     saveUserProfileToAppGroup(firstName: firstName, isConfigured: isConfigured)
+                    DispatchQueue.main.async {
+                        self.lastSyncDate = Date()
+                        if isConfigured {
+                            print("✅ Watch: Profil configuré détecté - notification envoyée")
+                            NotificationCenter.default.post(name: NSNotification.Name("ConfigurationDetected"), object: nil)
+                        } else {
+                            NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
+                        }
+                    }
                 }
                 
             case "user_profile_deleted":
                 // Le profil a été supprimé sur iOS - nettoyer toutes les données
-                print("🗑️ Watch: Profil supprimé sur iOS - nettoyage des données")
+                print("🗑️ Watch: Profil supprimé sur iOS via application context - nettoyage des données")
                 clearAllWatchData()
+                // La notification ProfileNotConfigured est déjà envoyée dans clearAllWatchData()
                 
             default:
                 break
@@ -442,8 +487,9 @@ extension WatchDataManager: WCSessionDelegate {
     }
     
     // Nettoyer toutes les données de la Watch
-    private func clearAllWatchData() {
+    func clearAllWatchData() {
         guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            print("⚠️ Watch: Impossible d'accéder à l'App Group pour nettoyer")
             return
         }
         
@@ -459,10 +505,11 @@ extension WatchDataManager: WCSessionDelegate {
         
         print("✅ Watch: Toutes les données ont été nettoyées")
         
-        // Notifier que la configuration a changé
+        // Notifier que la configuration a changé (profil supprimé)
         DispatchQueue.main.async {
             self.objectWillChange.send()
-            NotificationCenter.default.post(name: NSNotification.Name("ConfigurationDetected"), object: nil)
+            self.lastSyncDate = Date() // Mettre à jour pour déclencher onChange
+            NotificationCenter.default.post(name: NSNotification.Name("ProfileNotConfigured"), object: nil)
         }
     }
     
