@@ -19,32 +19,62 @@ struct TutorialScreen: View {
             TutorialStep(
                 icon: "sparkles",
                 title: "Bienvenue dans Shoply !".localized,
-                description: "Votre assistant personnel pour créer des outfits parfaits adaptés à la météo et à votre style.".localized,
-                imageColor: .blue
+                description: "Votre assistant personnel intelligent pour créer des outfits parfaits. Découvrez toutes les fonctionnalités qui vous aideront à organiser votre style.".localized,
+                imageColor: AppColors.buttonPrimary
             ),
             TutorialStep(
                 icon: "tshirt.fill",
-                title: "Ajoutez vos vêtements".localized,
-                description: "Commencez par ajouter au moins 5 vêtements dans votre garde-robe avec leurs photos pour que l'IA puisse vous proposer les meilleurs outfits.".localized,
-                imageColor: .purple
+                title: "Gestion de garde-robe".localized,
+                description: "Ajoutez vos vêtements avec photos, organisez-les en collections thématiques et créez votre garde-robe digitale complète. Plus vous ajoutez de vêtements, plus les suggestions seront précises.".localized,
+                imageColor: AppColors.buttonPrimary
             ),
             TutorialStep(
                 icon: "brain.head.profile",
-                title: "Sélection Intelligente".localized,
-                description: "Générez des outfits personnalisés en utilisant ChatGPT pour une analyse avancée de vos vêtements, ou utilisez l'algorithme local pour préserver votre confidentialité.".localized,
-                imageColor: .orange
+                title: "Shoply AI - Sélection intelligente".localized,
+                description: "Générez des outfits personnalisés avec Shoply AI, votre assistant IA créé par William RAUWENS OLIVER. L'IA analyse votre style, la météo et vos préférences pour créer des tenues parfaites.".localized,
+                imageColor: AppColors.buttonPrimary
+            ),
+            TutorialStep(
+                icon: "message.fill",
+                title: "Chat avec Shoply AI".localized,
+                description: "Discutez avec Shoply AI pour obtenir des conseils personnalisés sur la mode, le style et vos tenues. L'IA comprend votre contexte et vous guide dans vos choix.".localized,
+                imageColor: AppColors.buttonPrimary
+            ),
+            TutorialStep(
+                icon: "airplane",
+                title: "Mode Voyage".localized,
+                description: "Planifiez vos voyages avec des checklists intelligentes générées par Shoply AI. L'IA analyse votre destination, la météo et crée une liste personnalisée pour ne rien oublier.".localized,
+                imageColor: AppColors.buttonPrimary
             ),
             TutorialStep(
                 icon: "calendar",
-                title: "Planifiez vos outfits".localized,
-                description: "Consultez le calendrier pour planifier vos tenues à l'avance selon la météo prévue. L'IA s'adapte automatiquement aux conditions.".localized,
-                imageColor: .green
+                title: "Calendrier et historique".localized,
+                description: "Planifiez vos outfits à l'avance, consultez votre historique et marquez vos favoris. L'application s'intègre avec votre calendrier iOS pour des suggestions d'événements.".localized,
+                imageColor: AppColors.buttonPrimary
             ),
             TutorialStep(
-                icon: "clock.fill",
-                title: "Suivez votre historique".localized,
-                description: "Gardez une trace de vos outfits portés et marquez vos favoris pour retrouver facilement vos combinaisons préférées.".localized,
-                imageColor: .pink
+                icon: "heart.fill",
+                title: "Wishlist et shopping".localized,
+                description: "Créez une wishlist de vêtements désirés, scannez des codes-barres pour comparer les prix et trouvez les meilleures offres. Organisez vos envies par priorité.".localized,
+                imageColor: AppColors.buttonPrimary
+            ),
+            TutorialStep(
+                icon: "star.fill",
+                title: "Gamification".localized,
+                description: "Débloquez des badges, progressez en niveaux et suivez vos achievements. Rendez l'organisation de votre style ludique et motivante avec le système de gamification.".localized,
+                imageColor: AppColors.buttonPrimary
+            ),
+            TutorialStep(
+                icon: "chart.line.uptrend.xyaxis",
+                title: "Statistiques et tendances".localized,
+                description: "Analysez vos préférences vestimentaires, suivez vos vêtements les plus portés et découvrez les tendances mode adaptées à votre profil. Comprenez votre style en profondeur.".localized,
+                imageColor: AppColors.buttonPrimary
+            ),
+            TutorialStep(
+                icon: "briefcase.fill",
+                title: "Modes spécialisés".localized,
+                description: "Utilisez le Mode Professionnel pour les occasions importantes, le Mode Romantique pour les rendez-vous, et créez des lookbooks PDF de vos meilleurs outfits.".localized,
+                imageColor: AppColors.buttonPrimary
             )
         ]
     }
@@ -165,40 +195,95 @@ struct TutorialStep {
 
 struct TutorialStepView: View {
     let step: TutorialStep
+    @State private var iconScale: CGFloat = 0.8
+    @State private var contentOpacity: Double = 0
     
     var body: some View {
         VStack(spacing: 40) {
             Spacer()
             
-            // Icône grande
+            // Icône grande avec animation
             ZStack {
-                Circle()
-                    .fill(step.imageColor.opacity(0.2))
-                    .frame(width: 180, height: 180)
+                // Cercles concentriques animés
+                ForEach(0..<2, id: \.self) { index in
+                    Circle()
+                        .stroke(
+                            step.imageColor.opacity(0.2 - Double(index) * 0.1),
+                            lineWidth: 2
+                        )
+                        .frame(width: 200 + CGFloat(index * 30), height: 200 + CGFloat(index * 30))
+                        .opacity(0.5)
+                }
                 
-                Image(systemName: step.icon)
-                    .font(.system(size: 80))
-                    .foregroundColor(step.imageColor)
+                // Cercle principal
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    step.imageColor.opacity(0.25),
+                                    step.imageColor.opacity(0.15)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 180, height: 180)
+                        .overlay {
+                            Circle()
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [
+                                            step.imageColor.opacity(0.4),
+                                            step.imageColor.opacity(0.2)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 3
+                                )
+                        }
+                        .shadow(color: step.imageColor.opacity(0.3), radius: 20, x: 0, y: 10)
+                    
+                    Image(systemName: step.icon)
+                        .font(.system(size: 80, weight: .semibold))
+                        .foregroundColor(step.imageColor)
+                }
+                .scaleEffect(iconScale)
             }
             
-            // Titre et description
-            VStack(spacing: 16) {
+            // Titre et description avec animation
+            VStack(spacing: 20) {
                 Text(step.title)
                     .font(.playfairDisplayBold(size: 32))
                     .foregroundColor(AppColors.primaryText)
                     .multilineTextAlignment(.center)
+                    .padding(.horizontal, 30)
                 
                 Text(step.description)
-                    .font(.system(size: 18))
+                    .font(.system(size: 17, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
                     .multilineTextAlignment(.center)
-                    .lineSpacing(6)
+                    .lineSpacing(8)
                     .padding(.horizontal, 40)
             }
+            .opacity(contentOpacity)
             
             Spacer()
         }
         .padding()
+        .onAppear {
+            // Animation d'entrée
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                iconScale = 1.0
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                withAnimation(.easeIn(duration: 0.4)) {
+                    contentOpacity = 1.0
+                }
+            }
+        }
     }
 }
 

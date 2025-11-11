@@ -267,107 +267,220 @@ struct OnboardingScreen: View {
 
 // MARK: - Étape 0: Page de bienvenue
 struct OnboardingStep0_Welcome: View {
+    @State private var logoScale: CGFloat = 0.8
+    @State private var logoRotation: Double = 0
+    @State private var featuresOpacity: Double = 0
+    @State private var featuresOffset: CGFloat = 30
+    
     var body: some View {
-        VStack(spacing: 40) {
+        VStack(spacing: 0) {
             Spacer()
             
-            // Logo et illustration
-            VStack(spacing: 30) {
+            // Logo animé avec effet moderne
+            VStack(spacing: 32) {
                 ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    AppColors.buttonPrimary.opacity(0.2),
-                                    AppColors.buttonPrimary.opacity(0.1)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                    // Cercles animés en arrière-plan
+                    ForEach(0..<3, id: \.self) { index in
+                        Circle()
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        AppColors.buttonPrimary.opacity(0.3 - Double(index) * 0.1),
+                                        AppColors.buttonPrimary.opacity(0.1 - Double(index) * 0.05)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 2
                             )
-                        )
-                        .frame(width: 140, height: 140)
-                        .overlay(
-                            Circle()
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [
-                                            AppColors.buttonPrimary.opacity(0.4),
-                                            AppColors.buttonPrimary.opacity(0.2)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 2
+                            .frame(width: 160 + CGFloat(index * 20), height: 160 + CGFloat(index * 20))
+                            .opacity(0.6)
+                            .blur(radius: CGFloat(index) * 2)
+                    }
+                    
+                    // Logo principal avec effet glassmorphism
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        AppColors.buttonPrimary.opacity(0.25),
+                                        AppColors.buttonPrimary.opacity(0.15)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
                                 )
-                        )
-                    
-                    Image(systemName: "tshirt.fill")
-                        .font(.system(size: 60, weight: .semibold))
-                        .foregroundColor(AppColors.buttonPrimary)
+                            )
+                            .frame(width: 160, height: 160)
+                            .overlay {
+                                Circle()
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                AppColors.buttonPrimary.opacity(0.5),
+                                                AppColors.buttonPrimary.opacity(0.2)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 3
+                                    )
+                            }
+                            .shadow(color: AppColors.buttonPrimary.opacity(0.4), radius: 20, x: 0, y: 10)
+                        
+                        Image(systemName: "tshirt.fill")
+                            .font(.system(size: 70, weight: .bold))
+                            .foregroundColor(AppColors.buttonPrimary)
+                            .rotationEffect(.degrees(logoRotation))
+                    }
+                    .scaleEffect(logoScale)
                 }
-                .shadow(color: AppColors.buttonPrimary.opacity(0.3), radius: 16, x: 0, y: 8)
+                .padding(.top, 40)
                 
-                VStack(spacing: 16) {
-                    Text("Bienvenue sur Shoply".localized)
-                        .font(.playfairDisplayBold(size: 36))
-                        .foregroundColor(AppColors.primaryText)
-                        .multilineTextAlignment(.center)
+                // Titre avec animation
+                VStack(spacing: 20) {
+                    Text("Bienvenue sur".localized)
+                        .font(.system(size: 24, weight: .light))
+                        .foregroundColor(AppColors.secondaryText)
+                        .opacity(featuresOpacity)
                     
-                    Text("Votre assistant style intelligent pour créer des tenues parfaites".localized)
+                    Text("Shoply".localized)
+                        .font(.playfairDisplayBold(size: 48))
+                        .foregroundColor(AppColors.primaryText)
+                        .opacity(featuresOpacity)
+                    
+                    Text("Votre assistant style intelligent".localized)
                         .font(.system(size: 18, weight: .regular))
                         .foregroundColor(AppColors.secondaryText)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
-                        .lineSpacing(4)
+                        .padding(.horizontal, 50)
+                        .lineSpacing(6)
+                        .opacity(featuresOpacity)
                 }
             }
             
-            // Points forts
-            VStack(spacing: 20) {
-                FeatureItem(icon: "sparkles", title: "Suggestions intelligentes".localized, description: "Basées sur votre style et la météo".localized)
-                FeatureItem(icon: "photo.fill", title: "Gestion de votre garde-robe".localized, description: "Organisez tous vos vêtements".localized)
-                FeatureItem(icon: "brain.head.profile", title: "Assistant IA".localized, description: "Des conseils personnalisés 24/7".localized)
-            }
-            .padding(.horizontal, 40)
-            
             Spacer()
+            
+            // Points forts avec animation en cascade
+            VStack(spacing: 24) {
+                ModernFeatureCard(
+                    icon: "sparkles",
+                    title: "Shoply AI".localized,
+                    description: "Intelligence artificielle avancée pour des suggestions personnalisées".localized,
+                    delay: 0.1
+                )
+                .opacity(featuresOpacity)
+                .offset(y: featuresOffset)
+                
+                ModernFeatureCard(
+                    icon: "tshirt.fill",
+                    title: "Garde-robe complète".localized,
+                    description: "Organisez vos vêtements en collections et suivez votre style".localized,
+                    delay: 0.2
+                )
+                .opacity(featuresOpacity)
+                .offset(y: featuresOffset)
+                
+                ModernFeatureCard(
+                    icon: "airplane",
+                    title: "Mode Voyage".localized,
+                    description: "Planifiez vos outfits de voyage avec checklist intelligente".localized,
+                    delay: 0.3
+                )
+                .opacity(featuresOpacity)
+                .offset(y: featuresOffset)
+            }
+            .padding(.horizontal, 30)
+            .padding(.bottom, 40)
+        }
+        .onAppear {
+            // Animation du logo
+            withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
+                logoScale = 1.0
+            }
+            
+            withAnimation(.linear(duration: 20).repeatForever(autoreverses: false)) {
+                logoRotation = 360
+            }
+            
+            // Animation des features
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    featuresOpacity = 1.0
+                    featuresOffset = 0
+                }
+            }
         }
     }
 }
 
-struct FeatureItem: View {
+struct ModernFeatureCard: View {
     let icon: String
     let title: String
     let description: String
+    let delay: Double
+    @State private var isVisible = false
     
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
-                Circle()
-                    .fill(AppColors.buttonSecondary)
-                    .frame(width: 50, height: 50)
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppColors.buttonPrimary.opacity(0.2),
+                                AppColors.buttonPrimary.opacity(0.1)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 56, height: 56)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(AppColors.buttonPrimary.opacity(0.3), lineWidth: 1.5)
+                    }
                 
                 Image(systemName: icon)
-                    .font(.system(size: 24, weight: .medium))
+                    .font(.system(size: 26, weight: .semibold))
                     .foregroundColor(AppColors.buttonPrimary)
             }
-            .shadow(color: AppColors.shadow, radius: 6, x: 0, y: 3)
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 17, weight: .bold))
                     .foregroundColor(AppColors.primaryText)
                 
                 Text(description)
                     .font(.system(size: 14, weight: .regular))
                     .foregroundColor(AppColors.secondaryText)
+                    .lineLimit(2)
             }
             
             Spacer()
         }
-        .padding(.vertical, 8)
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(AppColors.buttonSecondary)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(AppColors.cardBorder.opacity(0.2), lineWidth: 1)
+                }
+        )
+        .shadow(color: AppColors.shadow.opacity(0.1), radius: 8, x: 0, y: 4)
+        .scaleEffect(isVisible ? 1.0 : 0.95)
+        .opacity(isVisible ? 1.0 : 0)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                    isVisible = true
+                }
+            }
+        }
     }
 }
+
 
 // MARK: - Indicateur de progression
 struct ProgressIndicator: View {

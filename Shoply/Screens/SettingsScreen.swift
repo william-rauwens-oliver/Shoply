@@ -339,18 +339,35 @@ struct SettingsScreen: View {
         // Déconnecter Apple Sign In
         AppleSignInService.shared.signOut()
         
-        // Supprimer tous les autres flags et données SAUF RGPD
+        // Réinitialiser TOUS les flags pour revenir à l'état initial
         UserDefaults.standard.removeObject(forKey: "hasSeenAppleSignInScreen")
         UserDefaults.standard.removeObject(forKey: "hasCompletedTutorial")
+        UserDefaults.standard.removeObject(forKey: "tutorial_completed")
+        UserDefaults.standard.removeObject(forKey: "onboardingCompleted")
+        
+        // Réinitialiser le profil utilisateur
+        UserDefaults.standard.removeObject(forKey: "userProfile")
         
         // NE PAS réinitialiser RGPD - on garde le consentement
-        // On retourne juste à Apple Sign In pour permettre une nouvelle connexion
+        // L'app reviendra à l'écran de bienvenue (OnboardingScreen)
         
         // Forcer la synchronisation
         UserDefaults.standard.synchronize()
         
-        alertMessage = "Toutes vos données ont été supprimées. Vous allez être redirigé vers l'écran de connexion."
+        // Forcer la mise à jour de l'état du DataManager
+        DispatchQueue.main.async {
+            // Vérifier à nouveau l'état de l'onboarding
+            _ = dataManager.hasCompletedOnboarding()
+        }
+        
+        alertMessage = "Toutes vos données ont été supprimées. L'application va redémarrer sur l'écran de bienvenue.".localized
         showingAlert = true
+        
+        // Fermer l'écran des paramètres après un court délai pour permettre à l'app de redémarrer
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            // L'app détectera automatiquement que l'onboarding n'est plus complété
+            // et affichera l'écran de bienvenue
+        }
         
         // L'app va automatiquement revenir à l'écran Apple Sign In car isAuthenticated est maintenant false
         // Grâce à la logique conditionnelle dans ShoplyApp.swift
