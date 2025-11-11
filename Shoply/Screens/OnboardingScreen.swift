@@ -13,7 +13,7 @@ struct OnboardingScreen: View {
     @State private var currentStep = 0
     @State private var firstName = ""
     @State private var email = ""
-    @State private var profileBackgroundImage: UIImage? = nil
+    @State private var profilePhoto: UIImage? = nil
     @State private var dateOfBirth: Date = {
         // Date par défaut : il y a 18 ans (donc 18 ans actuellement)
         let calendar = Calendar.current
@@ -88,7 +88,7 @@ struct OnboardingScreen: View {
                     case 0:
                         OnboardingStep0_Welcome()
                     case 1:
-                    OnboardingStep1(firstName: $firstName, backgroundImage: $profileBackgroundImage)
+                    OnboardingStep1(firstName: $firstName, profileImage: $profilePhoto)
                     case 2:
                         OnboardingStep2_Email(email: $email, showingError: $showingEmailError)
                     case 3:
@@ -248,9 +248,9 @@ struct OnboardingScreen: View {
             email: trimmedEmail, // Email saisi par l'utilisateur
                 createdAt: Date()
             )
-        // Ajouter l'image de fond si fournie
-        if let bg = profileBackgroundImage {
-            profile.backgroundPhoto = bg
+        // Ajouter la photo de profil si fournie
+        if let photo = profilePhoto {
+            profile.profilePhoto = photo
         }
         
         // Sauvegarder le profil en local (UserDefaults via DataManager)
@@ -304,7 +304,7 @@ struct OnboardingStep0_Welcome: View {
                             .blur(radius: CGFloat(index) * 2)
                     }
                     
-                    // Logo principal avec effet glassmorphism
+                    // Logo principal avec effet glassmorphism (étoiles pour l'IA)
                     ZStack {
                         Circle()
                             .fill(
@@ -334,7 +334,7 @@ struct OnboardingStep0_Welcome: View {
                             }
                             .shadow(color: AppColors.buttonPrimary.opacity(0.4), radius: 20, x: 0, y: 10)
                         
-                        Image(systemName: "tshirt.fill")
+                        Image(systemName: "sparkles")
                             .font(.system(size: 70, weight: .bold))
                             .foregroundColor(AppColors.buttonPrimary)
                             .rotationEffect(.degrees(logoRotation))
@@ -509,9 +509,9 @@ struct ProgressIndicator: View {
 // MARK: - Étape 1: Prénom
 struct OnboardingStep1: View {
     @Binding var firstName: String
-    @Binding var backgroundImage: UIImage?
+    @Binding var profileImage: UIImage?
     @FocusState private var isTextFieldFocused: Bool
-    @State private var selectedBackgroundItem: PhotosPickerItem?
+    @State private var selectedProfileItem: PhotosPickerItem?
     
     var body: some View {
         VStack(spacing: 30) {
@@ -562,16 +562,16 @@ struct OnboardingStep1: View {
                     }
                 }
             
-            // Image de fond (optionnel)
+            // Photo de profil (optionnelle)
             VStack(alignment: .leading, spacing: 12) {
-                Text("Image de fond (optionnel)".localized)
+                Text("Photo de profil (optionnelle)".localized)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(AppColors.primaryText)
                     .padding(.horizontal, 40)
                 
                 HStack(spacing: 12) {
-                    if let bg = backgroundImage {
-                        Image(uiImage: bg)
+                    if let img = profileImage {
+                        Image(uiImage: img)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(height: 140)
@@ -583,7 +583,7 @@ struct OnboardingStep1: View {
                             .padding(.leading, 40)
                         
                         Button {
-                            backgroundImage = nil
+                            profileImage = nil
                         } label: {
                             HStack {
                                 Image(systemName: "trash")
@@ -598,11 +598,11 @@ struct OnboardingStep1: View {
                         }
                         .padding(.trailing, 40)
                     } else {
-                        PhotosPicker(selection: $selectedBackgroundItem, matching: .images) {
+                        PhotosPicker(selection: $selectedProfileItem, matching: .images) {
                             HStack(spacing: 12) {
                                 Image(systemName: "photo.on.rectangle.angled")
                                     .font(.system(size: 22, weight: .medium))
-                                Text("Choisir une image de fond".localized)
+                                Text("Choisir une photo de profil".localized)
                                     .font(.system(size: 15, weight: .semibold))
                             }
                             .foregroundColor(AppColors.primaryText)
@@ -612,13 +612,13 @@ struct OnboardingStep1: View {
                             .roundedCorner(16)
                             .padding(.horizontal, 40)
                         }
-                        .onChange(of: selectedBackgroundItem) { oldValue, newValue in
+                        .onChange(of: selectedProfileItem) { oldValue, newValue in
                             Task {
                                 if let newValue = newValue,
                                    let data = try? await newValue.loadTransferable(type: Data.self),
                                    let image = UIImage(data: data) {
                                     await MainActor.run {
-                                        backgroundImage = image
+                                        profileImage = image
                                     }
                                 }
                             }
