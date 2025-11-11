@@ -106,6 +106,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     case spanish = "es"           // 4. Espagnol - ~548 millions
     case french = "fr"            // 5. Français - ~274 millions
     case italian = "it"           // Italien
+    case german = "de"            // Allemand
     case arabic = "ar"            // 6. Arabe - ~274 millions
     case bengali = "bn"           // 7. Bengali - ~272 millions
     case russian = "ru"           // 8. Russe - ~258 millions
@@ -122,6 +123,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         case .spanish: return "Español"
         case .french: return "Français"
         case .italian: return "Italiano"
+        case .german: return "Deutsch"
         case .arabic: return "العربية"
         case .bengali: return "বাংলা"
         case .russian: return "Русский"
@@ -138,6 +140,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         case .spanish: return "🇪🇸"
         case .french: return "🇫🇷"
         case .italian: return "🇮🇹"
+        case .german: return "🇩🇪"
         case .arabic: return "🇸🇦"
         case .bengali: return "🇧🇩"
         case .russian: return "🇷🇺"

@@ -2314,8 +2314,8 @@ struct LocalizedString {
                 return translation
             }
             
-            // Fallback: ordre de priorité (inclut l'italien)
-            let fallbackLanguages: [AppLanguage] = [.french, .english, .spanish, .italian, .portuguese, .russian, .arabic, .hindi, .chineseSimplified, .bengali, .indonesian]
+            // Fallback: ordre de priorité (inclut l'italien et l'allemand)
+            let fallbackLanguages: [AppLanguage] = [.french, .english, .spanish, .italian, .german, .portuguese, .russian, .arabic, .hindi, .chineseSimplified, .bengali, .indonesian]
             for fallbackLang in fallbackLanguages {
                 if let translation = translationsForKey[fallbackLang] {
                     return translation

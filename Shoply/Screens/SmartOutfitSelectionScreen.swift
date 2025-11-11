@@ -761,10 +761,12 @@ struct AIOptionCard: View {
                     Text(title.localized)
                         .font(DesignSystem.Typography.headline())
                         .foregroundColor(AppColors.primaryText)
+                        .multilineTextAlignment(.leading)
                     
                     Text(description.localized)
                         .font(DesignSystem.Typography.caption())
                         .foregroundColor(AppColors.secondaryText)
+                        .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 
