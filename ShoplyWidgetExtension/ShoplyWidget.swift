@@ -15,7 +15,7 @@ struct ShoplyWidget: Widget {
         StaticConfiguration(kind: kind, provider: ChatWidgetProvider()) { (entry: ChatWidgetEntry) in
             if #available(iOS 17.0, *) {
                 ChatAIWidgetView(entry: entry)
-                    .containerBackground(.fill.secondary, for: .widget)
+                    .containerBackground(Color(uiColor: .systemBackground), for: .widget)
             } else {
                 ChatAIWidgetView(entry: entry)
             }
@@ -52,7 +52,6 @@ struct ChatWidgetEntry: TimelineEntry {
 struct ChatAIWidgetView: View {
     var entry: ChatWidgetEntry
     @Environment(\.widgetFamily) var family
-    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         switch family {
@@ -70,16 +69,10 @@ struct ChatAIWidgetView: View {
 
 // Small Widget - Design adaptatif
 struct SmallChatWidget: View {
-    @Environment(\.colorScheme) var colorScheme
-    
     var body: some View {
         ZStack {
             // Fond adaptatif selon le thème
-            if colorScheme == .dark {
-                Color.black
-            } else {
-                Color.white
-            }
+            Color(uiColor: .systemBackground)
             
             VStack(spacing: 12) {
                 Image(systemName: "sparkles")
@@ -103,16 +96,10 @@ struct SmallChatWidget: View {
 
 // Medium Widget
 struct MediumChatWidget: View {
-    @Environment(\.colorScheme) var colorScheme
-    
     var body: some View {
         ZStack {
             // Fond adaptatif
-            if colorScheme == .dark {
-                Color.black
-            } else {
-                Color.white
-            }
+            Color(uiColor: .systemBackground)
             
         HStack(spacing: 16) {
                     Image(systemName: "sparkles")
@@ -140,16 +127,10 @@ struct MediumChatWidget: View {
 
 // Large Widget
 struct LargeChatWidget: View {
-    @Environment(\.colorScheme) var colorScheme
-    
     var body: some View {
         ZStack {
             // Fond adaptatif
-            if colorScheme == .dark {
-                Color.black
-            } else {
-                Color.white
-            }
+            Color(uiColor: .systemBackground)
             
         VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 12) {

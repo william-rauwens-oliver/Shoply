@@ -277,15 +277,6 @@ struct TutorialStepView: View {
             }
             .padding(.vertical, 24)
             .padding(.horizontal, 20)
-            .background {
-                // En mode clair: pas de fond gris derrière, laisser le fond blanc
-                if colorScheme == .dark {
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(AppColors.buttonSecondary)
-                        .shadow(color: AppColors.shadow.opacity(0.25), radius: 20, x: 0, y: 10)
-            }
-            }
-            .padding(.horizontal, 20)
             
             Spacer(minLength: 0)
         }
