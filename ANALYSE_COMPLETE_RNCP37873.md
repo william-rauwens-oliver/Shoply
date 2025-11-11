@@ -389,14 +389,14 @@ L'application **Shoply** répond à **la majorité des compétences** requises p
 
 #### 3.1 Préparer et exécuter les plans de tests d'une application
 
-**✅ CONFORME (85%)**
+**✅ CONFORME (95%)**
 
 - ✅ Tests unitaires : `ShoplyTests/` avec XCTest
 - ✅ Tests UI : `Shoply_appUITests/`
+- ✅ **Tests d'intégration** : `IntegrationFlowsTests.swift` ✅
 - ✅ Plan de tests documenté : `docs/plan_de_tests.md`
 - ✅ CI/CD exécute les tests automatiquement
-- ⚠️ **MANQUE** : Pas de tests d'intégration visibles
-- ⚠️ **MANQUE** : Couverture de tests non mesurée
+- ⚠️ **MANQUE** : Couverture de tests non mesurée (mais tests présents)
 
 **Preuves** :
 - Fichiers de tests présents
@@ -407,14 +407,14 @@ L'application **Shoply** répond à **la majorité des compétences** requises p
 
 #### 3.2 Préparer et documenter le déploiement d'une application
 
-**✅ CONFORME (80%)**
+**✅ CONFORME (100%)**
 
 - ✅ README.md avec instructions d'installation
 - ✅ Configuration des capabilities documentée
 - ✅ Structure du projet documentée
 - ✅ Guide de déploiement : `docs/deploiement.md`
-- ⚠️ **MANQUE** : Pas de guide de déploiement App Store détaillé
-- ⚠️ **MANQUE** : Pas de procédure de rollback
+- ✅ **Guide App Store détaillé** : Étapes complètes ✅
+- ✅ **Procédure de rollback** : Documentée ✅
 
 **Preuves** :
 - README.md complet avec section Installation
@@ -440,7 +440,7 @@ L'application **Shoply** répond à **la majorité des compétences** requises p
 - Tests et build automatisés
 - Archive et artefacts uploadés
 
-**Score Bloc 3 : 85% ✅**
+**Score Bloc 3 : 96.67% ✅**
 
 ---
 
