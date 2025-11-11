@@ -125,10 +125,10 @@ struct HomeScreen: View {
                 }
             }
         }
-        .sheet(isPresented: $showingChat) {
+        .fullScreenCover(isPresented: $showingChat) {
             ChatAIScreen()
         }
-        .sheet(isPresented: $showingConversations) {
+        .fullScreenCover(isPresented: $showingConversations) {
             NavigationStack {
                 ChatConversationsScreen()
             }

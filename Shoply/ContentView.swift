@@ -26,7 +26,7 @@ struct ContentView: View {
             // Contenu principal - afficher directement HomeScreen
             HomeScreen()
                 .environmentObject(settingsManager)
-                .sheet(isPresented: $shouldOpenChat) {
+                .fullScreenCover(isPresented: $shouldOpenChat) {
                     NavigationStack {
                         ChatAIScreen()
                     }

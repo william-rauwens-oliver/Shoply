@@ -21,6 +21,7 @@ struct UserProfile: Codable {
     var gender: Gender
     var email: String?
     var profilePhotoData: Data? // Photo de profil encodée en Data
+    var backgroundPhotoData: Data? // Image de fond de profil (optionnelle)
     var createdAt: Date
     var lastWeatherUpdate: Date?
     var preferences: UserPreferences
@@ -35,7 +36,17 @@ struct UserProfile: Codable {
         }
     }
     
-    init(firstName: String = "", dateOfBirth: Date? = nil, age: Int = 0, gender: Gender = .notSpecified, email: String? = nil, profilePhotoData: Data? = nil, createdAt: Date = Date(), preferences: UserPreferences = UserPreferences()) {
+    var backgroundPhoto: UIImage? {
+        get {
+            guard let data = backgroundPhotoData else { return nil }
+            return UIImage(data: data)
+        }
+        set {
+            backgroundPhotoData = newValue?.jpegData(compressionQuality: 0.8)
+        }
+    }
+    
+    init(firstName: String = "", dateOfBirth: Date? = nil, age: Int = 0, gender: Gender = .notSpecified, email: String? = nil, profilePhotoData: Data? = nil, backgroundPhotoData: Data? = nil, createdAt: Date = Date(), preferences: UserPreferences = UserPreferences()) {
         self.firstName = firstName
         // Si dateOfBirth n'est pas fournie mais age l'est (ancienne version), calculer dateOfBirth approximative
         if let dob = dateOfBirth {
@@ -55,6 +66,7 @@ struct UserProfile: Codable {
         self.gender = gender
         self.email = email
         self.profilePhotoData = profilePhotoData
+        self.backgroundPhotoData = backgroundPhotoData
         self.createdAt = createdAt
         self.preferences = preferences
     }
@@ -65,6 +77,7 @@ struct UserProfile: Codable {
         case gender
         case email
         case profilePhotoData
+        case backgroundPhotoData
         case createdAt
         case lastWeatherUpdate
         case preferences
@@ -78,6 +91,7 @@ struct UserProfile: Codable {
         gender = try container.decode(Gender.self, forKey: .gender)
         email = try container.decodeIfPresent(String.self, forKey: .email)
         profilePhotoData = try container.decodeIfPresent(Data.self, forKey: .profilePhotoData)
+        backgroundPhotoData = try container.decodeIfPresent(Data.self, forKey: .backgroundPhotoData)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         lastWeatherUpdate = try container.decodeIfPresent(Date.self, forKey: .lastWeatherUpdate)
         preferences = try container.decodeIfPresent(UserPreferences.self, forKey: .preferences) ?? UserPreferences()
@@ -105,6 +119,7 @@ struct UserProfile: Codable {
         try container.encode(gender, forKey: .gender)
         try container.encodeIfPresent(email, forKey: .email)
         try container.encodeIfPresent(profilePhotoData, forKey: .profilePhotoData)
+        try container.encodeIfPresent(backgroundPhotoData, forKey: .backgroundPhotoData)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(lastWeatherUpdate, forKey: .lastWeatherUpdate)
         try container.encode(preferences, forKey: .preferences)

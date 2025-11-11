@@ -12,6 +12,7 @@ struct OnboardingScreen: View {
     @State private var currentStep = 0
     @State private var firstName = ""
     @State private var email = ""
+    @State private var profileBackgroundImage: UIImage? = nil
     @State private var dateOfBirth: Date = {
         // Date par défaut : il y a 18 ans (donc 18 ans actuellement)
         let calendar = Calendar.current
@@ -86,7 +87,7 @@ struct OnboardingScreen: View {
                     case 0:
                         OnboardingStep0_Welcome()
                     case 1:
-                    OnboardingStep1(firstName: $firstName)
+                    OnboardingStep1(firstName: $firstName, backgroundImage: $profileBackgroundImage)
                     case 2:
                         OnboardingStep2_Email(email: $email, showingError: $showingEmailError)
                     case 3:
@@ -239,13 +240,17 @@ struct OnboardingScreen: View {
         // Le genre peut être notSpecified (optionnel)
         
         // Créer un nouveau profil avec toutes les informations
-        let profile = UserProfile(
+        var profile = UserProfile(
             firstName: trimmedFirstName,
             dateOfBirth: dateOfBirth,
             gender: selectedGender, // Peut être notSpecified
             email: trimmedEmail, // Email saisi par l'utilisateur
                 createdAt: Date()
             )
+        // Ajouter l'image de fond si fournie
+        if let bg = profileBackgroundImage {
+            profile.backgroundPhoto = bg
+        }
         
         // Sauvegarder le profil en local (UserDefaults via DataManager)
         dataManager.saveUserProfile(profile)
@@ -503,7 +508,9 @@ struct ProgressIndicator: View {
 // MARK: - Étape 1: Prénom
 struct OnboardingStep1: View {
     @Binding var firstName: String
+    @Binding var backgroundImage: UIImage?
     @FocusState private var isTextFieldFocused: Bool
+    @State private var selectedBackgroundItem: PhotosPickerItem?
     
     var body: some View {
         VStack(spacing: 30) {
@@ -553,6 +560,71 @@ struct OnboardingStep1: View {
                         isTextFieldFocused = true
                     }
                 }
+            
+            // Image de fond (optionnel)
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Image de fond (optionnel)".localized)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(AppColors.primaryText)
+                    .padding(.horizontal, 40)
+                
+                HStack(spacing: 12) {
+                    if let bg = backgroundImage {
+                        Image(uiImage: bg)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 140)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(AppColors.cardBorder.opacity(0.3), lineWidth: 1)
+                            }
+                            .padding(.leading, 40)
+                        
+                        Button {
+                            backgroundImage = nil
+                        } label: {
+                            HStack {
+                                Image(systemName: "trash")
+                                Text("Supprimer".localized)
+                            }
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.red)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(AppColors.buttonSecondary)
+                            .roundedCorner(12)
+                        }
+                        .padding(.trailing, 40)
+                    } else {
+                        PhotosPicker(selection: $selectedBackgroundItem, matching: .images) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "photo.on.rectangle.angled")
+                                    .font(.system(size: 22, weight: .medium))
+                                Text("Choisir une image de fond".localized)
+                                    .font(.system(size: 15, weight: .semibold))
+                            }
+                            .foregroundColor(AppColors.primaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(AppColors.buttonSecondary)
+                            .roundedCorner(16)
+                            .padding(.horizontal, 40)
+                        }
+                        .onChange(of: selectedBackgroundItem) { oldValue, newValue in
+                            Task {
+                                if let newValue = newValue,
+                                   let data = try? await newValue.loadTransferable(type: Data.self),
+                                   let image = UIImage(data: data) {
+                                    await MainActor.run {
+                                        backgroundImage = image
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             
             Spacer()
         }
