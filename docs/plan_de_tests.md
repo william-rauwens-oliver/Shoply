@@ -7,6 +7,7 @@ Vérifier la conformité fonctionnelle, la stabilité, la sécurité et l’acce
 - Tests unitaires (Services, Utils)
 - Tests UI (flux critiques)
 - Tests d’accessibilité (libellés, traits)
+- Tests d’intégration (flux SQL/NoSQL)
 
 ## Périmètre
 1. Onboarding (profil, photo, thème)
@@ -21,6 +22,7 @@ Vérifier la conformité fonctionnelle, la stabilité, la sécurité et l’acce
 ## Cas de tests (exemples)
 - `RGDPManagerTests`: consentement, export, révoquer
 - `OutfitServiceTests`: génération aléatoire sans crash
+- `IntegrationFlowsTests`: CRUD SQLite et requêtes NoSQL
 - UI:
   - Onboarding: bouton “Pour commencer” visible
   - Collections: suppression collection non défaut
@@ -30,5 +32,6 @@ Vérifier la conformité fonctionnelle, la stabilité, la sécurité et l’acce
 - 0 crash sur les parcours principaux
 - Tests Unit/UI passent en CI
 - A11y labels présents pour éléments interactifs clés
+- Couverture activée (Xcode -enableCodeCoverage YES)
 
 

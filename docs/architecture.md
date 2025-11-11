@@ -51,9 +51,15 @@ Persistance (SQLite + Core Data + CloudKit)
 - `Utils/Localization.swift` (11 langues incluant DE et IT)
 - `AppSettingsManager` gère le choix de langue
 
+## Éco‑conception
+- Voir `docs/ecoconception.md` (principes, indicateurs, pistes)
+
 ## Tests et CI/CD
 - Tests Unit/UI (`ShoplyTests`, `Shoply_appUITests`)
 - GitHub Actions: tests + build
+
+## Diagrammes
+- Voir `docs/uml.md` (classes et séquences en Mermaid)
 
 ## Décisions architecturales (extraits)
 - MVVM avec SwiftUI pour la vitesse et la lisibilité

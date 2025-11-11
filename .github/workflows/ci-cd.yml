@@ -30,6 +30,7 @@ jobs:
             -scheme Shoply \
             -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
             -only-testing:ShoplyTests \
+            -enableCodeCoverage YES \
             | xcpretty || true
       
       - name: Run UI Tests
@@ -38,6 +39,7 @@ jobs:
             -scheme Shoply \
             -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
             -only-testing:Shoply_appUITests \
+            -enableCodeCoverage YES \
             | xcpretty || true
   
   # Job 2 : Build

@@ -243,10 +243,12 @@ Le projet utilise un design system minimaliste noir et blanc :
 ## 📝 Fonctionnalités Détaillées
 ## 📚 Documentation
 - Architecture: `docs/architecture.md`
+- Éco‑conception: `docs/ecoconception.md`
 - Sécurité: `docs/securite.md`
 - RGPD: `docs/rgpd.md`
 - Déploiement: `docs/deploiement.md`
 - Plan de tests: `docs/plan_de_tests.md`
+- Diagrammes UML: `docs/uml.md`
 
 
 ### Collections
