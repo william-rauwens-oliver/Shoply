@@ -197,23 +197,7 @@ struct OnboardingScreen: View {
                         .padding(.bottom, 50)
                     }
                 } else {
-                    // Page de bienvenue - bouton centré
-                    Button(action: {
-                        withAnimation {
-                            currentStep += 1
-                        }
-                    }) {
-                        Text("Pour commencer".localized)
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(AppColors.buttonPrimaryText)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(AppColors.buttonPrimary)
-                            .roundedCorner(20)
-                            .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
-                }
-                    .padding(.horizontal, 40)
-                .padding(.bottom, 50)
+                    // CTA géré via safeAreaInset pour éviter qu'il sorte de l'écran
                 }
             }
             .sheet(isPresented: $showingTutorial) {
@@ -221,6 +205,29 @@ struct OnboardingScreen: View {
             }
         }
         .preferredColorScheme(settingsManager.colorScheme)
+        // Assure la visibilité du CTA "Pour commencer" même si le contenu est long
+        .safeAreaInset(edge: .bottom) {
+            if currentStep == 0 {
+                HStack {
+                    Button(action: {
+                        withAnimation { currentStep += 1 }
+                    }) {
+                        Text("Pour commencer".localized)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(AppColors.buttonPrimaryText)
+                            .frame(maxWidth: 500)
+                            .padding()
+                            .background(AppColors.buttonPrimary)
+                            .roundedCorner(20)
+                            .shadow(color: AppColors.shadow, radius: 12, x: 0, y: 6)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 8)
+                .background(AppColors.background.opacity(0.0001)) // capture safe area taps sans changer le fond
+            }
+        }
     }
     
     // Fonction pour valider l'email avec vérification du domaine
