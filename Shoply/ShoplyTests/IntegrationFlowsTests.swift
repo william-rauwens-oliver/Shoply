@@ -5,6 +5,7 @@
 //  Tests d'intégration simples pour démontrer les flux de base.
 //
 
+#if canImport(XCTest)
 import XCTest
 @testable import Shoply
 
@@ -30,5 +31,6 @@ final class IntegrationFlowsTests: XCTestCase {
         try await nosql.delete(collection: "conversations", id: id)
     }
 }
+#endif
 
 
