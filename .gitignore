@@ -106,3 +106,12 @@ iOSInjectionProject/
 # App-Icon exports
 App-Icon/
 
+# React Native
+ShoplyRN/node_modules/
+ShoplyRN/android/.gradle/
+ShoplyRN/android/app/build/
+ShoplyRN/android/build/
+ShoplyRN/ios/build/
+ShoplyRN/.bundle/
+ShoplyRN/.git/
+
